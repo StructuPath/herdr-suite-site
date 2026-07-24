@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Overview — Herdr Suite docs</title>
-<meta name="description" content="Practical guides for the four StructuPath Herdr plugins: Browser, Guard, Swarm, Conductor.">
+<meta name="description" content="Four plugins for Herdr, the terminal agent multiplexer — built and maintained by StructuPath. All four are public, marketplace-listed (they carry the herdr">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -49,67 +49,85 @@
   </aside>
 
   <main class="prose">
-
 <div class="crumb">Docs</div>
-<h1>StructuPath Herdr Suite</h1>
-<p class="plugin-id">four plugins · verified on herdr 0.7.5 · MIT</p>
-<p class="lead">Four plugins for <a href="https://herdr.dev">Herdr</a>, the terminal agent
-multiplexer. All four are public, listed on the Herdr marketplace (they carry the
-<code>herdr-plugin</code> topic), and MIT licensed.</p>
-
+<h1>StructuPath Herdr Plugins</h1>
+<p>Four plugins for <a href="https://herdr.dev">Herdr</a>, the terminal agent multiplexer — built and maintained by <a href="https://github.com/StructuPath">StructuPath</a>. All four are public, marketplace-listed (they carry the <code>herdr-plugin</code> topic), and verified on <strong>herdr 0.7.5</strong>.</p>
 <div class="table-scroll"><table>
-<tr><th>Plugin</th><th>ID</th><th>Purpose</th></tr>
-<tr><td><a href="/docs/browser/">🌐 Browser</a></td><td><code>structupath.browser</code></td><td>A live, drivable web browser inside a Herdr pane</td></tr>
-<tr><td><a href="/docs/guard/">🛡️ Guard</a></td><td><code>structupath.guard</code></td><td>Cross-agent command policy: audit, alert, interrupt</td></tr>
-<tr><td><a href="/docs/swarm/">🐝 Swarm</a></td><td><code>structupath.swarm</code></td><td>Run N <em>identical</em> agents in parallel, worktree-per-agent</td></tr>
-<tr><td><a href="/docs/conductor/">🎩 Conductor</a></td><td><code>structupath.conductor</code></td><td>Orchestrate a <em>role-differentiated</em> team as visible agent panes</td></tr>
+<thead>
+<tr>
+<th>Plugin</th>
+<th>ID</th>
+<th>Repo</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="/docs/browser/">Browser</a></td>
+<td><code>structupath.browser</code></td>
+<td><a href="https://github.com/StructuPath/herdr-browser">herdr-browser</a></td>
+<td>A live, drivable web browser inside a Herdr pane</td>
+</tr>
+<tr>
+<td><a href="/docs/guard/">Guard</a></td>
+<td><code>structupath.guard</code></td>
+<td><a href="https://github.com/StructuPath/herdr-guard">herdr-guard</a></td>
+<td>Cross-agent command policy: audit, alert, interrupt</td>
+</tr>
+<tr>
+<td><a href="/docs/swarm/">Swarm</a></td>
+<td><code>structupath.swarm</code></td>
+<td><a href="https://github.com/StructuPath/herdr-swarm">herdr-swarm</a></td>
+<td>Run N <em>identical</em> agents in parallel, safely, worktree-per-agent</td>
+</tr>
+<tr>
+<td><a href="/docs/conductor/">Conductor</a></td>
+<td><code>structupath.conductor</code></td>
+<td><a href="https://github.com/StructuPath/herdr-conductor">herdr-conductor</a></td>
+<td>Orchestrate a <em>role-differentiated</em> feature team as visible agent panes</td>
+</tr>
+</tbody>
 </table></div>
-
-<p><b>Swarm vs Conductor:</b> Swarm fans out N interchangeable agents into git worktrees
-and you keep the best result. Conductor runs a <em>team of different roles</em> (builder,
-validator, reviewer…), each a real attachable pane, driven by an orchestrating agent.
-The three orchestration plugins compose:</p>
-
+<p><strong>Swarm vs Conductor:</strong> Swarm fans out N interchangeable agents into git worktrees and you keep the best result. Conductor runs a <em>team of different roles</em> (builder, validator, reviewer…), each a real attachable pane, driven by an orchestrating agent.</p>
+<p>The three orchestration plugins compose:</p>
 <pre><code>CONDUCTOR decides  →  SWARM isolates          →  GUARD enforces
-(role dispatch)       (worktree per writer)      (command policy / audit)</code></pre>
-
+(role dispatch)       (worktree per writer)      (command policy / audit)
+</code></pre>
 <h2>Install</h2>
-<pre><code>herdr plugin install <span class="p">StructuPath/herdr-browser</span>
-herdr plugin install <span class="p">StructuPath/herdr-guard</span>
-herdr plugin install <span class="p">StructuPath/herdr-swarm</span>
-herdr plugin install <span class="p">StructuPath/herdr-conductor</span></code></pre>
+<pre><code class="language-bash">herdr plugin install StructuPath/herdr-browser
+herdr plugin install StructuPath/herdr-guard
+herdr plugin install StructuPath/herdr-swarm
+herdr plugin install StructuPath/herdr-conductor
+</code></pre>
 <p>For development, clone a repo and <code>herdr plugin link .</code> — disk edits stay live.</p>
-
-<h2>Health checks</h2>
-<pre><code>herdr plugin list          <span class="c"># installed + enabled? shows source path</span>
-herdr plugin action list   <span class="c"># proves the action scripts actually registered</span>
-herdr plugin log list      <span class="c"># per-command logs from failed actions</span>
-herdr status server        <span class="c"># is the herdr server up</span></code></pre>
-<p><code>enabled</code> in <code>plugin list</code> means the manifest parsed;
-<code>action list</code> means the scripts are wired in. Both green = healthy. A plugin
-pane shows a <b>label</b> in <code>herdr pane list</code> (plain terminals show none) —
-that's the tell it's plugin-owned and rendering.</p>
+<h2>Health checks (all four)</h2>
+<pre><code class="language-bash">herdr plugin list          # installed + enabled? shows source path
+herdr plugin action list   # proves the action scripts actually registered
+herdr plugin log list      # per-command logs: exit codes / stderr from failed actions
+herdr status server        # is the herdr server up
+</code></pre>
+<p><code>enabled</code> in <code>plugin list</code> means the manifest parsed; <code>action list</code> means the scripts are wired in. Both green = healthy. A plugin pane shows a <strong>label</strong> in <code>herdr pane list</code> (plain terminals show none) — that's the tell it's plugin-owned and rendering.</p>
 <p>Invoke any action manually:</p>
-<pre><code>herdr plugin action invoke &lt;action_id&gt; --plugin &lt;plugin_id&gt;</code></pre>
-<blockquote><p>Exception: <code>swarm fanout</code> can <b>not</b> be action-invoked —
-panes spawned by the herdr server don't inherit the caller's environment. Use the TUI
-menu, or run the fan-out pane script directly (see <a href="/docs/swarm/">Swarm</a>).</p></blockquote>
-
+<pre><code class="language-bash">herdr plugin action invoke &lt;action_id&gt; --plugin &lt;plugin_id&gt;
+</code></pre>
+<blockquote>
+<p>Exception: <code>swarm fanout</code> can <strong>not</strong> be action-invoked — panes spawned by the herdr server don't inherit the caller's environment. Use the TUI menu, or run the fan-out pane script directly (see <a href="/docs/swarm/">Swarm</a>).</p>
+</blockquote>
 <h2>Common ground</h2>
 <ul>
-<li><b>Config:</b> <code>~/.config/herdr/</code> (<code>config.toml</code>; <code>plugins.json</code> is the package registry).</li>
-<li><b>Keybindings:</b> Herdr plugins cannot ship default keybindings — add your own <code>[[keys.command]]</code> entries in <code>config.toml</code>.</li>
-<li><b>Reference:</b> each repo's README is authoritative; these pages are the practical guide.</li>
-<li><b>License:</b> MIT © StructuPath, all four.</li>
+<li><strong>Config:</strong> <code>~/.config/herdr/</code> (<code>config.toml</code>; <code>plugins.json</code> is the package registry).</li>
+<li><strong>Keybindings:</strong> Herdr plugins cannot ship default keybindings — add your own <code>[[keys.command]]</code> entries in <code>config.toml</code> (examples on each plugin page).</li>
+<li><strong>Docs:</strong> each repo's <code>README.md</code> is the authoritative reference; these wiki pages are the practical guide.</li>
+<li><strong>License:</strong> MIT © StructuPath, all four.</li>
 </ul>
-
     <nav class="pager" aria-label="Docs pages"><span></span><a href="/docs/browser/" style="text-align:right"><span class="lbl">Next</span>Browser</a></nav>
   </main>
 </div>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
+    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>

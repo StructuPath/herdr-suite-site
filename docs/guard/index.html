@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guard guide — Herdr Suite docs</title>
-<meta name="description" content="Cross-agent command policy for Herdr: audit risky commands, alert, best-effort interrupt.">
+<meta name="description" content="Cross-agent command policy for Herdr: watches every pane, audits risky commands, notifies you, and best-effort interrupts dangerous shell input. Runs in th">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -49,58 +49,87 @@
   </aside>
 
   <main class="prose">
-
 <div class="crumb">Docs / Plugins</div>
-<h1>🛡️ Guard</h1>
-<p class="plugin-id">structupath.guard · <a href="https://github.com/StructuPath/herdr-guard">repo</a> · <a href="https://github.com/StructuPath/herdr-guard#readme">full README</a></p>
-<p class="lead">Cross-agent command policy for Herdr: watches every pane, audits risky
-commands, notifies you, and best-effort interrupts dangerous shell input. Runs in the
-background — mostly hands-off.</p>
-
+<h1>🛡️ Guard (<code>structupath.guard</code>)</h1>
+<p>Cross-agent command policy for Herdr: watches every pane, audits risky commands, notifies you, and best-effort interrupts dangerous shell input. Runs in the background — mostly hands-off.</p>
+<p>Repo: <a href="https://github.com/StructuPath/herdr-guard">StructuPath/herdr-guard</a> · Full reference: the repo <a href="https://github.com/StructuPath/herdr-guard#readme">README</a></p>
 <h2>Actions</h2>
 <div class="table-scroll"><table>
-<tr><th>Action</th><th>What</th></tr>
-<tr><td><code>open</code></td><td>Open the guard dashboard pane (policy / activity)</td></tr>
-<tr><td><code>test</code></td><td>Dry-run a command against the live policy (allow/deny, nothing executes)</td></tr>
-<tr><td><code>pause</code> / <code>resume</code></td><td>Pause enforcement for 15 minutes (matches stay audited) / reactivate</td></tr>
-<tr><td><code>reset-rules</code></td><td>Back up + reseed the default ruleset</td></tr>
+<thead>
+<tr>
+<th>Action</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>open</code></td>
+<td>Open the guard dashboard pane (policy / activity)</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>Dry-run a command against the live policy (allow/deny, nothing executes)</td>
+</tr>
+<tr>
+<td><code>pause</code> / <code>resume</code></td>
+<td>Pause enforcement for 15 minutes (matches stay audited) / reactivate</td>
+</tr>
+<tr>
+<td><code>reset-rules</code></td>
+<td>Back up + reseed the default ruleset</td>
+</tr>
+</tbody>
 </table></div>
-<p><b>Everyday:</b> leave it running. Use <code>test</code> when unsure whether a command
-would be blocked, <code>pause</code>/<code>resume</code> to override temporarily.</p>
-
-<h2>What it can and can't see</h2>
+<p><strong>Everyday:</strong> leave it running. Use <code>test</code> when unsure whether a command would be blocked, <code>pause</code>/<code>resume</code> to override temporarily.</p>
+<h2>What it can and can't see (honest contract)</h2>
 <div class="table-scroll"><table>
-<tr><th>Pane</th><th>Guard sees</th><th>Interrupt guarantee</th></tr>
-<tr><td>Interactive zsh/bash</td><td>Typed and unsubmitted input</td><td>Strong pre-execution cancel via <code>ctrl+c</code></td></tr>
-<tr><td>Raw/no-echo shell</td><td>Nothing typed</td><td>None; <code>stty -echo</code> is itself alerted</td></tr>
-<tr><td>Agent TUIs (Pi/Claude/Codex)</td><td>Only rendered terminal text</td><td>Incidental; harness hooks remain authoritative</td></tr>
-<tr><td>Logs/builds</td><td>Printed output</td><td>Best-effort while the process runs</td></tr>
-<tr><td>Herdr popups</td><td>Nothing in v1</td><td>Blind spot</td></tr>
+<thead>
+<tr>
+<th>Pane</th>
+<th>Guard sees</th>
+<th>Interrupt guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interactive zsh/bash</td>
+<td>Typed and unsubmitted input</td>
+<td>Strong pre-execution cancel via <code>ctrl+c</code></td>
+</tr>
+<tr>
+<td>Raw/no-echo shell</td>
+<td>Nothing typed</td>
+<td>None; <code>stty -echo</code> is itself alerted</td>
+</tr>
+<tr>
+<td>Agent TUIs (Pi/Claude/Codex)</td>
+<td>Only rendered terminal text</td>
+<td>Incidental; harness hooks remain authoritative</td>
+</tr>
+<tr>
+<td>Logs/builds</td>
+<td>Printed output</td>
+<td>Best-effort while the process runs</td>
+</tr>
+<tr>
+<td>Herdr popups</td>
+<td>Nothing in v1</td>
+<td>Blind spot</td>
+</tr>
+</tbody>
 </table></div>
-<blockquote><p>This is a <b>text policy layer, not intent analysis</b> — advisory against
-a process that can disable the plugin or use an unobserved popup. Use native agent hooks
-for authoritative tool-call enforcement.</p></blockquote>
-
+<p>This is a <strong>text policy layer, not intent analysis</strong> — advisory against a process that can disable the plugin or use an unobserved popup. Use native agent hooks for authoritative tool-call enforcement.</p>
 <h2>Policy</h2>
-<p>Rules live at <code>$HERDR_PLUGIN_CONFIG_DIR/rules.json</code> (severity
-<code>audit</code> / <code>alert</code> / <code>interrupt</code>; <code>regex</code> or
-<code>substring</code> matching; <code>prompt_only</code>). The shipped defaults cover
-destructive filesystem/Git/infra commands, secret-file reads, publishing, data
-exfiltration, and evasion indicators (<code>stty -echo</code>, detached tmux/screen,
-<code>disown</code>, base64-to-shell, eval subshells).</p>
-<p>A workspace may add substring rules in <code>.herdr-guard.json</code>, but project
-rules are capped at <code>alert</code> — repository-controlled regex and interrupt rules
-are rejected, and workspace rules can't lower global ones unless you explicitly enable
-<code>allow_project_override</code>. Review the defaults before enabling interrupt rules
-in production.</p>
-
+<p>Rules live at <code>$HERDR_PLUGIN_CONFIG_DIR/rules.json</code> (severity <code>audit</code> / <code>alert</code> / <code>interrupt</code>; <code>regex</code> or <code>substring</code> matching; <code>prompt_only</code>). The shipped defaults cover destructive filesystem/Git/infra commands, secret-file reads, publishing, data exfiltration, and evasion indicators (<code>stty -echo</code>, detached tmux/screen, <code>disown</code>, base64-to-shell, eval subshells).</p>
+<p>A workspace may add substring rules in <code>.herdr-guard.json</code>, but project rules are capped at <code>alert</code> — repository-controlled regex and interrupt rules are rejected, and workspace rules can't lower global ones unless you explicitly enable <code>allow_project_override</code>. Review the defaults before enabling interrupt rules in production.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/browser/"><span class="lbl">Previous</span>Browser</a><a href="/docs/swarm/" style="text-align:right"><span class="lbl">Next</span>Swarm</a></nav>
   </main>
 </div>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
+    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>

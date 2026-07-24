@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Swarm guide — Herdr Suite docs</title>
-<meta name="description" content="Parallel coding agents on one repo, safely — worktree-per-agent fan-out and review-first harvest.">
+<meta name="description" content="Repo: StructuPath/herdr-swarm · Full reference: the repo README">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -49,79 +49,98 @@
   </aside>
 
   <main class="prose">
-
 <div class="crumb">Docs / Plugins</div>
-<h1>🐝 Swarm</h1>
-<p class="plugin-id">structupath.swarm · <a href="https://github.com/StructuPath/herdr-swarm">repo</a> · <a href="https://github.com/StructuPath/herdr-swarm#readme">full README</a></p>
-<p class="lead"><b>Mental model:</b> "Try this task N different ways in parallel, then
-keep the best." Each agent works in its <b>own git worktree + branch</b> off a recorded
-base SHA, so agents never collide and <code>main</code> stays clean until <em>you</em>
-merge. Agents commit locally and never push — you are the merge gate.</p>
-
+<h1>🐝 Swarm (<code>structupath.swarm</code>)</h1>
+<p><strong>Mental model:</strong> "Try this task N different ways in parallel, then keep the best." Each agent works in its <strong>own git worktree + branch</strong> off a recorded base SHA, so agents never collide and <code>main</code> stays clean until <em>you</em> merge. Agents commit locally and never push — you are the merge gate.</p>
+<p>Repo: <a href="https://github.com/StructuPath/herdr-swarm">StructuPath/herdr-swarm</a> · Full reference: the repo <a href="https://github.com/StructuPath/herdr-swarm#readme">README</a></p>
 <h2>The 5 actions, in order</h2>
 <div class="table-scroll"><table>
-<tr><th>#</th><th>Action</th><th>You do</th><th>It does</th></tr>
-<tr><td>1</td><td><b>Fan out</b></td><td>how many agents (N), preset per slot, the task</td><td>N worktrees + <code>swarm/&lt;run&gt;/&lt;slot&gt;</code> branches, task → <code>.swarm-task.md</code>, launches agents, opens Status</td></tr>
-<tr><td>2</td><td><b>Status</b></td><td>watch; <code>1</code>–<code>9</code> jump into a slot, <code>q</code> quit</td><td>per-slot state + <b>committed/uncommitted counts</b> vs the fork point</td></tr>
-<tr><td>3</td><td><b>Harvest</b></td><td>review + merge, one slot at a time</td><td>merges good slots back <code>--no-ff</code>; removes worktree after (branch kept)</td></tr>
-<tr><td>4</td><td><b>Prune</b></td><td>confirm via env flags</td><td>deletes fully-merged <code>swarm/*</code> branches (dry-run lists first)</td></tr>
-<tr><td>—</td><td><b>Abort</b></td><td>bail anytime</td><td>stops agents, removes clean worktrees, <b>keeps branches</b></td></tr>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>You do</th>
+<th>It does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Fan out</strong></td>
+<td>how many agents (N), preset per slot, the task</td>
+<td>N worktrees + <code>swarm/&lt;run&gt;/&lt;slot&gt;</code> branches, task → <code>.swarm-task.md</code>, launches agents, opens Status</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Status</strong></td>
+<td>watch; <code>1</code>–<code>9</code> jump into a slot, <code>q</code> quit</td>
+<td>per-slot state + <strong>committed/uncommitted counts</strong> vs the fork point</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Harvest</strong></td>
+<td>review + merge, one slot at a time</td>
+<td>merges good slots back <code>--no-ff</code>; removes worktree after (branch kept)</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Prune</strong></td>
+<td>confirm via env flags</td>
+<td>deletes fully-merged <code>swarm/*</code> branches (dry-run lists first)</td>
+</tr>
+<tr>
+<td>—</td>
+<td><strong>Abort</strong></td>
+<td>bail anytime</td>
+<td>stops agents, removes clean worktrees, <strong>keeps branches</strong></td>
+</tr>
+</tbody>
 </table></div>
-<p><b>Everyday flow:</b> TUI menu → <b>Fan out</b> → <b>Status</b> (watch) →
-<b>Harvest</b> (keep winners) → <b>Prune</b> (tidy).</p>
-
-<h2>Harvest keys</h2>
+<p><strong>Everyday flow:</strong> TUI menu → <strong>Fan out</strong> (answer prompts) → <strong>Status</strong> (watch) → <strong>Harvest</strong> (keep winners) → <strong>Prune</strong> (tidy).</p>
+<h2>Harvest keys (per slot)</h2>
 <ul>
 <li><code>1</code>–<code>9</code> select slot · <code>r</code> re-preview · <code>q</code> quit</li>
 <li>Clean slot → merged automatically (base drift-checked before every merge)</li>
 <li>Dirty slot → <code>w</code> commit WIP · <code>s</code> skip · <code>d</code> discard (typed confirm, snapshot ref saved first)</li>
 <li>Conflict → <code>s</code> shell into merge tree · <code>a</code> abort merge · <code>b</code> back out</li>
 </ul>
-
-<h2>Prune is gated on purpose</h2>
-<pre><code>HERDR_SWARM_PRUNE_CONFIRM=yes         <span class="c"># delete listed merged swarm/* branches</span>
-HERDR_SWARM_PRUNE_ACK_REVERTED=yes    <span class="c"># also needed for merged-then-reverted</span>
-HERDR_SWARM_PRUNE_BACKUPS=yes         <span class="c"># delete discard-snapshot backup refs</span></code></pre>
-<p>Prune uses safe <code>git branch -d</code> semantics (never force), refuses branches
-still checked out in a worktree, and never touches snapshots belonging to the active run.</p>
-
+<h2>Prune is gated on purpose (destructive)</h2>
+<pre><code class="language-bash">HERDR_SWARM_PRUNE_CONFIRM=yes         # delete listed merged swarm/* branches
+HERDR_SWARM_PRUNE_ACK_REVERTED=yes    # also needed for merged-then-reverted
+HERDR_SWARM_PRUNE_BACKUPS=yes         # delete discard-snapshot backup refs
+</code></pre>
+<p>Prune uses safe <code>git branch -d</code> semantics (never force), refuses branches still checked out in a worktree, and never touches snapshots belonging to the active run.</p>
 <h2>Scripted / headless fan-out</h2>
-<p><code>fanout</code> can <b>not</b> be action-invoked — panes spawned by the herdr
-server don't inherit the caller's environment. Call the pane script directly with env
-overrides:</p>
-<pre><code>HERDR_SWARM_SLOTS=3 \
-HERDR_SWARM_PRESETS=claude,claude,codex \   <span class="c"># one name = applies to all slots</span>
+<p><code>fanout</code> can <strong>not</strong> be action-invoked — panes spawned by the herdr server don't inherit the caller's environment. Call the pane script directly with env overrides:</p>
+<pre><code class="language-bash">HERDR_SWARM_SLOTS=3 \
+HERDR_SWARM_PRESETS=claude,claude,codex \   # one name = applies to all slots
 HERDR_SWARM_TASK_FILE=/path/brief.md \
-HERDR_SWARM_DETRITUS=rename \               <span class="c"># delete | rename | abort</span>
+HERDR_SWARM_DETRITUS=rename \               # delete | rename | abort (leftover branches)
 HERDR_WORKSPACE_ID=&lt;repo workspace id&gt; \
-  bash "$(herdr plugin list --json | jq -r '.plugins[]|select(.id=="structupath.swarm").root')/scripts/fanout-pane.sh"</code></pre>
-<p>Harvest (<code>scripts/harvest-step.sh</code>), abort, and prune are also zero-TTY
-scriptable — an agent can drive the whole plugin. Presets live in
-<code>presets.conf</code> (<code>name|kind|args</code>); defaults are <code>claude</code>
-and <code>codex</code>.</p>
-
+  bash &quot;$(herdr plugin list --json | jq -r '.plugins[]|select(.id==&quot;structupath.swarm&quot;).root')/scripts/fanout-pane.sh&quot;
+</code></pre>
+<p>Harvest (<code>scripts/harvest-step.sh</code>), abort, and prune are also zero-TTY scriptable — an agent can drive the whole plugin. Presets live in <code>presets.conf</code> (<code>name|kind|args</code>); defaults are <code>claude</code> and <code>codex</code>.</p>
 <h2>Three things to remember</h2>
 <ol>
-<li><b>Isolation is the point</b> — own worktree + branch each; <code>main</code> untouched until harvest.</li>
-<li><b>You are the merge gate</b> — agents commit locally, never push; you decide what lands.</li>
-<li><b>Cleanup is layered + safe</b> — abort keeps branches, prune won't force-delete, discards snapshot first.</li>
+<li><strong>Isolation is the point</strong> — own worktree + branch each; <code>main</code> untouched until harvest.</li>
+<li><strong>You are the merge gate</strong> — agents commit locally, never push; you decide what lands.</li>
+<li><strong>Cleanup is layered + safe</strong> — abort keeps branches, prune won't force-delete, discards snapshot first.</li>
 </ol>
-
 <h2>Sharp edges</h2>
 <ul>
-<li><b>Fresh worktrees lack your env</b> — <code>.env</code>, <code>node_modules</code>, build caches are absent; the most likely cause of "all my agents failed instantly." Drop a <code>setup.sh</code> in the plugin config dir to prep each worktree automatically.</li>
-<li><b>Squash merges are invisible</b> — a slot you squash-merged yourself still shows as pending; skip it by hand.</li>
-<li><b>Closing the parent repo workspace kills swarm agents silently</b> — committed work survives and stays harvestable.</li>
-<li><b>0.7.5 cosmetic quirk</b> — a finished slot shows <code>working</code> in Status until you open Harvest; committed work is harvestable regardless.</li>
+<li><strong>Fresh worktrees lack your env</strong> — <code>.env</code>, <code>node_modules</code>, build caches are absent; the most likely cause of "all my agents failed instantly." Drop a <code>setup.sh</code> in the plugin config dir to prep each worktree automatically.</li>
+<li><strong>Squash merges are invisible</strong> — a slot you squash-merged yourself still shows as pending; skip it by hand.</li>
+<li><strong>Closing the parent repo workspace kills swarm agents silently</strong> — committed work survives and stays harvestable.</li>
+<li><strong>0.7.5 cosmetic quirk</strong> — a finished slot shows <code>working</code> in Status until you open Harvest; committed work is harvestable regardless.</li>
 </ul>
-
     <nav class="pager" aria-label="Docs pages"><a href="/docs/guard/"><span class="lbl">Previous</span>Guard</a><a href="/docs/conductor/" style="text-align:right"><span class="lbl">Next</span>Conductor</a></nav>
   </main>
 </div>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
+    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>

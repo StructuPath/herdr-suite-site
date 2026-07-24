@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Conductor guide — Herdr Suite docs</title>
-<meta name="description" content="Orchestrate a role-differentiated feature team as visible Herdr agent panes.">
+<meta name="description" content="Repo: StructuPath/herdr-conductor · Full reference: the repo README">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -49,64 +49,83 @@
   </aside>
 
   <main class="prose">
-
 <div class="crumb">Docs / Plugins</div>
-<h1>🎩 Conductor</h1>
-<p class="plugin-id">structupath.conductor · <a href="https://github.com/StructuPath/herdr-conductor">repo</a> · <a href="https://github.com/StructuPath/herdr-conductor#readme">full README</a></p>
-<p class="lead"><b>Mental model:</b> "Run a <em>team</em> — a builder, a validator, a
-reviewer — each as a real, visible, attachable agent pane, with one orchestrator driving
-them." Unlike <a href="/docs/swarm/">Swarm's</a> N-identical fan-out, Conductor's workers
-are <b>role-differentiated</b> and <b>mixed-vendor</b> (claude/codex/pi side by side),
-and they <b>survive the orchestrator</b> — a crashed driver doesn't kill the team.</p>
-
+<h1>🎩 Conductor (<code>structupath.conductor</code>)</h1>
+<p><strong>Mental model:</strong> "Run a <em>team</em> — a builder, a validator, a reviewer — each as a real, visible, attachable agent pane, with one orchestrator driving them." Unlike <a href="/docs/swarm/">Swarm's</a> N-identical fan-out, Conductor's workers are <strong>role-differentiated</strong> and <strong>mixed-vendor</strong> (claude/codex/pi side by side), and they <strong>survive the orchestrator</strong> — a crashed driver doesn't kill the team.</p>
+<p>Repo: <a href="https://github.com/StructuPath/herdr-conductor">StructuPath/herdr-conductor</a> · Full reference: the repo <a href="https://github.com/StructuPath/herdr-conductor#readme">README</a></p>
 <h2>The split that makes it work</h2>
 <div class="table-scroll"><table>
-<tr><th>Half</th><th>Where</th><th>Who drives it</th></tr>
-<tr><td><b>Transport</b> (the loop)</td><td><code>scripts/conductor-lib.sh</code></td><td>An orchestrating <b>agent</b> sources it and runs the loop</td></tr>
-<tr><td><b>Operational surface</b></td><td>the <code>board</code> + <code>stand-down</code> actions</td><td>You / the TUI menu</td></tr>
+<thead>
+<tr>
+<th>Half</th>
+<th>Where</th>
+<th>Who drives it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Transport</strong> (the loop)</td>
+<td><code>scripts/conductor-lib.sh</code></td>
+<td>An orchestrating <strong>agent</strong> sources it and runs the loop</td>
+</tr>
+<tr>
+<td><strong>Operational surface</strong></td>
+<td>the <code>board</code> + <code>stand-down</code> actions</td>
+<td>You / the TUI menu</td>
+</tr>
+</tbody>
 </table></div>
-<p>Dispatch is <b>agent-driven, not an action</b> — herdr plugin actions get no argv/TTY,
-so the intelligence that decomposes a feature and assigns roles is the agent's job, not a
-shell script's.</p>
-
+<p>Dispatch is <strong>agent-driven, not an action</strong> — herdr plugin actions get no argv/TTY, so the intelligence that decomposes a feature and assigns roles is the agent's job, not a shell script's.</p>
 <h2>The 2 actions</h2>
 <div class="table-scroll"><table>
-<tr><th>Action</th><th>What</th></tr>
-<tr><td><code>board</code></td><td>Live pane: one row per worker — role, kind, pane, <b>status (from <code>herdr agent list</code>, not screen-scraping)</b>, cwd. Refreshes every 2s; <code>q</code> quits.</td></tr>
-<tr><td><code>stand-down</code></td><td>Closes only conductor-owned worker panes for the active run (ownership-verified); git branches + worktrees kept.</td></tr>
+<thead>
+<tr>
+<th>Action</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>board</code></td>
+<td>Live pane: one row per worker — role, kind, pane, <strong>status (from <code>herdr agent list</code>, not screen-scraping)</strong>, cwd. Refreshes every 2s; <code>q</code> quits.</td>
+</tr>
+<tr>
+<td><code>stand-down</code></td>
+<td>Closes only conductor-owned worker panes for the active run (ownership-verified); git branches + worktrees kept.</td>
+</tr>
+</tbody>
 </table></div>
-<pre><code>herdr plugin action invoke board      --plugin structupath.conductor
-herdr plugin action invoke stand-down --plugin structupath.conductor</code></pre>
-
-<h2>The agent-driven loop</h2>
-<pre><code>. scripts/conductor-lib.sh
-conductor_start_worker builder  claude "$engine_wt"          <span class="c"># warms by default</span>
-conductor_start_worker reviewer codex  "$repo" -- --sandbox read-only
-conductor_dispatch builder "$builder_prompt"
-conductor_await    builder &amp;&amp; conductor_collect builder      <span class="c"># settles on the report SENTINEL</span>
-conductor_teardown</code></pre>
-
+<pre><code class="language-bash">herdr plugin action invoke board      --plugin structupath.conductor
+herdr plugin action invoke stand-down --plugin structupath.conductor
+</code></pre>
+<h2>The agent-driven loop (what the orchestrator does)</h2>
+<pre><code class="language-bash">. scripts/conductor-lib.sh
+conductor_start_worker builder  claude &quot;$engine_wt&quot;          # warms by default
+conductor_start_worker reviewer codex  &quot;$repo&quot; -- --sandbox read-only
+conductor_dispatch builder &quot;$builder_prompt&quot;
+conductor_await    builder &amp;&amp; conductor_collect builder      # settles on the report SENTINEL
+conductor_teardown
+</code></pre>
 <h2>Three things to remember</h2>
 <ol>
-<li><b>Settle ≠ success</b> — a worker hits <code>idle</code> after <em>any</em> turn (even a clarifying question). Completion is a <code>&lt;!-- REPORT-COMPLETE --&gt;</code> sentinel in <code>.conductor/report.md</code>, never agent state. The lib enforces this (freshness-checked).</li>
-<li><b>Warm by default</b> — a cold interactive agent opens on a welcome screen and drops its first prompt; <code>conductor_start_worker</code> warms it. <code>--no-warm</code> to skip.</li>
-<li><b>Files both directions</b> — mission in via <code>.conductor/task.md</code>, result out via <code>.conductor/report.md</code> (auto-gitignored). Panes are for humans to watch and attach to.</li>
+<li><strong>Settle ≠ success</strong> — a worker hits <code>idle</code> after <em>any</em> turn (even a clarifying question). Completion is a <code>&lt;!-- REPORT-COMPLETE --&gt;</code> sentinel in <code>.conductor/report.md</code>, never agent state. The lib enforces this (freshness-checked).</li>
+<li><strong>Warm by default</strong> — a cold interactive agent opens on a welcome screen and drops its first prompt; <code>conductor_start_worker</code> warms it. <code>--no-warm</code> to skip.</li>
+<li><strong>Files both directions</strong> — mission in via <code>.conductor/task.md</code>, result out via <code>.conductor/report.md</code> (auto-gitignored). Panes are for humans to watch and attach to.</li>
 </ol>
-
 <h2>The composition</h2>
 <pre><code>CONDUCTOR decides   →   SWARM isolates        →   GUARD enforces
-(this plugin)           (worktree per writer)     (read-only audit for review roles)</code></pre>
-
+(this plugin)           (worktree per writer)     (read-only audit for review roles)
+</code></pre>
 <h2>Requirements</h2>
 <p>herdr ≥ 0.7.5, Node ≥ 20, Python 3, Bash 3.2+. macOS / Linux.</p>
-
     <nav class="pager" aria-label="Docs pages"><a href="/docs/swarm/"><span class="lbl">Previous</span>Swarm</a><span></span></nav>
   </main>
 </div>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
+    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>

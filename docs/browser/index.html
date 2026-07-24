@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Browser guide — Herdr Suite docs</title>
-<meta name="description" content="Live, drivable browser pane for Herdr — shared agent sessions, real interaction, recording.">
+<meta name="description" content="A drivable browser pane for Herdr, built around agent-browser. When a coding agent drives Chrome in one pane, herdr-browser gives you a live, human-visible">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -49,76 +49,105 @@
   </aside>
 
   <main class="prose">
-
 <div class="crumb">Docs / Plugins</div>
-<h1>🌐 Browser</h1>
-<p class="plugin-id">structupath.browser · <a href="https://github.com/StructuPath/herdr-browser">repo</a> · <a href="https://github.com/StructuPath/herdr-browser#readme">full README</a></p>
-<p class="lead">A drivable browser pane built around
-<a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>. When a coding
-agent drives Chrome in one pane, herdr-browser gives you a live, human-visible view of
-that same session in another — inspect the page, watch console output and page errors,
-click real browser coordinates, type, scroll, navigate, and record, without leaving Herdr.</p>
-
+<h1>🌐 Browser (<code>structupath.browser</code>)</h1>
+<p>A drivable browser pane for Herdr, built around <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>. When a coding agent drives Chrome in one pane, herdr-browser gives you a live, human-visible view of that same session in another — inspect the page, watch console output and page errors, click real browser coordinates, type, scroll, navigate, and record, without leaving Herdr.</p>
+<p>Repo: <a href="https://github.com/StructuPath/herdr-browser">StructuPath/herdr-browser</a> · Full reference: the repo <a href="https://github.com/StructuPath/herdr-browser#readme">README</a></p>
 <h2>Session model</h2>
-<p>One browser session per Herdr workspace (<code>herdr-ws-&lt;workspace-id&gt;</code>), so
-browser state never leaks between workspaces. The exact session name appears in the
-viewer header.</p>
+<p>One browser session per Herdr workspace (<code>herdr-ws-&lt;workspace-id&gt;</code>), so browser state never leaks between workspaces. The exact session name appears in the viewer header. Two ways in:</p>
 <div class="table-scroll"><table>
-<tr><th>Action</th><th>What</th></tr>
-<tr><td><code>open</code></td><td>Viewer onto the shared <em>agent</em> browser session. With no URL = view-only attach.</td></tr>
-<tr><td><code>browse</code></td><td>Personal interactive browser (separate Carbonyl Chromium — does <b>not</b> share the agent's session). Type the URL in its address bar.</td></tr>
-<tr><td><code>record-start</code> / <code>record-stop</code></td><td>Record the workspace session to WebM</td></tr>
-<tr><td><code>close</code></td><td>Close every browser pane in the workspace and end its session</td></tr>
+<thead>
+<tr>
+<th>Action</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>open</code></td>
+<td>Viewer onto the shared <em>agent</em> browser session. With no URL = view-only attach.</td>
+</tr>
+<tr>
+<td><code>browse</code></td>
+<td>Personal interactive browser (separate Carbonyl Chromium — does <strong>not</strong> share the agent's session). <strong>Type the URL in its address bar.</strong></td>
+</tr>
+<tr>
+<td><code>record-start</code> / <code>record-stop</code></td>
+<td>Record the workspace session to WebM</td>
+</tr>
+<tr>
+<td><code>close</code></td>
+<td>Close every browser pane in the workspace and end its session</td>
+</tr>
+</tbody>
 </table></div>
-<p><b>Everyday:</b> menu → <b>Open</b> (or <b>Browse</b>) → drive it keyboard-first.
-Close with the <code>close</code> action or <code>q</code> in the pane. Cmd/Ctrl+click a
-localhost URL printed in any Herdr pane to open it in the workspace browser.</p>
-
+<p><strong>Everyday:</strong> menu → <strong>Open</strong> (or <strong>Browse</strong>) → drive it keyboard-first. Close with the <code>close</code> action or <code>q</code> in the pane. Cmd/Ctrl+click a localhost URL printed in any Herdr pane to open it in the workspace browser.</p>
 <h2>Passing a URL</h2>
-<p>Action-invoke can't pass a URL (herdr 0.7.x actions get no argv), so <code>open</code>
-with no URL attaches view-only. Set the URL with <code>u</code> inside the pane, via a
-localhost Cmd/Ctrl+click, or from the CLI against the session shown in the pane header:</p>
-<pre><code>agent-browser --session herdr-ws-&lt;workspaceId&gt; open https://example.com</code></pre>
-
+<p>Action-invoke can't pass a URL (herdr 0.7.x actions get no argv), so <code>open</code> with no URL attaches view-only. Set the URL either with <code>u</code> inside the pane, via a localhost Cmd/Ctrl+click, or from the CLI against the session shown in the pane header:</p>
+<pre><code class="language-bash">agent-browser --session herdr-ws-&lt;workspaceId&gt; open https://example.com
+</code></pre>
 <h2>Viewer controls</h2>
 <div class="table-scroll"><table>
-<tr><th>Input</th><th>Action</th></tr>
-<tr><td><code>u</code></td><td>Address prompt (<code>https://</code> assumed when omitted)</td></tr>
-<tr><td>Click the screenshot</td><td>Real Chrome mouse events at that page coordinate</td></tr>
-<tr><td><code>i</code></td><td>Type into the focused page element</td></tr>
-<tr><td><code>b</code> / <code>f</code></td><td>History back / forward</td></tr>
-<tr><td><code>r</code></td><td>Reload</td></tr>
-<tr><td><code>j</code> / <code>k</code> / Space / wheel</td><td>Scroll</td></tr>
-<tr><td><code>q</code></td><td>Close the viewer pane</td></tr>
+<thead>
+<tr>
+<th>Input</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>u</code></td>
+<td>Address prompt (<code>https://</code> assumed when omitted)</td>
+</tr>
+<tr>
+<td>Click the screenshot</td>
+<td>Real Chrome mouse events at that page coordinate</td>
+</tr>
+<tr>
+<td><code>i</code></td>
+<td>Type into the focused page element</td>
+</tr>
+<tr>
+<td><code>b</code> / <code>f</code></td>
+<td>History back / forward</td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>Reload</td>
+</tr>
+<tr>
+<td><code>j</code> / <code>k</code> / Space / wheel</td>
+<td>Scroll</td>
+</tr>
+<tr>
+<td><code>q</code></td>
+<td>Close the viewer pane</td>
+</tr>
+</tbody>
 </table></div>
-
 <h2>Requirements</h2>
 <ul>
 <li>Herdr ≥ 0.7.0, Node ≥ 20 (Node 22+ enables live WebSocket streaming)</li>
 <li><code>npm install -g agent-browser &amp;&amp; agent-browser install</code></li>
 <li>Optional: <code>chafa</code> (ANSI rendering), <code>carbonyl@next</code> (the interactive Browse action)</li>
 </ul>
-<p>Rendering auto-selects the strongest mode the terminal supports: Kitty graphics →
-ANSI symbols via chafa → text-only. Frames stream over WebSocket when available, with
-transparent polling fallback.</p>
-
-<h2>Troubleshooting</h2>
+<p>Rendering auto-selects the strongest mode the terminal supports: Kitty graphics → ANSI symbols via chafa → text-only. Frames stream over WebSocket when available, with transparent polling fallback.</p>
+<h2>Troubleshooting quick hits</h2>
 <ul>
-<li><b><code>agent-browser is not installed</code></b> — <code>npm install -g agent-browser &amp;&amp; agent-browser install</code></li>
-<li><b><code>session … is not running</code></b> — open a URL with <code>u</code>, click a localhost link, or start agent-browser with the session in the pane header</li>
-<li><b>Text-only mode</b> — install chafa or enable Kitty graphics (<code>[experimental] kitty_graphics = true</code> in <code>config.toml</code>, then <code>herdr server reload-config</code>)</li>
-<li><b>Action failures</b> — <code>herdr plugin log list --plugin structupath.browser</code></li>
+<li><strong><code>agent-browser is not installed</code></strong> — <code>npm install -g agent-browser &amp;&amp; agent-browser install</code></li>
+<li><strong><code>session … is not running</code></strong> — open a URL with <code>u</code>, click a localhost link, or start agent-browser with the session in the pane header</li>
+<li><strong>Text-only mode</strong> — install chafa or enable Kitty graphics (<code>[experimental] kitty_graphics = true</code> in <code>config.toml</code>, then <code>herdr server reload-config</code>)</li>
+<li><strong>Action failures</strong> — <code>herdr plugin log list --plugin structupath.browser</code></li>
 </ul>
-<p>See the <a href="https://github.com/StructuPath/herdr-browser#readme">README</a> for
-configuration files, environment overrides, recording details, and the security model.</p>
-
+<p>See the <a href="https://github.com/StructuPath/herdr-browser#readme">README</a> for configuration files, environment overrides, recording details, and the security model.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/"><span class="lbl">Previous</span>Overview</a><a href="/docs/guard/" style="text-align:right"><span class="lbl">Next</span>Guard</a></nav>
   </main>
 </div>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
+    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>

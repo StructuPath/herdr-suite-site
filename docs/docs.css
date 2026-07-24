@@ -95,6 +95,8 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-
   text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
 }
 .prose h1 { font-size: 34px; letter-spacing: -.02em; line-height: 1.15; margin-bottom: 6px; }
+.prose h1 code { font-size: .5em; vertical-align: middle; color: var(--muted); }
+.prose h1 + p { font-size: 17.5px; color: var(--muted); }
 .prose .plugin-id { font-family: var(--mono); font-size: 13.5px; color: var(--muted); margin-bottom: 26px; }
 .prose h2 {
   font-size: 21px; letter-spacing: -.01em; margin: 42px 0 12px;

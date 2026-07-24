@@ -8,95 +8,239 @@
 <meta property="og:title" content="StructuPath Herdr Suite">
 <meta property="og:description" content="Four open-source plugins for Herdr: Browser, Guard, Swarm, Conductor.">
 <meta property="og:url" content="https://herdr.structupath.ai/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0c0f14;
-    --panel: #141922;
-    --panel-2: #1a212c;
-    --border: #253044;
-    --text: #dbe4f0;
-    --muted: #8496ad;
-    --accent: #e8833a;      /* structural-steel orange */
-    --accent-2: #4fb6a2;
-    --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    --bg: #0b0e13;
+    --surface: #10141b;
+    --surface-2: #151b24;
+    --border: #232c3a;
+    --border-hot: #e8833a;
+    --text: #e3eaf4;
+    --muted: #8a9ab0;
+    --accent: #e8833a;
+    --accent-dim: #b05e24;
+    --teal: #4fb6a2;
+    --sans: "Archivo", -apple-system, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
   body {
     background: var(--bg); color: var(--text);
-    font: 16px/1.65 -apple-system, "Segoe UI", system-ui, sans-serif;
+    font: 16px/1.65 var(--sans);
     -webkit-font-smoothing: antialiased;
   }
-  a { color: var(--accent-2); text-decoration: none; }
+  a { color: var(--teal); text-decoration: none; }
   a:hover { text-decoration: underline; }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
-
-  header { padding: 72px 0 48px; border-bottom: 1px solid var(--border); }
-  .kicker {
-    font-family: var(--mono); font-size: 13px; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px;
   }
-  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.15; letter-spacing: -.02em; }
-  h1 .dim { color: var(--muted); font-weight: 400; }
-  .sub { margin-top: 18px; max-width: 620px; color: var(--muted); font-size: 18px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex; align-items: center; gap: 28px;
+    height: 60px; max-width: 1040px; margin: 0 auto; padding: 0 24px;
+  }
+  .wordmark {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-weight: 600; font-size: 15px; color: var(--text);
+    letter-spacing: -.01em;
+  }
+  .wordmark:hover { text-decoration: none; }
+  .mark {
+    width: 22px; height: 22px; border-radius: 5px; flex: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: #14100b;
+  }
+  .nav-links { display: flex; gap: 22px; margin-left: 8px; }
+  .nav-links a { color: var(--muted); font-size: 14.5px; font-weight: 500; }
+  .nav-links a:hover { color: var(--text); text-decoration: none; }
+  .nav-spacer { flex: 1; }
+  .nav-gh { color: var(--muted); display: grid; place-items: center; }
+  .nav-gh:hover { color: var(--text); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #14100b;
+    font-family: var(--sans); font-weight: 700; font-size: 14.5px;
+    padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer;
+  }
+  .btn:hover { background: #f2954e; text-decoration: none; }
+  .btn.ghost {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn.ghost:hover { border-color: var(--muted); background: var(--surface); }
+  @media (max-width: 720px) { .nav-links { display: none; } }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 92px 0 72px; position: relative; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(600px 300px at 75% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+      repeating-linear-gradient(90deg, transparent 0 119px, color-mix(in srgb, var(--border) 40%, transparent) 119px 120px);
+    mask-image: linear-gradient(180deg, #000 0%, transparent 90%);
+  }
+  .hero .wrap { position: relative; }
+  .kicker {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent);
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  }
+  .kicker::before { content: ""; width: 26px; height: 1px; background: var(--accent); }
+  h1 {
+    font-size: clamp(34px, 5.6vw, 58px); line-height: 1.04;
+    letter-spacing: -.03em; font-weight: 800; max-width: 760px;
+  }
+  h1 .dim { color: var(--muted); font-weight: 500; }
+  .sub { margin-top: 22px; max-width: 590px; color: var(--muted); font-size: 18px; }
   .sub b { color: var(--text); font-weight: 600; }
+  .hero-cta { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
 
   .pipeline {
-    margin-top: 34px; padding: 18px 22px; background: var(--panel);
-    border: 1px solid var(--border); border-radius: 10px;
-    font-family: var(--mono); font-size: 14px; overflow-x: auto; white-space: nowrap;
+    margin-top: 46px; display: flex; align-items: stretch; gap: 0;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--surface); overflow-x: auto;
   }
-  .pipeline .op { color: var(--accent); font-weight: 700; }
-  .pipeline .arrow { color: var(--muted); padding: 0 10px; }
-
-  section { padding: 56px 0; border-bottom: 1px solid var(--border); }
-  h2 { font-size: 24px; margin-bottom: 8px; letter-spacing: -.01em; }
-  .lede { color: var(--muted); margin-bottom: 32px; max-width: 640px; }
-
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-  @media (max-width: 660px) { .grid { grid-template-columns: 1fr; } }
-  .card {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 24px; display: flex; flex-direction: column; gap: 12px;
+  .stage {
+    flex: 1; min-width: 150px; padding: 18px 20px;
+    border-right: 1px solid var(--border);
+    color: inherit; transition: background .18s ease;
   }
-  .card:hover { border-color: var(--accent); }
-  .card .emoji { font-size: 26px; }
-  .card h3 { font-size: 18px; }
-  .card h3 .id { display: block; font-family: var(--mono); font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 4px; }
-  .card p { color: var(--muted); font-size: 15px; flex: 1; }
-  .card .links { font-family: var(--mono); font-size: 13px; display: flex; gap: 16px; }
-
-  pre {
-    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
-    padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size: 14px;
-    line-height: 1.8; color: var(--text);
+  .stage:last-child { border-right: none; }
+  .stage:hover { background: var(--surface-2); text-decoration: none; }
+  .stage .op {
+    font-family: var(--mono); font-size: 13.5px; font-weight: 600;
+    color: var(--accent); display: flex; align-items: center; gap: 8px;
   }
-  pre .c { color: var(--muted); }
-  pre .p { color: var(--accent-2); }
+  .stage:hover .op { text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 65%, transparent); }
+  .stage .verb { display: block; margin-top: 4px; font-size: 14px; color: var(--muted); }
+  .stage .num { color: var(--muted); font-weight: 400; }
 
-  .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
   .fact {
-    font-family: var(--mono); font-size: 13px; color: var(--muted);
+    font-family: var(--mono); font-size: 12.5px; color: var(--muted);
     border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px;
   }
 
-  footer { padding: 40px 0 64px; color: var(--muted); font-size: 14px; }
-  footer .row { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 14px; font-family: var(--mono); font-size: 13px; }
+  /* entrance */
+  @media (prefers-reduced-motion: no-preference) {
+    .rise { opacity: 0; transform: translateY(14px); animation: rise .6s cubic-bezier(.2,.7,.3,1) forwards; }
+    .rise.d1 { animation-delay: .06s } .rise.d2 { animation-delay: .14s }
+    .rise.d3 { animation-delay: .22s } .rise.d4 { animation-delay: .32s }
+    .rise.d5 { animation-delay: .42s }
+    @keyframes rise { to { opacity: 1; transform: none } }
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.3,1); }
+    .reveal.in { opacity: 1; transform: none; }
+  }
+
+  /* ---------- sections ---------- */
+  section { padding: 76px 0; border-top: 1px solid var(--border); }
+  .sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 10px; }
+  .sec-num { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  h2 { font-size: 27px; letter-spacing: -.02em; font-weight: 700; }
+  .lede { color: var(--muted); margin-bottom: 36px; max-width: 620px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 26px; display: flex; flex-direction: column; gap: 12px;
+    transition: border-color .18s ease, transform .18s ease;
+  }
+  .card:hover { border-color: var(--border-hot); transform: translateY(-2px); }
+  .card-top { display: flex; align-items: center; justify-content: space-between; }
+  .card .emoji { font-size: 25px; }
+  .card .item-no { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .1em; }
+  .card:hover .item-no { color: var(--accent); }
+  .card h3 { font-size: 19px; font-weight: 700; }
+  .card h3 .id { display: block; font-family: var(--mono); font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 4px; }
+  .card p { color: var(--muted); font-size: 15px; flex: 1; }
+  .card .links { font-family: var(--mono); font-size: 13px; display: flex; gap: 18px; }
+
+  pre {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 22px; overflow-x: auto; font-family: var(--mono); font-size: 14px;
+    line-height: 1.85; color: var(--text);
+  }
+  pre .c { color: var(--muted); }
+  pre .p { color: var(--teal); }
+  code { font-family: var(--mono); font-size: .92em; }
+
+  /* ---------- footer ---------- */
+  footer { border-top: 1px solid var(--border); padding: 60px 0 0; }
+  .foot-grid {
+    display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px;
+    padding-bottom: 48px;
+  }
+  @media (max-width: 820px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .foot-grid { grid-template-columns: 1fr; } }
+  .foot-brand p { color: var(--muted); font-size: 14.5px; margin-top: 14px; max-width: 300px; }
+  .foot-col h4 {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .foot-col ul { list-style: none; padding: 0; display: grid; gap: 10px; }
+  .foot-col a { color: #b8c4d6; font-size: 14.5px; }
+  .foot-col a:hover { color: var(--text); }
+  .foot-col .ext::after { content: " ↗"; color: var(--muted); font-size: .85em; }
+  .foot-bottom {
+    border-top: 1px solid var(--border); padding: 22px 0 30px;
+    display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between;
+    color: var(--muted); font-size: 13.5px;
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap">
-    <div class="kicker">StructuPath · open source</div>
-    <h1>The Herdr Suite<br><span class="dim">four plugins that run your agent panes</span></h1>
-    <p class="sub">Plugins for <a href="https://herdr.dev">Herdr</a>, the terminal agent
-    multiplexer. <b>Watch</b> what your agents browse, <b>police</b> what they type,
-    <b>parallelize</b> them safely, and <b>orchestrate</b> them as a team — without
-    leaving your terminal.</p>
-    <div class="pipeline">
-      <span class="op">CONDUCTOR</span> decides<span class="arrow">→</span><span class="op">SWARM</span> isolates<span class="arrow">→</span><span class="op">GUARD</span> enforces<span class="arrow">→</span><span class="op">BROWSER</span> shows you
+<nav class="nav" aria-label="Main">
+  <div class="nav-inner">
+    <a class="wordmark" href="#top"><span class="mark">H</span>herdr&nbsp;suite</a>
+    <div class="nav-links">
+      <a href="#plugins">Plugins</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/StructuPath/herdr-browser/wiki">Docs</a>
+      <a href="/llms.txt">llms.txt</a>
     </div>
-    <div class="facts">
+    <div class="nav-spacer"></div>
+    <a class="nav-gh" href="https://github.com/StructuPath" aria-label="StructuPath on GitHub">
+      <svg width="19" height="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+    </a>
+    <a class="btn" href="#install">Install</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="kicker rise d1">StructuPath · open source · for herdr</div>
+    <h1 class="rise d2">Run your agent panes<br><span class="dim">like a crew, not a pile of tabs.</span></h1>
+    <p class="sub rise d3">Four plugins for <a href="https://herdr.dev">Herdr</a>, the terminal
+    agent multiplexer. <b>Watch</b> what your agents browse, <b>police</b> what they type,
+    <b>parallelize</b> them safely, and <b>orchestrate</b> them as a team — without leaving
+    your terminal.</p>
+    <div class="hero-cta rise d4">
+      <a class="btn" href="#install">Install the suite</a>
+      <a class="btn ghost" href="https://github.com/StructuPath/herdr-browser/wiki">Read the docs</a>
+    </div>
+    <div class="pipeline rise d5" role="list" aria-label="How the plugins compose">
+      <a class="stage" role="listitem" href="#conductor"><span class="op"><span class="num">01</span> CONDUCTOR</span><span class="verb">decides</span></a>
+      <a class="stage" role="listitem" href="#swarm"><span class="op"><span class="num">02</span> SWARM</span><span class="verb">isolates</span></a>
+      <a class="stage" role="listitem" href="#guard"><span class="op"><span class="num">03</span> GUARD</span><span class="verb">enforces</span></a>
+      <a class="stage" role="listitem" href="#browser"><span class="op"><span class="num">04</span> BROWSER</span><span class="verb">shows you</span></a>
+    </div>
+    <div class="facts rise d5">
       <span class="fact">verified on herdr 0.7.5</span>
       <span class="fact">marketplace-listed</span>
       <span class="fact">MIT licensed</span>
@@ -107,56 +251,56 @@
 
 <section id="plugins">
   <div class="wrap">
-    <h2>The four plugins</h2>
-    <p class="lede">Each does one job well. Use any alone; they compose into a full
-    orchestration substrate.</p>
+    <div class="sec-head"><span class="sec-num">§1</span><h2>The four plugins</h2></div>
+    <p class="lede">Each does one job well. Use any alone; together they form a full
+    orchestration substrate for coding agents.</p>
     <div class="grid">
-      <div class="card">
-        <div class="emoji">🌐</div>
+      <article class="card reveal" id="browser">
+        <div class="card-top"><span class="emoji">🌐</span><span class="item-no">B-01</span></div>
         <h3>Browser <span class="id">structupath.browser</span></h3>
         <p>A live, drivable web browser in a Herdr pane. When your coding agent drives
         Chrome, you see the same session — click, type, scroll, record to WebM. One
         isolated session per workspace.</p>
         <div class="links"><a href="https://github.com/StructuPath/herdr-browser">repo</a>
         <a href="https://github.com/StructuPath/herdr-browser/wiki/Browser">guide</a></div>
-      </div>
-      <div class="card">
-        <div class="emoji">🛡️</div>
+      </article>
+      <article class="card reveal" id="guard">
+        <div class="card-top"><span class="emoji">🛡️</span><span class="item-no">G-01</span></div>
         <h3>Guard <span class="id">structupath.guard</span></h3>
         <p>Cross-agent command policy. Watches every pane, audits risky commands, alerts
         you, and best-effort interrupts dangerous shell input — with an honest contract
         about what it can and can't see.</p>
         <div class="links"><a href="https://github.com/StructuPath/herdr-guard">repo</a>
         <a href="https://github.com/StructuPath/herdr-browser/wiki/Guard">guide</a></div>
-      </div>
-      <div class="card">
-        <div class="emoji">🐝</div>
+      </article>
+      <article class="card reveal" id="swarm">
+        <div class="card-top"><span class="emoji">🐝</span><span class="item-no">S-01</span></div>
         <h3>Swarm <span class="id">structupath.swarm</span></h3>
         <p>Try a task N ways in parallel, keep the best. Every agent gets its own git
         worktree and branch; agents commit locally and never push. You are the merge
         gate — review-first harvest, layered safe cleanup.</p>
         <div class="links"><a href="https://github.com/StructuPath/herdr-swarm">repo</a>
         <a href="https://github.com/StructuPath/herdr-browser/wiki/Swarm">guide</a></div>
-      </div>
-      <div class="card">
-        <div class="emoji">🎩</div>
+      </article>
+      <article class="card reveal" id="conductor">
+        <div class="card-top"><span class="emoji">🎩</span><span class="item-no">C-01</span></div>
         <h3>Conductor <span class="id">structupath.conductor</span></h3>
         <p>Run a role-differentiated team — builder, validator, reviewer — each a real,
         attachable pane, mixed-vendor, driven by an orchestrating agent. Workers survive
         the orchestrator; completion is a file sentinel, never agent state.</p>
         <div class="links"><a href="https://github.com/StructuPath/herdr-conductor">repo</a>
         <a href="https://github.com/StructuPath/herdr-browser/wiki/Conductor">guide</a></div>
-      </div>
+      </article>
     </div>
   </div>
 </section>
 
 <section id="install">
   <div class="wrap">
-    <h2>Install</h2>
+    <div class="sec-head"><span class="sec-num">§2</span><h2>Install</h2></div>
     <p class="lede">Straight from the Herdr marketplace — all four carry the
-    <code style="font-family:var(--mono)">herdr-plugin</code> topic.</p>
-<pre><span class="c"># pick what you need — or take the whole suite</span>
+    <code>herdr-plugin</code> topic.</p>
+<pre class="reveal"><span class="c"># pick what you need — or take the whole suite</span>
 herdr plugin install <span class="p">StructuPath/herdr-browser</span>
 herdr plugin install <span class="p">StructuPath/herdr-guard</span>
 herdr plugin install <span class="p">StructuPath/herdr-swarm</span>
@@ -170,15 +314,55 @@ herdr plugin action list</pre>
 
 <footer>
   <div class="wrap">
-    <div class="row">
-      <a href="https://github.com/StructuPath/herdr-browser/wiki">docs wiki</a>
-      <a href="https://github.com/StructuPath">github.com/StructuPath</a>
-      <a href="https://structupath.ai">structupath.ai</a>
-      <a href="https://herdr.dev">herdr.dev</a>
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="wordmark" href="#top"><span class="mark">H</span>herdr&nbsp;suite</a>
+        <p>Four open-source plugins that turn Herdr's agent panes into a working crew.
+        Built by StructuPath in Denver, Colorado.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Plugins</h4>
+        <ul>
+          <li><a href="https://github.com/StructuPath/herdr-browser">herdr-browser</a></li>
+          <li><a href="https://github.com/StructuPath/herdr-guard">herdr-guard</a></li>
+          <li><a href="https://github.com/StructuPath/herdr-swarm">herdr-swarm</a></li>
+          <li><a href="https://github.com/StructuPath/herdr-conductor">herdr-conductor</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Docs</h4>
+        <ul>
+          <li><a href="https://github.com/StructuPath/herdr-browser/wiki">Overview</a></li>
+          <li><a href="https://github.com/StructuPath/herdr-browser/wiki/Browser">Browser guide</a></li>
+          <li><a href="https://github.com/StructuPath/herdr-browser/wiki/Guard">Guard guide</a></li>
+          <li><a href="https://github.com/StructuPath/herdr-browser/wiki/Swarm">Swarm guide</a></li>
+          <li><a href="https://github.com/StructuPath/herdr-browser/wiki/Conductor">Conductor guide</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Ecosystem</h4>
+        <ul>
+          <li><a class="ext" href="https://herdr.dev">herdr.dev</a></li>
+          <li><a class="ext" href="https://github.com/topics/herdr-plugin">Herdr marketplace</a></li>
+          <li><a class="ext" href="https://structupath.ai">structupath.ai</a></li>
+          <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
+        </ul>
+      </div>
     </div>
-    <div>MIT © StructuPath. Not affiliated with the Herdr project.</div>
+    <div class="foot-bottom">
+      <span>MIT © StructuPath · Not affiliated with the Herdr project.</span>
+      <span>Fabricated in Denver, CO</span>
+    </div>
   </div>
 </footer>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
 
 </body>
 </html>

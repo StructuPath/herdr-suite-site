@@ -1,0 +1,25 @@
+# StructuPath Herdr Suite
+
+> Four open-source MIT-licensed plugins for Herdr (https://herdr.dev), the terminal agent multiplexer. Verified on herdr 0.7.5, macOS/Linux. Composition: Conductor decides → Swarm isolates → Guard enforces → Browser shows you.
+
+Install any plugin: `herdr plugin install StructuPath/<repo-name>`
+
+## Plugins
+
+- [herdr-browser](https://github.com/StructuPath/herdr-browser) (`structupath.browser`): live, drivable web browser in a Herdr pane; shares the coding agent's browser session, one isolated session per workspace, WebM recording.
+- [herdr-guard](https://github.com/StructuPath/herdr-guard) (`structupath.guard`): cross-agent command policy — audits risky commands, alerts, best-effort interrupts dangerous shell input. Text policy layer, not intent analysis.
+- [herdr-swarm](https://github.com/StructuPath/herdr-swarm) (`structupath.swarm`): N parallel agents on one repo, each in its own git worktree/branch; agents never push; review-first harvest merges winners.
+- [herdr-conductor](https://github.com/StructuPath/herdr-conductor) (`structupath.conductor`): role-differentiated agent team (builder/validator/reviewer) as attachable panes; completion via file sentinel, workers survive the orchestrator.
+
+## Docs
+
+- [Suite wiki (practical guides for all four)](https://github.com/StructuPath/herdr-browser/wiki)
+- [Browser guide](https://github.com/StructuPath/herdr-browser/wiki/Browser)
+- [Guard guide](https://github.com/StructuPath/herdr-browser/wiki/Guard)
+- [Swarm guide](https://github.com/StructuPath/herdr-browser/wiki/Swarm)
+- [Conductor guide](https://github.com/StructuPath/herdr-browser/wiki/Conductor)
+
+## Ecosystem
+
+- [Herdr](https://herdr.dev): the terminal agent multiplexer these plugins extend (not affiliated).
+- [StructuPath](https://structupath.ai): the maker — AI and steel-industry software, Denver, CO.

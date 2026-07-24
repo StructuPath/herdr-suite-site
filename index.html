@@ -52,7 +52,8 @@
   h2 { font-size: 24px; margin-bottom: 8px; letter-spacing: -.01em; }
   .lede { color: var(--muted); margin-bottom: 32px; max-width: 640px; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  @media (max-width: 660px) { .grid { grid-template-columns: 1fr; } }
   .card {
     background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
     padding: 24px; display: flex; flex-direction: column; gap: 12px;

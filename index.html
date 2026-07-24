@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StructuPath Herdr Suite — four plugins that run your agent panes</title>
+<meta name="description" content="Browser, Guard, Swarm, and Conductor — four open-source plugins for the Herdr terminal agent multiplexer. Watch, police, parallelize, and orchestrate your coding agents.">
+<meta property="og:title" content="StructuPath Herdr Suite">
+<meta property="og:description" content="Four open-source plugins for Herdr: Browser, Guard, Swarm, Conductor.">
+<meta property="og:url" content="https://herdr.structupath.ai/">
+<style>
+  :root {
+    --bg: #0c0f14;
+    --panel: #141922;
+    --panel-2: #1a212c;
+    --border: #253044;
+    --text: #dbe4f0;
+    --muted: #8496ad;
+    --accent: #e8833a;      /* structural-steel orange */
+    --accent-2: #4fb6a2;
+    --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 16px/1.65 -apple-system, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 72px 0 48px; border-bottom: 1px solid var(--border); }
+  .kicker {
+    font-family: var(--mono); font-size: 13px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+  }
+  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.15; letter-spacing: -.02em; }
+  h1 .dim { color: var(--muted); font-weight: 400; }
+  .sub { margin-top: 18px; max-width: 620px; color: var(--muted); font-size: 18px; }
+  .sub b { color: var(--text); font-weight: 600; }
+
+  .pipeline {
+    margin-top: 34px; padding: 18px 22px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-family: var(--mono); font-size: 14px; overflow-x: auto; white-space: nowrap;
+  }
+  .pipeline .op { color: var(--accent); font-weight: 700; }
+  .pipeline .arrow { color: var(--muted); padding: 0 10px; }
+
+  section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+  h2 { font-size: 24px; margin-bottom: 8px; letter-spacing: -.01em; }
+  .lede { color: var(--muted); margin-bottom: 32px; max-width: 640px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card .emoji { font-size: 26px; }
+  .card h3 { font-size: 18px; }
+  .card h3 .id { display: block; font-family: var(--mono); font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 4px; }
+  .card p { color: var(--muted); font-size: 15px; flex: 1; }
+  .card .links { font-family: var(--mono); font-size: 13px; display: flex; gap: 16px; }
+
+  pre {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size: 14px;
+    line-height: 1.8; color: var(--text);
+  }
+  pre .c { color: var(--muted); }
+  pre .p { color: var(--accent-2); }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .fact {
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px;
+  }
+
+  footer { padding: 40px 0 64px; color: var(--muted); font-size: 14px; }
+  footer .row { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 14px; font-family: var(--mono); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">StructuPath · open source</div>
+    <h1>The Herdr Suite<br><span class="dim">four plugins that run your agent panes</span></h1>
+    <p class="sub">Plugins for <a href="https://herdr.dev">Herdr</a>, the terminal agent
+    multiplexer. <b>Watch</b> what your agents browse, <b>police</b> what they type,
+    <b>parallelize</b> them safely, and <b>orchestrate</b> them as a team — without
+    leaving your terminal.</p>
+    <div class="pipeline">
+      <span class="op">CONDUCTOR</span> decides<span class="arrow">→</span><span class="op">SWARM</span> isolates<span class="arrow">→</span><span class="op">GUARD</span> enforces<span class="arrow">→</span><span class="op">BROWSER</span> shows you
+    </div>
+    <div class="facts">
+      <span class="fact">verified on herdr 0.7.5</span>
+      <span class="fact">marketplace-listed</span>
+      <span class="fact">MIT licensed</span>
+      <span class="fact">macOS / Linux</span>
+    </div>
+  </div>
+</header>
+
+<section id="plugins">
+  <div class="wrap">
+    <h2>The four plugins</h2>
+    <p class="lede">Each does one job well. Use any alone; they compose into a full
+    orchestration substrate.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="emoji">🌐</div>
+        <h3>Browser <span class="id">structupath.browser</span></h3>
+        <p>A live, drivable web browser in a Herdr pane. When your coding agent drives
+        Chrome, you see the same session — click, type, scroll, record to WebM. One
+        isolated session per workspace.</p>
+        <div class="links"><a href="https://github.com/StructuPath/herdr-browser">repo</a>
+        <a href="https://github.com/StructuPath/herdr-browser/wiki/Browser">guide</a></div>
+      </div>
+      <div class="card">
+        <div class="emoji">🛡️</div>
+        <h3>Guard <span class="id">structupath.guard</span></h3>
+        <p>Cross-agent command policy. Watches every pane, audits risky commands, alerts
+        you, and best-effort interrupts dangerous shell input — with an honest contract
+        about what it can and can't see.</p>
+        <div class="links"><a href="https://github.com/StructuPath/herdr-guard">repo</a>
+        <a href="https://github.com/StructuPath/herdr-browser/wiki/Guard">guide</a></div>
+      </div>
+      <div class="card">
+        <div class="emoji">🐝</div>
+        <h3>Swarm <span class="id">structupath.swarm</span></h3>
+        <p>Try a task N ways in parallel, keep the best. Every agent gets its own git
+        worktree and branch; agents commit locally and never push. You are the merge
+        gate — review-first harvest, layered safe cleanup.</p>
+        <div class="links"><a href="https://github.com/StructuPath/herdr-swarm">repo</a>
+        <a href="https://github.com/StructuPath/herdr-browser/wiki/Swarm">guide</a></div>
+      </div>
+      <div class="card">
+        <div class="emoji">🎩</div>
+        <h3>Conductor <span class="id">structupath.conductor</span></h3>
+        <p>Run a role-differentiated team — builder, validator, reviewer — each a real,
+        attachable pane, mixed-vendor, driven by an orchestrating agent. Workers survive
+        the orchestrator; completion is a file sentinel, never agent state.</p>
+        <div class="links"><a href="https://github.com/StructuPath/herdr-conductor">repo</a>
+        <a href="https://github.com/StructuPath/herdr-browser/wiki/Conductor">guide</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install</h2>
+    <p class="lede">Straight from the Herdr marketplace — all four carry the
+    <code style="font-family:var(--mono)">herdr-plugin</code> topic.</p>
+<pre><span class="c"># pick what you need — or take the whole suite</span>
+herdr plugin install <span class="p">StructuPath/herdr-browser</span>
+herdr plugin install <span class="p">StructuPath/herdr-guard</span>
+herdr plugin install <span class="p">StructuPath/herdr-swarm</span>
+herdr plugin install <span class="p">StructuPath/herdr-conductor</span>
+
+<span class="c"># health check</span>
+herdr plugin list
+herdr plugin action list</pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <a href="https://github.com/StructuPath/herdr-browser/wiki">docs wiki</a>
+      <a href="https://github.com/StructuPath">github.com/StructuPath</a>
+      <a href="https://structupath.ai">structupath.ai</a>
+      <a href="https://herdr.dev">herdr.dev</a>
+    </div>
+    <div>MIT © StructuPath. Not affiliated with the Herdr project.</div>
+  </div>
+</footer>
+
+</body>
+</html>

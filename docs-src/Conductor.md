@@ -29,29 +29,64 @@ Conductor currently owns its worktree lifecycle and harvest implementation. It d
 
 > **Supervised/manual today.** This example requires a human or trusted orchestrating agent to inspect reports and diffs, approve reconciliation, and handle conflicts. An autonomous supervisor/approval runtime, cross-plugin delegation to Swarm, and cryptographic worker/report attestation are **not implemented prerequisites** in the pinned runtime. Do not describe this flow as unattended or as a security boundary.
 
-1. Start from a clean Git repository and add a reviewed `.herdr-conductor.json` defining a `builder-engine` writing role (using the shipped `builder-engine` template) and at least one review role.
-2. Assemble the team and inspect its state:
+### 1. Declare the team
 
-   ```bash
-   herdr plugin action invoke assemble --plugin structupath.conductor
-   herdr plugin action invoke status --plugin structupath.conductor
-   herdr plugin action invoke board --plugin structupath.conductor
-   ```
+Start from a clean Git repository and add a reviewed `.herdr-conductor.json` defining a `builder-engine` writing role (using the shipped `builder-engine` template) and at least one review role.
 
-3. In a trusted orchestrator pane, source the transport, render role prompts, dispatch work, and wait for freshness-checked `<!-- REPORT-COMPLETE -->` sentinels:
+### 2. Assemble the team
 
-   ```bash
-   . /path/to/herdr-conductor/scripts/conductor-lib.sh
-   conductor_dispatch builder-engine "$(CONDUCTOR_MISSION='Implement the reviewed task.' conductor_render_role builder-engine)"
-   conductor_await builder-engine && conductor_collect builder-engine
-   ```
+Invoke the actions from the target repository's Herdr workspace, then inspect the team:
 
-4. Review each report, role branch, and test result. Only then invoke reconciliation:
+```bash
+herdr plugin action invoke assemble --plugin structupath.conductor
+herdr plugin action invoke status --plugin structupath.conductor
+herdr plugin action invoke board --plugin structupath.conductor
+```
 
-   ```bash
-   herdr plugin action invoke harvest --plugin structupath.conductor
-   herdr plugin action invoke stand-down --plugin structupath.conductor
-   ```
+### 3. Pin, verify, and dispatch the assembled run
+
+Run this entire block in one trusted orchestrator shell. The plugin action assembled the team in another process, so source `scripts/lib.sh` and pin its active run before calling the run-scoped transport functions. The block prints the selected run directory and roster, then requires the human or trusted orchestrator to confirm that exact run ID before dispatch can proceed.
+
+```bash
+(
+  . /path/to/herdr-conductor/scripts/lib.sh
+
+  if ! conductor_pin_active_run >/dev/null; then
+    printf '%s\n' 'No assembled Conductor run found.' >&2
+    exit 1
+  fi
+
+  selected_run="$CONDUCTOR_STATE_DIR/run-$CONDUCTOR_RUN_ID"
+  printf 'Selected Conductor run: %s\n' "$selected_run"
+  conductor_status
+
+  printf 'Type %s to verify this run before dispatch: ' "$CONDUCTOR_RUN_ID"
+  verified_run=
+  read -r verified_run
+  case "$verified_run" in
+    "$CONDUCTOR_RUN_ID")
+      task_file="$(
+        CONDUCTOR_MISSION='Implement the reviewed task.' \
+          conductor_render_role builder-engine
+      )"
+      conductor_dispatch builder-engine "$task_file"
+      conductor_await builder-engine && conductor_collect builder-engine
+      ;;
+    *)
+      printf '%s\n' 'Dispatch cancelled; inspect the selected run and try again.'
+      ;;
+  esac
+)
+```
+
+### 4. Review and reconcile
+
+Review each report, role branch, and test result. Only then invoke reconciliation:
+
+```bash
+herdr plugin action invoke harvest --plugin structupath.conductor
+herdr plugin action invoke stand-down --plugin structupath.conductor
+```
 
 Use the plugin README for the exact role-template/config schema and transport API before running this flow.
 

@@ -116,27 +116,51 @@
 <blockquote>
 <p><strong>Supervised/manual today.</strong> This example requires a human or trusted orchestrating agent to inspect reports and diffs, approve reconciliation, and handle conflicts. An autonomous supervisor/approval runtime, cross-plugin delegation to Swarm, and cryptographic worker/report attestation are <strong>not implemented prerequisites</strong> in the pinned runtime. Do not describe this flow as unattended or as a security boundary.</p>
 </blockquote>
-<ol>
-<li>Start from a clean Git repository and add a reviewed <code>.herdr-conductor.json</code> defining a <code>builder-engine</code> writing role (using the shipped <code>builder-engine</code> template) and at least one review role.</li>
-<li>Assemble the team and inspect its state:</li>
-</ol>
-<p><code>bash
-   herdr plugin action invoke assemble --plugin structupath.conductor
-   herdr plugin action invoke status --plugin structupath.conductor
-   herdr plugin action invoke board --plugin structupath.conductor</code></p>
-<ol>
-<li>In a trusted orchestrator pane, source the transport, render role prompts, dispatch work, and wait for freshness-checked <code>&lt;!-- REPORT-COMPLETE --&gt;</code> sentinels:</li>
-</ol>
-<p><code>bash
-   . /path/to/herdr-conductor/scripts/conductor-lib.sh
-   conductor_dispatch builder-engine "$(CONDUCTOR_MISSION='Implement the reviewed task.' conductor_render_role builder-engine)"
-   conductor_await builder-engine &amp;&amp; conductor_collect builder-engine</code></p>
-<ol>
-<li>Review each report, role branch, and test result. Only then invoke reconciliation:</li>
-</ol>
-<p><code>bash
-   herdr plugin action invoke harvest --plugin structupath.conductor
-   herdr plugin action invoke stand-down --plugin structupath.conductor</code></p>
+<h3>1. Declare the team</h3>
+<p>Start from a clean Git repository and add a reviewed <code>.herdr-conductor.json</code> defining a <code>builder-engine</code> writing role (using the shipped <code>builder-engine</code> template) and at least one review role.</p>
+<h3>2. Assemble the team</h3>
+<p>Invoke the actions from the target repository's Herdr workspace, then inspect the team:</p>
+<pre><code class="language-bash">herdr plugin action invoke assemble --plugin structupath.conductor
+herdr plugin action invoke status --plugin structupath.conductor
+herdr plugin action invoke board --plugin structupath.conductor
+</code></pre>
+<h3>3. Pin, verify, and dispatch the assembled run</h3>
+<p>Run this entire block in one trusted orchestrator shell. The plugin action assembled the team in another process, so source <code>scripts/lib.sh</code> and pin its active run before calling the run-scoped transport functions. The block prints the selected run directory and roster, then requires the human or trusted orchestrator to confirm that exact run ID before dispatch can proceed.</p>
+<pre><code class="language-bash">(
+  . /path/to/herdr-conductor/scripts/lib.sh
+
+  if ! conductor_pin_active_run &gt;/dev/null; then
+    printf '%s\n' 'No assembled Conductor run found.' &gt;&amp;2
+    exit 1
+  fi
+
+  selected_run=&quot;$CONDUCTOR_STATE_DIR/run-$CONDUCTOR_RUN_ID&quot;
+  printf 'Selected Conductor run: %s\n' &quot;$selected_run&quot;
+  conductor_status
+
+  printf 'Type %s to verify this run before dispatch: ' &quot;$CONDUCTOR_RUN_ID&quot;
+  verified_run=
+  read -r verified_run
+  case &quot;$verified_run&quot; in
+    &quot;$CONDUCTOR_RUN_ID&quot;)
+      task_file=&quot;$(
+        CONDUCTOR_MISSION='Implement the reviewed task.' \
+          conductor_render_role builder-engine
+      )&quot;
+      conductor_dispatch builder-engine &quot;$task_file&quot;
+      conductor_await builder-engine &amp;&amp; conductor_collect builder-engine
+      ;;
+    *)
+      printf '%s\n' 'Dispatch cancelled; inspect the selected run and try again.'
+      ;;
+  esac
+)
+</code></pre>
+<h3>4. Review and reconcile</h3>
+<p>Review each report, role branch, and test result. Only then invoke reconciliation:</p>
+<pre><code class="language-bash">herdr plugin action invoke harvest --plugin structupath.conductor
+herdr plugin action invoke stand-down --plugin structupath.conductor
+</code></pre>
 <p>Use the plugin README for the exact role-template/config schema and transport API before running this flow.</p>
 <h2>Trust and completion model</h2>
 <p>Write-capable workers and the orchestrator are trusted same-user principals. Their worktrees isolate changes for review but do not limit filesystem/process access. <code>read-only</code> launch flags or agent-native sandbox controls provide the intended reviewer restriction; Guard drops are an audit trail, not a sandbox.</p>

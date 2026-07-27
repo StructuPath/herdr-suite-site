@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import json
 import pathlib
 import re
@@ -168,6 +169,48 @@ def check_generated_docs() -> list[str]:
     return [f"generated docs check failed: {detail}"]
 
 
+def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
+    """Require every quickstart shell example to render as a fenced code block."""
+    if rendered_html is None:
+        page = SITE / "docs" / "conductor" / "index.html"
+        try:
+            rendered_html = page.read_text(encoding="utf-8")
+        except OSError as error:
+            return [f"unable to read generated Conductor guide: {error}"]
+
+    start = "<h2>Minimal supervised quickstart</h2>"
+    end = "<h2>Trust and completion model</h2>"
+    if start not in rendered_html or end not in rendered_html:
+        return ["generated Conductor guide is missing the quickstart section"]
+    quickstart = rendered_html.split(start, 1)[1].split(end, 1)[0]
+    bash_blocks = [
+        html.unescape(block)
+        for block in re.findall(
+            r'<pre><code class="language-bash">(.*?)</code></pre>',
+            quickstart,
+            re.DOTALL,
+        )
+    ]
+    expected_blocks = {
+        "assemble action": ("herdr plugin action invoke assemble",),
+        "pinned run dispatch": (
+            ". /path/to/herdr-conductor/scripts/lib.sh",
+            "conductor_pin_active_run",
+            "Selected Conductor run:",
+            "read -r verified_run",
+            "conductor_dispatch builder-engine",
+        ),
+        "harvest action": ("herdr plugin action invoke harvest",),
+    }
+    return [
+        f"Conductor quickstart {label} is not a rendered bash code block"
+        for label, snippets in expected_blocks.items()
+        if not any(
+            all(snippet in block for snippet in snippets) for block in bash_blocks
+        )
+    ]
+
+
 def local_target(url: str) -> pathlib.Path | None:
     parsed = urlsplit(url)
     if parsed.scheme or parsed.netloc or not parsed.path.startswith("/"):
@@ -254,8 +297,19 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     forbidden_sample = "Guard enforces every agent command."
     if not any(pattern.search(forbidden_sample) for pattern in FORBIDDEN_CLAIMS.values()):
         failures.append("self-test did not detect a forbidden claim")
+    conductor_html = (SITE / "docs" / "conductor" / "index.html").read_text(
+        encoding="utf-8"
+    )
+    broken_fences = conductor_html.replace(
+        '<pre><code class="language-bash">', '<p><code class="language-bash">'
+    )
+    if not check_conductor_quickstart(broken_fences):
+        failures.append("self-test did not detect broken quickstart code fences")
     if not failures:
-        print("OK: self-test detected action, version, and forbidden-claim mutations")
+        print(
+            "OK: self-test detected action, version, forbidden-claim, "
+            "and quickstart-rendering mutations"
+        )
     return failures
 
 
@@ -279,6 +333,7 @@ def main() -> int:
     errors.extend(check_data_and_docs(plugins))
     errors.extend(check_forbidden_claims())
     errors.extend(check_generated_docs())
+    errors.extend(check_conductor_quickstart())
     errors.extend(check_local_links())
     if args.sibling_root:
         errors.extend(check_sibling_manifests(args.sibling_root.resolve(), plugins))

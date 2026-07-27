@@ -1,25 +1,43 @@
 # StructuPath Herdr Suite
 
-> Four open-source MIT-licensed plugins for Herdr (https://herdr.dev), the terminal agent multiplexer. Verified on herdr 0.7.5, macOS/Linux. Composition: Conductor decides → Swarm isolates → Guard enforces → Browser shows you.
+> Canonical suite documentation for four open-source MIT-licensed Herdr plugins. Compatibility and testing evidence is plugin-specific and pinned in https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json.
 
-Install any plugin: `herdr plugin install StructuPath/<repo-name>`
+Canonical docs: https://herdr.structupath.ai/docs/
+Source Markdown: https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src
 
-## Plugins
+## Trust and composition boundaries
 
-- [herdr-browser](https://github.com/StructuPath/herdr-browser) (`structupath.browser`): live, drivable web browser in a Herdr pane; shares the coding agent's browser session, one isolated session per workspace, WebM recording.
-- [herdr-guard](https://github.com/StructuPath/herdr-guard) (`structupath.guard`): cross-agent command policy — audits risky commands, alerts, best-effort interrupts dangerous shell input. Text policy layer, not intent analysis.
-- [herdr-swarm](https://github.com/StructuPath/herdr-swarm) (`structupath.swarm`): N parallel agents on one repo, each in its own git worktree/branch; agents never push; review-first harvest merges winners.
-- [herdr-conductor](https://github.com/StructuPath/herdr-conductor) (`structupath.conductor`): role-differentiated agent team (builder/validator/reviewer) as attachable panes; completion via file sentinel, workers survive the orchestrator.
+- Guard is advisory/best-effort for agent TUIs. It sees rendered terminal text, not authoritative tool intent; native harness or sandbox controls remain authoritative.
+- Swarm independently creates and harvests Swarm-owned worktrees for interchangeable fan-out agents.
+- Conductor currently creates and reconciles Conductor-owned worktrees itself. It does not delegate worktree creation or harvest to Swarm.
+- Write-capable agents and plugins are trusted same-user principals. Worktrees isolate changes for review, not filesystem or process access.
 
-## Docs
+## Plugins and pinned compatibility
 
-- [Suite wiki (practical guides for all four)](https://github.com/StructuPath/herdr-browser/wiki)
-- [Browser guide](https://github.com/StructuPath/herdr-browser/wiki/Browser)
-- [Guard guide](https://github.com/StructuPath/herdr-browser/wiki/Guard)
-- [Swarm guide](https://github.com/StructuPath/herdr-browser/wiki/Swarm)
-- [Conductor guide](https://github.com/StructuPath/herdr-browser/wiki/Conductor)
+- Browser (`structupath.browser`) release 0.5.0: Herdr >=0.7.0; README evidence records testing with 0.7.4. Live/drivable workspace browser session, separate interactive browse, and WebM recording. https://herdr.structupath.ai/docs/browser/
+- Guard (`structupath.guard`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. Advisory command policy: audit, alert, and best-effort interrupt. https://herdr.structupath.ai/docs/guard/
+- Swarm (`structupath.swarm`) release 0.1.0: Herdr >=0.7.4; evidence records 0.7.4 and 0.7.5 paths. Worktree-per-agent fan-out and review-first harvest. https://herdr.structupath.ai/docs/swarm/
+- Conductor (`structupath.conductor`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. Role-differentiated agent team as visible panes with file-sentinel completion. https://herdr.structupath.ai/docs/conductor/
 
-## Ecosystem
+## Conductor actions
 
-- [Herdr](https://herdr.dev): the terminal agent multiplexer these plugins extend (not affiliated).
-- [StructuPath](https://structupath.ai): the maker — AI and steel-industry software, Denver, CO.
+Conductor exposes exactly five actions:
+
+1. `structupath.conductor.assemble` — stand up the declared team and open the board.
+2. `structupath.conductor.board` — open the live worker board.
+3. `structupath.conductor.status` — print one-shot run status.
+4. `structupath.conductor.harvest` — reconcile writer branches in a Conductor integration worktree.
+5. `structupath.conductor.stand-down` — close verified Conductor-owned worker panes while keeping Git work.
+
+The supervised quickstart is at https://herdr.structupath.ai/docs/conductor/ and explicitly identifies autonomous supervisor approval, Swarm delegation, and report attestation as not implemented in the pinned runtime.
+
+## Install
+
+Commands documented by the plugin repositories:
+
+`herdr plugin install StructuPath/herdr-browser`
+`herdr plugin install StructuPath/herdr-guard`
+`herdr plugin install StructuPath/herdr-swarm`
+`herdr plugin install StructuPath/herdr-conductor`
+
+These commands are not a blanket marketplace-availability claim. Inspect each manifest and repository before installing same-user plugin code.

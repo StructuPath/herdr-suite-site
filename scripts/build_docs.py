@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""Generate /docs pages from the herdr-browser wiki (the canonical docs source).
+"""Generate committed /docs HTML from this repository's canonical docs-src Markdown.
 
-Usage:  python3 scripts/build_docs.py <path-to-cloned-wiki>
-Local:  uv run --with markdown scripts/build_docs.py ../herdr-browser.wiki
-CI:     pip install markdown && python3 scripts/build_docs.py wiki
+Usage:
+    python3 scripts/build_docs.py
+    python3 scripts/build_docs.py --check
 
-Wiki page -> site page mapping is PAGES below. _Sidebar.md and _Footer.md are ignored.
+The check mode fails when committed HTML differs from a clean regeneration.
 """
+import pathlib
 import re
 import sys
-import pathlib
 
 import markdown
 
 SITE = pathlib.Path(__file__).resolve().parent.parent
+DOCS_SRC = SITE / "docs-src"
 
-# (wiki file stem, slug, nav title, site url)
+# (source file stem, slug, nav title, site URL)
 PAGES = [
     ("Home",      "index",     "Overview",  "/docs/"),
     ("Browser",   "browser",   "Browser",   "/docs/browser/"),
@@ -24,7 +25,7 @@ PAGES = [
     ("Conductor", "conductor", "Conductor", "/docs/conductor/"),
 ]
 
-# wiki-internal links -> site urls
+# docs-src internal links -> published site URLs
 LINK_MAP = {stem: url for stem, _, _, url in PAGES}
 
 TEMPLATE = """<!doctype html>
@@ -71,7 +72,7 @@ TEMPLATE = """<!doctype html>
     </ul>
     <h4>Links</h4>
     <ul>
-      <li><a class="ext" href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a></li>
+      <li><a class="ext" href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">Docs source</a></li>
       <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
       <li><a href="/llms.txt">llms.txt</a></li>
     </ul>
@@ -86,8 +87,8 @@ TEMPLATE = """<!doctype html>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
-    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Canonical source:
+    <a href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">docs-src</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>
@@ -99,7 +100,7 @@ TEMPLATE = """<!doctype html>
 
 def convert(md_text: str) -> str:
     html = markdown.markdown(md_text, extensions=["tables", "fenced_code"])
-    # wiki-internal links -> site urls
+    # docs-src internal links -> site URLs
     for stem, url in LINK_MAP.items():
         html = html.replace(f'href="{stem}"', f'href="{url}"')
     # horizontal-scroll wrapper for tables
@@ -128,17 +129,15 @@ def pager_html(i: int) -> str:
     return f'    <nav class="pager" aria-label="Docs pages">{left}{right}</nav>'
 
 
-def main() -> int:
-    if len(sys.argv) != 2:
-        print(__doc__)
-        return 2
-    wiki = pathlib.Path(sys.argv[1])
-    missing = [stem for stem, *_ in PAGES if not (wiki / f"{stem}.md").exists()]
+def rendered_pages() -> list[tuple[pathlib.Path, str]]:
+    """Return output paths and deterministic rendered HTML for every docs page."""
+    missing = [stem for stem, *_ in PAGES if not (DOCS_SRC / f"{stem}.md").exists()]
     if missing:
-        print(f"ERROR: wiki pages missing: {missing} in {wiki} — refusing to build partial docs.")
-        return 1
-    for i, (stem, slug, title, url) in enumerate(PAGES):
-        md_text = (wiki / f"{stem}.md").read_text(encoding="utf-8")
+        raise FileNotFoundError(f"docs source pages missing: {missing} in {DOCS_SRC}")
+
+    pages = []
+    for i, (stem, slug, title, _url) in enumerate(PAGES):
+        md_text = (DOCS_SRC / f"{stem}.md").read_text(encoding="utf-8")
         actives = {f"a_{s}": (' class="active"' if s == slug else "") for _, s, _, _ in PAGES}
         html = TEMPLATE.format(
             tab_title=("Overview" if slug == "index" else f"{title} guide"),
@@ -149,9 +148,38 @@ def main() -> int:
             **actives,
         )
         out = SITE / "docs" / ("index.html" if slug == "index" else f"{slug}/index.html")
+        pages.append((out, html))
+    return pages
+
+
+def main() -> int:
+    if sys.argv[1:] not in ([], ["--check"]):
+        print(__doc__)
+        return 2
+
+    check = sys.argv[1:] == ["--check"]
+    stale = []
+    try:
+        pages = rendered_pages()
+    except FileNotFoundError as error:
+        print(f"ERROR: {error}")
+        return 1
+
+    for out, html in pages:
+        relative = out.relative_to(SITE)
+        if check:
+            if not out.exists() or out.read_text(encoding="utf-8") != html:
+                stale.append(str(relative))
+            continue
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(html, encoding="utf-8")
-        print(f"wrote {out.relative_to(SITE)}")
+        print(f"wrote {relative}")
+
+    if stale:
+        print(f"ERROR: generated docs are stale: {', '.join(stale)}")
+        return 1
+    if check:
+        print(f"OK: {len(pages)} generated docs pages are current")
     return 0
 
 

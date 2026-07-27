@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "evidence_date": "2026-07-27",
+  "plugins": [
+    {
+      "slug": "browser",
+      "name": "Browser",
+      "id": "structupath.browser",
+      "repository": "https://github.com/StructuPath/herdr-browser",
+      "commit": "72b986e3a0233b938b0046806bc2aaeefb56e12e",
+      "version": "0.5.0",
+      "min_herdr_version": "0.7.0",
+      "tested_herdr_versions": ["0.7.4"],
+      "manifest_sha256": "037a4a5a6411463240e022dce40c2ec3a3024e56e67d4c682d9392bba30dd0ca",
+      "actions": ["open", "close", "browse", "record-start", "record-stop"]
+    },
+    {
+      "slug": "guard",
+      "name": "Guard",
+      "id": "structupath.guard",
+      "repository": "https://github.com/StructuPath/herdr-guard",
+      "commit": "fa8ebcaaf6731976b9c208ebb4bcd61339deac97",
+      "version": "0.1.0",
+      "min_herdr_version": "0.7.5",
+      "tested_herdr_versions": ["0.7.5"],
+      "manifest_sha256": "294361a8eb4ce2aba632b0d5b789b06d65d92652596ec869c6e12505912a26ff",
+      "actions": ["open", "pause", "resume", "test", "reset-rules"]
+    },
+    {
+      "slug": "swarm",
+      "name": "Swarm",
+      "id": "structupath.swarm",
+      "repository": "https://github.com/StructuPath/herdr-swarm",
+      "commit": "0dc0a2b0a77e590d854fafd5eae0e76dbcc00017",
+      "version": "0.1.0",
+      "min_herdr_version": "0.7.4",
+      "tested_herdr_versions": ["0.7.4", "0.7.5"],
+      "manifest_sha256": "54b3806f30816115743dd7d6e908c09c352d90b006a6f7885d46e292373d47b4",
+      "actions": ["fanout", "status", "harvest", "abort", "prune"]
+    },
+    {
+      "slug": "conductor",
+      "name": "Conductor",
+      "id": "structupath.conductor",
+      "repository": "https://github.com/StructuPath/herdr-conductor",
+      "commit": "d4c6527e36991b234861781af34fe16c7ef16f4b",
+      "version": "0.1.0",
+      "min_herdr_version": "0.7.5",
+      "tested_herdr_versions": ["0.7.5"],
+      "manifest_sha256": "1ab62a6a3b77dd52fb1184a2f3d06c6ac0d21349e3abe6e29928356407458572",
+      "actions": ["assemble", "board", "status", "harvest", "stand-down"]
+    }
+  ]
+}

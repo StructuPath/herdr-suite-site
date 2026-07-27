@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>StructuPath Herdr Suite — four plugins that run your agent panes</title>
-<meta name="description" content="Browser, Guard, Swarm, and Conductor — four open-source plugins for the Herdr terminal agent multiplexer. Watch, police, parallelize, and orchestrate your coding agents.">
+<meta name="description" content="Browser, Guard, Swarm, and Conductor — four open-source plugins for the Herdr terminal agent multiplexer. Observe, advise, parallelize, and coordinate coding agents.">
 <meta property="og:title" content="StructuPath Herdr Suite">
 <meta property="og:description" content="Four open-source plugins for Herdr: Browser, Guard, Swarm, Conductor.">
 <meta property="og:url" content="https://herdr.structupath.ai/">
@@ -227,24 +227,24 @@
     <div class="kicker rise d1">StructuPath · open source · for herdr</div>
     <h1 class="rise d2">Run your agent panes<br><span class="dim">like a crew, not a pile of tabs.</span></h1>
     <p class="sub rise d3">Four plugins for <a href="https://herdr.dev">Herdr</a>, the terminal
-    agent multiplexer. <b>Watch</b> what your agents browse, <b>police</b> what they type,
-    <b>parallelize</b> them safely, and <b>orchestrate</b> them as a team — without leaving
-    your terminal.</p>
+    agent multiplexer. <b>Watch</b> browser sessions, apply <b>advisory</b> command policy,
+    <b>parallelize</b> work in reviewable worktrees, and <b>coordinate</b> role-based teams —
+    without leaving your terminal.</p>
     <div class="hero-cta rise d4">
       <a class="btn" href="#install">Install the suite</a>
       <a class="btn ghost" href="/docs/">Read the docs</a>
     </div>
-    <div class="pipeline rise d5" role="list" aria-label="How the plugins compose">
-      <a class="stage" role="listitem" href="#conductor"><span class="op"><span class="num">01</span> CONDUCTOR</span><span class="verb">decides</span></a>
-      <a class="stage" role="listitem" href="#swarm"><span class="op"><span class="num">02</span> SWARM</span><span class="verb">isolates</span></a>
-      <a class="stage" role="listitem" href="#guard"><span class="op"><span class="num">03</span> GUARD</span><span class="verb">enforces</span></a>
-      <a class="stage" role="listitem" href="#browser"><span class="op"><span class="num">04</span> BROWSER</span><span class="verb">shows you</span></a>
+    <div class="pipeline rise d5" role="list" aria-label="Four focused Herdr plugins">
+      <a class="stage" role="listitem" href="#browser"><span class="op"><span class="num">01</span> BROWSER</span><span class="verb">shows sessions</span></a>
+      <a class="stage" role="listitem" href="#guard"><span class="op"><span class="num">02</span> GUARD</span><span class="verb">advises</span></a>
+      <a class="stage" role="listitem" href="#swarm"><span class="op"><span class="num">03</span> SWARM</span><span class="verb">fans out</span></a>
+      <a class="stage" role="listitem" href="#conductor"><span class="op"><span class="num">04</span> CONDUCTOR</span><span class="verb">coordinates</span></a>
     </div>
     <div class="facts rise d5">
-      <span class="fact">verified on herdr 0.7.5</span>
-      <span class="fact">marketplace-listed</span>
+      <span class="fact">plugin-specific compatibility</span>
+      <span class="fact">reviewable pinned evidence</span>
       <span class="fact">MIT licensed</span>
-      <span class="fact">macOS / Linux</span>
+      <span class="fact">macOS / Linux manifests</span>
     </div>
   </div>
 </header>
@@ -283,9 +283,9 @@
       <article class="card reveal" id="guard">
         <div class="card-top"><span class="emoji">🛡️</span><span class="item-no">G-01</span></div>
         <h3>Guard <span class="id">structupath.guard</span></h3>
-        <p>Cross-agent command policy. Watches every pane, audits risky commands, alerts
-        you, and best-effort interrupts dangerous shell input — with an honest contract
-        about what it can and can't see.</p>
+        <p>Advisory cross-agent command policy. Observes rendered terminal text, audits
+        and alerts on matches, and best-effort interrupts visible shell input — with an
+        honest contract about what it can and can't see in agent TUIs.</p>
         <div class="links"><a href="https://github.com/StructuPath/herdr-guard">repo</a>
         <a href="/docs/guard/">guide</a></div>
       </article>
@@ -302,8 +302,8 @@
         <div class="card-top"><span class="emoji">🎩</span><span class="item-no">C-01</span></div>
         <h3>Conductor <span class="id">structupath.conductor</span></h3>
         <p>Run a role-differentiated team — builder, validator, reviewer — each a real,
-        attachable pane, mixed-vendor, driven by an orchestrating agent. Workers survive
-        the orchestrator; completion is a file sentinel, never agent state.</p>
+        attachable pane, driven by an orchestrating agent. Conductor currently owns its
+        worktree and harvest flow; it does not delegate those operations to Swarm.</p>
         <div class="links"><a href="https://github.com/StructuPath/herdr-conductor">repo</a>
         <a href="/docs/conductor/">guide</a></div>
       </article>
@@ -314,8 +314,8 @@
 <section id="install">
   <div class="wrap">
     <div class="sec-head"><span class="sec-num">§2</span><h2>Install</h2></div>
-    <p class="lede">Straight from the Herdr marketplace — all four carry the
-    <code>herdr-plugin</code> topic.</p>
+    <p class="lede">Install commands documented by each plugin repository. Review source,
+    manifests, and plugin-specific requirements before installation.</p>
 <pre class="reveal"><span class="c"># pick what you need — or take the whole suite</span>
 herdr plugin install <span class="p">StructuPath/herdr-browser</span>
 herdr plugin install <span class="p">StructuPath/herdr-guard</span>
@@ -325,6 +325,9 @@ herdr plugin install <span class="p">StructuPath/herdr-conductor</span>
 <span class="c"># health check</span>
 herdr plugin list
 herdr plugin action list</pre>
+    <p class="lede" style="margin-top:22px;margin-bottom:0">Write-capable plugins and agents
+    are trusted same-user principals. Worktrees make changes reviewable; they are not a
+    sandbox or operating-system security boundary.</p>
   </div>
 </section>
 
@@ -360,8 +363,8 @@ herdr plugin action list</pre>
         <h4>Ecosystem</h4>
         <ul>
           <li><a class="ext" href="https://herdr.dev">herdr.dev</a></li>
-          <li><a class="ext" href="https://github.com/topics/herdr-plugin">Herdr marketplace</a></li>
-          <li><a class="ext" href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a></li>
+          <li><a class="ext" href="https://github.com/topics/herdr-plugin">herdr-plugin topic</a></li>
+          <li><a class="ext" href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">Canonical docs source</a></li>
           <li><a class="ext" href="https://structupath.ai">structupath.ai</a></li>
           <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
         </ul>

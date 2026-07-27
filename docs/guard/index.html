@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guard guide — Herdr Suite docs</title>
-<meta name="description" content="Cross-agent command policy for Herdr: watches every pane, audits risky commands, notifies you, and best-effort interrupts dangerous shell input. Runs in th">
+<meta name="description" content="Guard is an advisory, best-effort cross-agent command policy layer for Herdr. It audits and alerts on matching terminal text and may interrupt visible shel">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@
     </ul>
     <h4>Links</h4>
     <ul>
-      <li><a class="ext" href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a></li>
+      <li><a class="ext" href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">Docs source</a></li>
       <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
       <li><a href="/llms.txt">llms.txt</a></li>
     </ul>
@@ -51,37 +51,67 @@
   <main class="prose">
 <div class="crumb">Docs / Plugins</div>
 <h1>🛡️ Guard (<code>structupath.guard</code>)</h1>
-<p>Cross-agent command policy for Herdr: watches every pane, audits risky commands, notifies you, and best-effort interrupts dangerous shell input. Runs in the background — mostly hands-off.</p>
-<p>Repo: <a href="https://github.com/StructuPath/herdr-guard">StructuPath/herdr-guard</a> · Full reference: the repo <a href="https://github.com/StructuPath/herdr-guard#readme">README</a></p>
-<h2>Actions</h2>
+<p>Guard is an <strong>advisory, best-effort</strong> cross-agent command policy layer for Herdr. It audits and alerts on matching terminal text and may interrupt visible shell input, but it is not an authorization boundary for agent TUIs.</p>
+<p>Repo: <a href="https://github.com/StructuPath/herdr-guard">StructuPath/herdr-guard</a> · Detailed reference: the repo <a href="https://github.com/StructuPath/herdr-guard#readme">README</a></p>
+<h2>Pinned evidence</h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
-<th>Action</th>
-<th>What</th>
+<th>Field</th>
+<th>Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>open</code></td>
-<td>Open the guard dashboard pane (policy / activity)</td>
+<td>Plugin release</td>
+<td><code>0.1.0</code></td>
 </tr>
 <tr>
-<td><code>test</code></td>
-<td>Dry-run a command against the live policy (allow/deny, nothing executes)</td>
+<td>Minimum Herdr</td>
+<td><code>0.7.5</code></td>
 </tr>
 <tr>
-<td><code>pause</code> / <code>resume</code></td>
-<td>Pause enforcement for 15 minutes (matches stay audited) / reactivate</td>
+<td>Explicitly tested Herdr</td>
+<td><code>0.7.5</code></td>
 </tr>
 <tr>
-<td><code>reset-rules</code></td>
-<td>Back up + reseed the default ruleset</td>
+<td>Evidence commit</td>
+<td><code>fa8ebcaaf6731976b9c208ebb4bcd61339deac97</code></td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Everyday:</strong> leave it running. Use <code>test</code> when unsure whether a command would be blocked, <code>pause</code>/<code>resume</code> to override temporarily.</p>
-<h2>What it can and can't see (honest contract)</h2>
+<h2>Actions</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Action ID</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>structupath.guard.open</code></td>
+<td>Open the policy/activity dashboard</td>
+</tr>
+<tr>
+<td><code>structupath.guard.pause</code></td>
+<td>Pause enforcement for 15 minutes while continuing to audit</td>
+</tr>
+<tr>
+<td><code>structupath.guard.resume</code></td>
+<td>Resume enforcement immediately</td>
+</tr>
+<tr>
+<td><code>structupath.guard.test</code></td>
+<td>Dry-run text against the active policy without executing it</td>
+</tr>
+<tr>
+<td><code>structupath.guard.reset-rules</code></td>
+<td>Back up and reseed the default rules</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Honest coverage contract</h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -93,18 +123,18 @@
 <tbody>
 <tr>
 <td>Interactive zsh/bash</td>
-<td>Typed and unsubmitted input</td>
-<td>Strong pre-execution cancel via <code>ctrl+c</code></td>
+<td>Typed, unsubmitted input</td>
+<td>Strong pre-execution <code>ctrl+c</code> attempt</td>
 </tr>
 <tr>
 <td>Raw/no-echo shell</td>
-<td>Nothing typed</td>
-<td>None; <code>stty -echo</code> is itself alerted</td>
+<td>No typed input</td>
+<td>None; <code>stty -echo</code> can be alerted</td>
 </tr>
 <tr>
 <td>Agent TUIs (Pi/Claude/Codex)</td>
-<td>Only rendered terminal text</td>
-<td>Incidental; harness hooks remain authoritative</td>
+<td>Rendered terminal text only</td>
+<td>Incidental and best-effort; native harness controls remain authoritative</td>
 </tr>
 <tr>
 <td>Logs/builds</td>
@@ -113,23 +143,23 @@
 </tr>
 <tr>
 <td>Herdr popups</td>
-<td>Nothing in v1</td>
+<td>Nothing in the pinned release</td>
 <td>Blind spot</td>
 </tr>
 </tbody>
 </table></div>
-<p>This is a <strong>text policy layer, not intent analysis</strong> — advisory against a process that can disable the plugin or use an unobserved popup. Use native agent hooks for authoritative tool-call enforcement.</p>
-<h2>Policy</h2>
-<p>Rules live at <code>$HERDR_PLUGIN_CONFIG_DIR/rules.json</code> (severity <code>audit</code> / <code>alert</code> / <code>interrupt</code>; <code>regex</code> or <code>substring</code> matching; <code>prompt_only</code>). The shipped defaults cover destructive filesystem/Git/infra commands, secret-file reads, publishing, data exfiltration, and evasion indicators (<code>stty -echo</code>, detached tmux/screen, <code>disown</code>, base64-to-shell, eval subshells).</p>
-<p>A workspace may add substring rules in <code>.herdr-guard.json</code>, but project rules are capped at <code>alert</code> — repository-controlled regex and interrupt rules are rejected, and workspace rules can't lower global ones unless you explicitly enable <code>allow_project_override</code>. Review the defaults before enabling interrupt rules in production.</p>
+<p>Guard performs text matching, not intent analysis. An agent running as the same user can disable the plugin, use unseen channels, or act outside observed terminal text. Use native agent hooks, sandboxing, and operating-system controls for authoritative enforcement.</p>
+<h2>Policy and trust</h2>
+<p>Rules live at <code>$HERDR_PLUGIN_CONFIG_DIR/rules.json</code> and support <code>audit</code>, <code>alert</code>, and <code>interrupt</code> severities with regex or substring matching. Workspace <code>.herdr-guard.json</code> rules are capped at <code>alert</code>; repository-controlled regex and interrupt rules are rejected.</p>
+<p>The plugin itself is ordinary local code with the user's privileges. Review the source and policy before use, and protect audit logs because they can contain sensitive metadata even after redaction.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/browser/"><span class="lbl">Previous</span>Browser</a><a href="/docs/swarm/" style="text-align:right"><span class="lbl">Next</span>Swarm</a></nav>
   </main>
 </div>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
-    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Canonical source:
+    <a href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">docs-src</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>

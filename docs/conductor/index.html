@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Conductor guide — Herdr Suite docs</title>
-<meta name="description" content="Repo: StructuPath/herdr-conductor · Full reference: the repo README">
+<meta name="description" content="Conductor runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. An orchestrating agent drives dispatch; co">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@
     </ul>
     <h4>Links</h4>
     <ul>
-      <li><a class="ext" href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a></li>
+      <li><a class="ext" href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">Docs source</a></li>
       <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
       <li><a href="/llms.txt">llms.txt</a></li>
     </ul>
@@ -51,81 +51,104 @@
   <main class="prose">
 <div class="crumb">Docs / Plugins</div>
 <h1>🎩 Conductor (<code>structupath.conductor</code>)</h1>
-<p><strong>Mental model:</strong> "Run a <em>team</em> — a builder, a validator, a reviewer — each as a real, visible, attachable agent pane, with one orchestrator driving them." Unlike <a href="/docs/swarm/">Swarm's</a> N-identical fan-out, Conductor's workers are <strong>role-differentiated</strong> and <strong>mixed-vendor</strong> (claude/codex/pi side by side), and they <strong>survive the orchestrator</strong> — a crashed driver doesn't kill the team.</p>
-<p>Repo: <a href="https://github.com/StructuPath/herdr-conductor">StructuPath/herdr-conductor</a> · Full reference: the repo <a href="https://github.com/StructuPath/herdr-conductor#readme">README</a></p>
-<h2>The split that makes it work</h2>
+<p>Conductor runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. An orchestrating agent drives dispatch; completion is a report-file sentinel, not an agent's <code>idle</code> state.</p>
+<p>Repo: <a href="https://github.com/StructuPath/herdr-conductor">StructuPath/herdr-conductor</a> · Detailed reference: the repo <a href="https://github.com/StructuPath/herdr-conductor#readme">README</a></p>
+<h2>Pinned evidence</h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
-<th>Half</th>
-<th>Where</th>
-<th>Who drives it</th>
+<th>Field</th>
+<th>Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Transport</strong> (the loop)</td>
-<td><code>scripts/conductor-lib.sh</code></td>
-<td>An orchestrating <strong>agent</strong> sources it and runs the loop</td>
+<td>Plugin release</td>
+<td><code>0.1.0</code></td>
 </tr>
 <tr>
-<td><strong>Operational surface</strong></td>
-<td>the <code>board</code> + <code>stand-down</code> actions</td>
-<td>You / the TUI menu</td>
+<td>Minimum Herdr</td>
+<td><code>0.7.5</code></td>
+</tr>
+<tr>
+<td>Explicitly tested Herdr</td>
+<td><code>0.7.5</code></td>
+</tr>
+<tr>
+<td>Evidence commit</td>
+<td><code>d4c6527e36991b234861781af34fe16c7ef16f4b</code></td>
 </tr>
 </tbody>
 </table></div>
-<p>Dispatch is <strong>agent-driven, not an action</strong> — herdr plugin actions get no argv/TTY, so the intelligence that decomposes a feature and assigns roles is the agent's job, not a shell script's.</p>
-<h2>The 2 actions</h2>
+<h2>All five actions</h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
-<th>Action</th>
-<th>What</th>
+<th>Action ID</th>
+<th>Behavior</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>board</code></td>
-<td>Live pane: one row per worker — role, kind, pane, <strong>status (from <code>herdr agent list</code>, not screen-scraping)</strong>, cwd. Refreshes every 2s; <code>q</code> quits.</td>
+<td><code>structupath.conductor.assemble</code></td>
+<td>Read <code>.herdr-conductor.json</code>, create the declared team, and open the board</td>
 </tr>
 <tr>
-<td><code>stand-down</code></td>
-<td>Closes only conductor-owned worker panes for the active run (ownership-verified); git branches + worktrees kept.</td>
+<td><code>structupath.conductor.board</code></td>
+<td>Open the live board with one row per worker</td>
+</tr>
+<tr>
+<td><code>structupath.conductor.status</code></td>
+<td>Print the board's role/kind/pane/state/cwd data once</td>
+</tr>
+<tr>
+<td><code>structupath.conductor.harvest</code></td>
+<td>Merge writing-role branches into a Conductor integration worktree, reporting conflicts without forcing</td>
+</tr>
+<tr>
+<td><code>structupath.conductor.stand-down</code></td>
+<td>Close verified Conductor-owned worker panes while keeping branches and worktrees</td>
 </tr>
 </tbody>
 </table></div>
-<pre><code class="language-bash">herdr plugin action invoke board      --plugin structupath.conductor
-herdr plugin action invoke stand-down --plugin structupath.conductor
-</code></pre>
-<h2>The agent-driven loop (what the orchestrator does)</h2>
-<pre><code class="language-bash">. scripts/conductor-lib.sh
-conductor_start_worker builder  claude &quot;$engine_wt&quot;          # warms by default
-conductor_start_worker reviewer codex  &quot;$repo&quot; -- --sandbox read-only
-conductor_dispatch builder &quot;$builder_prompt&quot;
-conductor_await    builder &amp;&amp; conductor_collect builder      # settles on the report SENTINEL
-conductor_teardown
-</code></pre>
-<h2>Three things to remember</h2>
+<p>Conductor currently owns its worktree lifecycle and harvest implementation. It does <strong>not</strong> call Swarm to create worktrees or to harvest branches. Swarm is a separate, independently invoked fan-out tool, not a hidden Conductor runtime dependency.</p>
+<h2>Minimal supervised quickstart</h2>
+<blockquote>
+<p><strong>Supervised/manual today.</strong> This example requires a human or trusted orchestrating agent to inspect reports and diffs, approve reconciliation, and handle conflicts. An autonomous supervisor/approval runtime, cross-plugin delegation to Swarm, and cryptographic worker/report attestation are <strong>not implemented prerequisites</strong> in the pinned runtime. Do not describe this flow as unattended or as a security boundary.</p>
+</blockquote>
 <ol>
-<li><strong>Settle ≠ success</strong> — a worker hits <code>idle</code> after <em>any</em> turn (even a clarifying question). Completion is a <code>&lt;!-- REPORT-COMPLETE --&gt;</code> sentinel in <code>.conductor/report.md</code>, never agent state. The lib enforces this (freshness-checked).</li>
-<li><strong>Warm by default</strong> — a cold interactive agent opens on a welcome screen and drops its first prompt; <code>conductor_start_worker</code> warms it. <code>--no-warm</code> to skip.</li>
-<li><strong>Files both directions</strong> — mission in via <code>.conductor/task.md</code>, result out via <code>.conductor/report.md</code> (auto-gitignored). Panes are for humans to watch and attach to.</li>
+<li>Start from a clean Git repository and add a reviewed <code>.herdr-conductor.json</code> defining a <code>builder-engine</code> writing role (using the shipped <code>builder-engine</code> template) and at least one review role.</li>
+<li>Assemble the team and inspect its state:</li>
 </ol>
-<h2>The composition</h2>
-<pre><code>CONDUCTOR decides   →   SWARM isolates        →   GUARD enforces
-(this plugin)           (worktree per writer)     (read-only audit for review roles)
-</code></pre>
-<h2>Requirements</h2>
-<p>herdr ≥ 0.7.5, Node ≥ 20, Python 3, Bash 3.2+. macOS / Linux.</p>
+<p><code>bash
+   herdr plugin action invoke assemble --plugin structupath.conductor
+   herdr plugin action invoke status --plugin structupath.conductor
+   herdr plugin action invoke board --plugin structupath.conductor</code></p>
+<ol>
+<li>In a trusted orchestrator pane, source the transport, render role prompts, dispatch work, and wait for freshness-checked <code>&lt;!-- REPORT-COMPLETE --&gt;</code> sentinels:</li>
+</ol>
+<p><code>bash
+   . /path/to/herdr-conductor/scripts/conductor-lib.sh
+   conductor_dispatch builder-engine "$(CONDUCTOR_MISSION='Implement the reviewed task.' conductor_render_role builder-engine)"
+   conductor_await builder-engine &amp;&amp; conductor_collect builder-engine</code></p>
+<ol>
+<li>Review each report, role branch, and test result. Only then invoke reconciliation:</li>
+</ol>
+<p><code>bash
+   herdr plugin action invoke harvest --plugin structupath.conductor
+   herdr plugin action invoke stand-down --plugin structupath.conductor</code></p>
+<p>Use the plugin README for the exact role-template/config schema and transport API before running this flow.</p>
+<h2>Trust and completion model</h2>
+<p>Write-capable workers and the orchestrator are trusted same-user principals. Their worktrees isolate changes for review but do not limit filesystem/process access. <code>read-only</code> launch flags or agent-native sandbox controls provide the intended reviewer restriction; Guard drops are an audit trail, not a sandbox.</p>
+<p>Workers exchange <code>.conductor/task.md</code> and <code>.conductor/report.md</code>. A worker becoming <code>idle</code> can mean it asked a question or finished any turn; only a fresh report containing the completion sentinel satisfies <code>conductor_await</code>.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/swarm/"><span class="lbl">Previous</span>Swarm</a><span></span></nav>
   </main>
 </div>
 
 <footer class="foot-slim">
   <div class="inner">
-    <span>MIT © StructuPath · Not affiliated with the Herdr project. Docs are synced from the
-    <a href="https://github.com/StructuPath/herdr-browser/wiki">GitHub wiki</a>.</span>
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Canonical source:
+    <a href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">docs-src</a>.</span>
     <span><a href="/">herdr.structupath.ai</a></span>
   </div>
 </footer>

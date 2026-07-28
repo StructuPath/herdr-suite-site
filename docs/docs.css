@@ -346,6 +346,9 @@ a:focus-visible {
 	border-radius: 5px;
 	padding: 1.5px 6px;
 }
+.prose :not(pre) > code {
+	overflow-wrap: anywhere;
+}
 .prose pre {
 	background: var(--surface-2);
 	border: 1px solid var(--border);

@@ -53,8 +53,12 @@ def load_plugins() -> list[dict[str, Any]]:
 
 def expected_tested(plugin: dict[str, Any]) -> str:
     versions = plugin["tested_herdr_versions"]
-    if not isinstance(versions, list) or not all(isinstance(item, str) for item in versions):
-        raise ValueError(f"{plugin['slug']}: tested_herdr_versions must be a string list")
+    if not isinstance(versions, list) or not all(
+        isinstance(item, str) for item in versions
+    ):
+        raise ValueError(
+            f"{plugin['slug']}: tested_herdr_versions must be a string list"
+        )
     return "`, `".join(versions)
 
 
@@ -82,7 +86,9 @@ def check_plugin_doc(plugin: dict[str, Any], text: str) -> list[str]:
             re.MULTILINE,
         )
         if not pattern.search(text):
-            errors.append(f"docs-src/{plugin['name']}.md version/evidence drift: {label} != {value}")
+            errors.append(
+                f"docs-src/{plugin['name']}.md version/evidence drift: {label} != {value}"
+            )
 
     if str(plugin["id"]) != f"structupath.{slug}":
         errors.append(f"data/plugins.json id/slug drift for {slug}")
@@ -128,7 +134,9 @@ def check_data_and_docs(plugins: list[dict[str, Any]]) -> list[str]:
 
     expected_slugs = {"browser", "guard", "swarm", "conductor"}
     if seen_slugs != expected_slugs:
-        errors.append(f"plugin set drift: expected {sorted(expected_slugs)}, found {sorted(seen_slugs)}")
+        errors.append(
+            f"plugin set drift: expected {sorted(expected_slugs)}, found {sorted(seen_slugs)}"
+        )
 
     home = (DOCS_SRC / "Home.md").read_text(encoding="utf-8")
     for plugin in plugins:
@@ -152,7 +160,9 @@ def check_forbidden_claims(files: list[pathlib.Path] = PUBLIC_TEXT_FILES) -> lis
             match = pattern.search(text)
             if match:
                 line = text.count("\n", 0, match.start()) + 1
-                errors.append(f"{path.relative_to(SITE)}:{line}: forbidden {label}: {match.group(0)!r}")
+                errors.append(
+                    f"{path.relative_to(SITE)}:{line}: forbidden {label}: {match.group(0)!r}"
+                )
     return errors
 
 
@@ -190,7 +200,9 @@ def check_explore_contract() -> list[str]:
         text = path.read_text(encoding="utf-8")
         for marker in markers:
             if marker.casefold() not in text.casefold():
-                errors.append(f"{path.relative_to(SITE)} missing Explore contract marker: {marker!r}")
+                errors.append(
+                    f"{path.relative_to(SITE)} missing Explore contract marker: {marker!r}"
+                )
 
     landing = (SITE / "index.html").read_text(encoding="utf-8")
     video = re.search(r"<video\b([^>]*)>", landing, re.IGNORECASE | re.DOTALL)
@@ -287,12 +299,19 @@ def check_local_links() -> list[str]:
     for page in DOCS_SRC.glob("*.md"):
         text = page.read_text(encoding="utf-8")
         for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", text):
-            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", target) and target not in source_names:
-                errors.append(f"{page.relative_to(SITE)}: broken docs-src link {target!r}")
+            if (
+                re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", target)
+                and target not in source_names
+            ):
+                errors.append(
+                    f"{page.relative_to(SITE)}: broken docs-src link {target!r}"
+                )
     return errors
 
 
-def check_sibling_manifests(root: pathlib.Path, plugins: list[dict[str, Any]]) -> list[str]:
+def check_sibling_manifests(
+    root: pathlib.Path, plugins: list[dict[str, Any]]
+) -> list[str]:
     """Verify optional local sibling checkouts against the pinned reviewed evidence."""
     errors = []
     for plugin in plugins:
@@ -317,10 +336,14 @@ def check_sibling_manifests(root: pathlib.Path, plugins: list[dict[str, Any]]) -
             errors.append(f"{repo}: unable to read pinned manifest: {error}")
             continue
         if head != plugin["commit"]:
-            errors.append(f"{slug}: sibling HEAD {head} != pinned commit {plugin['commit']}")
+            errors.append(
+                f"{slug}: sibling HEAD {head} != pinned commit {plugin['commit']}"
+            )
         digest = hashlib.sha256(manifest).hexdigest()
         if digest != plugin["manifest_sha256"]:
-            errors.append(f"{slug}: manifest digest {digest} != {plugin['manifest_sha256']}")
+            errors.append(
+                f"{slug}: manifest digest {digest} != {plugin['manifest_sha256']}"
+            )
         parsed = tomllib.loads(manifest.decode("utf-8"))
         manifest_actions = [action["id"] for action in parsed.get("actions", [])]
         comparisons = {
@@ -331,7 +354,9 @@ def check_sibling_manifests(root: pathlib.Path, plugins: list[dict[str, Any]]) -
         }
         for field, actual in comparisons.items():
             if actual != plugin[field]:
-                errors.append(f"{slug}: manifest {field} {actual!r} != pinned {plugin[field]!r}")
+                errors.append(
+                    f"{slug}: manifest {field} {actual!r} != pinned {plugin[field]!r}"
+                )
     return errors
 
 
@@ -346,7 +371,9 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     if not check_plugin_doc(plugin, source.replace(f"`{version}`", "`999.0.0`", 1)):
         failures.append("self-test did not detect version drift")
     forbidden_sample = "Guard enforces every agent command."
-    if not any(pattern.search(forbidden_sample) for pattern in FORBIDDEN_CLAIMS.values()):
+    if not any(
+        pattern.search(forbidden_sample) for pattern in FORBIDDEN_CLAIMS.values()
+    ):
         failures.append("self-test did not detect a forbidden claim")
     conductor_html = (SITE / "docs" / "conductor" / "index.html").read_text(
         encoding="utf-8"
@@ -371,7 +398,9 @@ def main() -> int:
         type=pathlib.Path,
         help="optionally verify herdr-{browser,guard,swarm,conductor} checkouts at this path",
     )
-    parser.add_argument("--self-test", action="store_true", help="prove drift checks detect mutations")
+    parser.add_argument(
+        "--self-test", action="store_true", help="prove drift checks detect mutations"
+    )
     args = parser.parse_args()
 
     try:

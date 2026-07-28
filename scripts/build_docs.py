@@ -7,6 +7,7 @@ Usage:
 
 The check mode fails when committed HTML differs from a clean regeneration.
 """
+
 import pathlib
 import re
 import sys
@@ -18,11 +19,11 @@ DOCS_SRC = SITE / "docs-src"
 
 # (source file stem, slug, nav title, site URL)
 PAGES = [
-    ("Home",      "index",     "Overview",            "/docs/"),
-    ("Swarm",     "swarm",     "Explore · Swarm",     "/docs/swarm/"),
+    ("Home", "index", "Overview", "/docs/"),
+    ("Swarm", "swarm", "Explore · Swarm", "/docs/swarm/"),
     ("Conductor", "conductor", "Deliver · Conductor", "/docs/conductor/"),
-    ("Browser",   "browser",   "Browser",             "/docs/browser/"),
-    ("Guard",     "guard",     "Guard",               "/docs/guard/"),
+    ("Browser", "browser", "Browser", "/docs/browser/"),
+    ("Guard", "guard", "Guard", "/docs/guard/"),
 ]
 
 # docs-src internal links -> published site URLs
@@ -122,10 +123,16 @@ def first_sentence(md_text: str) -> str:
 def pager_html(i: int) -> str:
     prev = PAGES[i - 1] if i > 0 else None
     nxt = PAGES[i + 1] if i + 1 < len(PAGES) else None
-    left = (f'<a href="{prev[3]}"><span class="lbl">Previous</span>{prev[2]}</a>'
-            if prev else "<span></span>")
-    right = (f'<a href="{nxt[3]}" style="text-align:right"><span class="lbl">Next</span>{nxt[2]}</a>'
-             if nxt else "<span></span>")
+    left = (
+        f'<a href="{prev[3]}"><span class="lbl">Previous</span>{prev[2]}</a>'
+        if prev
+        else "<span></span>"
+    )
+    right = (
+        f'<a href="{nxt[3]}" style="text-align:right"><span class="lbl">Next</span>{nxt[2]}</a>'
+        if nxt
+        else "<span></span>"
+    )
     return f'    <nav class="pager" aria-label="Docs pages">{left}{right}</nav>'
 
 
@@ -138,7 +145,9 @@ def rendered_pages() -> list[tuple[pathlib.Path, str]]:
     pages = []
     for i, (stem, slug, title, _url) in enumerate(PAGES):
         md_text = (DOCS_SRC / f"{stem}.md").read_text(encoding="utf-8")
-        actives = {f"a_{s}": (' class="active"' if s == slug else "") for _, s, _, _ in PAGES}
+        actives = {
+            f"a_{s}": (' class="active"' if s == slug else "") for _, s, _, _ in PAGES
+        }
         html = TEMPLATE.format(
             tab_title=("Overview" if slug == "index" else f"{title} guide"),
             desc=first_sentence(md_text),
@@ -147,7 +156,9 @@ def rendered_pages() -> list[tuple[pathlib.Path, str]]:
             pager=pager_html(i),
             **actives,
         )
-        out = SITE / "docs" / ("index.html" if slug == "index" else f"{slug}/index.html")
+        out = (
+            SITE / "docs" / ("index.html" if slug == "index" else f"{slug}/index.html")
+        )
         pages.append((out, html))
     return pages
 

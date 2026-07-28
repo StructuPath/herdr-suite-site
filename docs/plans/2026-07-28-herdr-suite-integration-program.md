@@ -1,6 +1,6 @@
 # Herdr Suite Integration Program
 
-**Status:** approved Wave 0 plan  
+**Status:** Wave 0 implemented on reviewed branches; merge/release gates pending; Wave 1 planned
 **Date:** 2026-07-28  
 **Repositories:** `herdr-browser`, `herdr-guard`, `herdr-swarm`, `herdr-conductor`, `herdr-suite-site`
 
@@ -92,7 +92,7 @@ Required common identity:
 - `repo_id`, `workspace_id`, `base_ref`, `base_sha` where Git applies;
 - stable evidence/operation IDs and coordinator sequence;
 - explicit outcome: `observed`, `passed`, `failed`, `inconclusive`, or `unavailable`;
-- relative artifact URI, SHA-256, media type, and byte count;
+- normalized POSIX-style relative artifact path, SHA-256, media type, and byte count; paths reject backslashes, percent-encoded separators or dot segments, empty segments, controls, absolute prefixes, and `.`/`..` segments;
 - structured limitations.
 
 Only a named test/check can report `passed`. Browser recordings and Guard observations normally report `observed`. SHA-256 proves content integrity after capture, not identity, provenance, or correctness.
@@ -121,7 +121,7 @@ Examples:
 - `deliver.preview/1`
 - `deliver.apply/1`
 
-Unknown required capability IDs or contract majors fail closed. Optional missing capabilities become `skipped` or `unavailable`, never silently successful.
+Unknown required capability IDs or contract majors fail closed. Optional missing capabilities become `unavailable`, never silently successful.
 
 ### ADR-6 — Approval-aware mutators use explicit, atomic state
 
@@ -129,7 +129,7 @@ Approval binds actor kind (`human` or `trusted-orchestrator`), operation, previe
 
 Under the owning plugin's repository mutation lock, `apply` atomically transitions `{approved, nonce: unused, revision: N}` to `{consuming, operation_id, revision: N+1}` before any side effect. A retry with the same operation ID may only recover/return the journaled result; another replay is refused. A crash after consumption becomes `needs_attention` and cannot silently reapply. Failed precondition checks before consumption leave the nonce unused; any ambiguous crash or side effect requires a fresh preview and approval.
 
-Immediately before mutation, the adapter re-computes the preview subject. Any changed base, branch tip, report digest, config digest, integration SHA, cleanup inventory, or revision performs zero mutation and supersedes the approval.
+Immediately before mutation, the adapter re-computes the preview subject. Any changed base, branch tip, report digest, config digest, integration SHA, cleanup inventory, or revision performs zero external/repository mutation and supersedes the approval. Private approval state may record the superseded decision and revision; it may not consume the nonce or journal an external side effect.
 
 V1 actor kinds are cooperative same-user assertions, not authentication against a malicious same-UID process. Approvals live outside declared worker writable roots with private modes, but hashes and permissions do not create an authorization boundary.
 
@@ -152,7 +152,7 @@ Concurrent Swarm and Conductor mutation of one Git common directory is unsupport
 
 ## Fail-Closed Security Invariants
 
-- Every mutator requires one exact, schema-valid, regular non-symlink state generation whose repo/workspace/run identity matches the request. Missing, truncated, duplicate, incompatible, symlinked, or mismatched state returns `state_unknown`/`bookkeeping_unknown` with zero mutation. `.bak` is recovery inventory, never automatic mutation authority.
+- Every mutator requires one exact, schema-valid, regular non-symlink state generation whose repo/workspace/run identity matches the request. Missing, truncated, duplicate, incompatible, symlinked, or mismatched state returns `state_unknown`/`bookkeeping_unknown` with zero external/repository mutation. Private diagnostic state may record the refusal; `.bak` is recovery inventory, never automatic mutation authority.
 - Destructive cleanup is preview/apply. The preview emits a canonical recursive inventory digest bound to physical Git common-dir identity, run, resource, and operation ID. Apply re-verifies ownership and re-computes inventory immediately before removal; any change refuses without deletion.
 - Conductor pane identity includes workspace ID, pane ID, terminal ID, agent session/name, canonical cwd, run ID, and resource generation. Worktree identity includes canonical path, physical Git common dir, exact full branch ref, fork/head SHA, and `git worktree list --porcelain` membership. Missing, duplicate, changed, or foreign identity performs no close/remove.
 - Stand-down closes only identity-proven panes and archives state. It does not delete worktrees, branches, or artifacts. Deletion is a separate future design.
@@ -234,7 +234,7 @@ Scenario:
 5. The fixture predeclares candidate A's ID/SHA and supplies a test approval; the harness never infers or ranks the winner. Apply A with expected-base/head/journal guards.
 6. Assemble Conductor against the selected SHA; produce writer, validator, and reviewer reports bound to exact input/output SHAs.
 7. Preview Conductor reconciliation and grant scoped approval.
-8. Inject target/base drift after approval. First apply must return stale approval and perform zero mutation.
+8. Inject target/base drift after approval. First apply must return stale approval and perform zero external/repository mutation; private approval state may record the superseded refusal without consuming the nonce.
 9. Re-preview, re-approve, and apply successfully.
 10. Import Browser and Guard bounded artifacts, validate every digest, assert the exact Conductor validator receipt already produced, and verify retained cleanup inventory. The harness does not become a generic test runner or product orchestrator.
 
@@ -244,7 +244,7 @@ Required assertions:
 - Guard absence/unseen behavior is never converted to `passed`;
 - Browser evidence remains observational;
 - failed candidate evidence remains visible;
-- stale approval and replay perform zero mutation;
+- stale approval and replay perform zero external/repository mutation; private refusal/replay evidence is permitted;
 - no plugin reads/writes another plugin's private state;
 - final Git ref equals the approved apply result;
 - real developer state and preservation artifacts remain untouched.
@@ -287,7 +287,7 @@ A separate opt-in live Herdr matrix is required before changing public readiness
 - Keep Swarm and Conductor sequential; concurrent cross-plugin mutation remains unsupported.
 - Run stale/concurrent approval, crash-after-consume, drift, conflict, failure, replay, corrupt-state, foreign-resource, artifact-import, and inventory-change scenarios.
 
-**Gate:** stale apply performs zero mutation; replay is refused; failures remain recoverable; final fixture tests pass; all four receipts correlate.
+**Gate:** stale apply performs zero external/repository mutation; replay is refused while private refusal evidence is permitted; failures remain recoverable; final fixture tests pass; all four receipts correlate.
 
 ### Wave 4 — live compatibility, releases, and claim updates
 
@@ -324,3 +324,149 @@ Wave 0 is complete only when:
 5. Conductor's public docs no longer claim Swarm-backed lifecycle, Guard enforcement, verified pane ownership, durable recovery, or enforced read-only behavior.
 6. All plugin tests, shell/static checks, site generation, and site claim checks pass.
 7. No integration-runtime claim is added to the site.
+
+## Execution Checkpoint — 2026-07-28
+
+Wave 0 implementation is complete on isolated, pushed branches. This checkpoint does not mean the plugin branches are merged, released, or site-pinned.
+
+| Repository | Reviewed commit | Hosted CI | Current gate |
+| --- | --- | --- | --- |
+| Suite site | `6f1ecd36c767df75d4ca5e6f99bdf19252c747fd` | `30344745398` | Deployed; current public boundaries are truthful |
+| Browser | `8ccc8b8764ad269ba4e7c4468bff3a0f21dde4e0` | `30348362562` | Held Wave 2 precursor layered on completed Wave 0 preservation/CI; hold merge/promotion until Wave 1 schemas and later evidence/live gates |
+| Guard | `7aba52b4394d376bbdcf517fa5a5581686344798` | `30349007126` | Code ready; merge, manual smoke, `v0.1.1`, and atomic site repin remain |
+| Swarm | `18fcc7b2958ff6001831d7986ab8f2e3dfe7b7ba` | `30349398711` | Exact reviewed tree is ready to merge |
+| Conductor | `3e3eb80b3604c76f6b65f1f6169c17804d7cbe78` | `30343274295` | Stage 0 exact reviewed tree is ready to merge; Stage 1 remains required |
+
+Independent final reviews for all four plugin heads reported no blocker, high, or medium findings in their approved scope. Browser and Guard preservation commits still reproduce the original recorded patch hashes exactly. All local review branches were restored to their exact remote heads after generated review artifacts were preserved separately.
+
+### Phase A — Maintainer merge and Guard release gates
+
+These are repository operations, not implementation work, and require explicit maintainer approval.
+
+1. Open pull requests for exact Guard `7aba52b`, Swarm `18fcc7b`, and Conductor `3e3eb80` heads. Preserve the reviewed trees and commit history; if a merge strategy changes the resulting tree, rerun repository validation and independent review against the merge tree.
+2. Keep Browser `8ccc8b8` on its integration branch. Do not merge, release, or site-pin Browser 0.6.0 during Wave 1.
+3. After Guard merges, run the non-destructive manual smoke matrix in `herdr-guard/docs/SPEC.md` against the final merge tree. The transport portion is already verified against Herdr 0.7.5; live interrupt-key delivery remains optional and must not be inferred.
+4. Create and verify Guard `v0.1.1` only after the smoke passes. Recompute `herdr-plugin.toml` SHA-256 from the final tag target and require it to equal the reviewed digest `36cd8ab09f82f07f56e08d15013221d4f5a46a8c2d3aca1255581b24c70dc50b`; any mismatch blocks release/site repin and requires updated review evidence. Then atomically update the site to the tag target, version `0.1.1`, recomputed manifest digest, evidence date, and `tested_herdr_versions: ["0.7.5"]`. Use “best-effort request; prevention unknown” wording.
+5. If any Guard merge, smoke, or tag gate is incomplete, retain the current site withdrawal. Do not partially restore compatibility evidence.
+
+### Phase B — Conductor Stage 1 control plane
+
+Implement `TODO-9a1de9c8` on a new branch from the Stage-0-updated Conductor main. Stage 1 remains private plugin state; it is not a suite public contract.
+
+#### B0. Live identity capability discovery
+
+Before designing state fields or mutators, probe the exact supported Herdr version in a disposable workspace and record which identity fields are available from plugin context, pane/session/process inspection, and agent listings. Required pane-close identity remains workspace ID, pane ID, terminal identity, agent session/name, canonical cwd, run ID, and resource generation.
+
+Missing, malformed, ambiguous, or unavailable required identity is a Stage 1 no-go for that mutator. Do not fall back to `CONDUCTOR_REPO`, `$PWD`, newest-global state, names, or recorded pane IDs. If Herdr 0.7.5 cannot expose the required identity, preserve the inspected capability artifact, return capability unavailable, and keep stand-down disabled rather than weakening the contract.
+
+**Gate:** an independently reviewed live capability report maps every required identity field to an exact source and negative fixture; absent or duplicate fields produce zero close/remove/merge.
+
+#### B1. Strict state and identity kernel
+
+Add a private strict JSON state schema and a zero-dependency state helper. State is keyed by physical Git common-directory identity, workspace ID, run ID, and resource generation. Require exact keys/types/versions, bounded IDs, `0700` directories, `0600` files, no-follow regular-file reads, atomic temp/fsync/rename/directory-fsync writes, repository-scoped locks, and write-ahead resource journals.
+
+Legacy shell state is read-only administrative inventory. Never source, migrate, adopt, or use it as mutation authority.
+
+**Gate:** malformed, truncated, extra-key, wrong-version, symlinked, duplicate-active, foreign-repo/workspace, stale-generation, and lock-race inputs perform zero external mutation. Pre-intent durability failures also perform zero external mutation. A failure after state publication or an external side effect leaves the operation journaled as ambiguous/`needs_attention`, prohibits replay, and requires explicit recovery; temporary or published private state files are not counted as external mutation.
+
+#### B2. Context-bound assemble, board, and status
+
+Replace newest-global selection with explicit `HERDR_PLUGIN_CONTEXT_JSON` repository/workspace resolution. Record a fixed fork SHA before side effects; use run-unique full branch refs and agent names; journal intent before each pane/worktree/agent operation and exact observed identity afterward. Never adopt a same-named resource without exact journal proof.
+
+**Gate:** two repositories sharing one state root and two workspaces sharing one repository cannot observe or mutate each other's runs. Crash injection after every intent/result boundary leaves truthful, non-replayed journal state.
+
+#### B3. Identity-checked reconcile and stand-down
+
+Hold the repository mutation lock across reconciliation preflight and Git mutation. Verify canonical worktree path, common directory, full branch ref, fork/head SHA, and registered worktree membership. Before pane close, compare workspace, pane, terminal, agent session/name, canonical cwd, run ID, and generation with live Herdr data.
+
+Stage 1 reconciliation remains an explicitly invoked, attended native Conductor action. It has no suite adapter, public suite receipt, coordinator trigger, or automatic composition; Stage 3 alone adds the suite approval-aware apply path.
+
+Stand-down may archive state and close identity-proven panes only. It must not delete worktrees, branches, artifacts, reports, recordings, logs, or Guard files.
+
+**Gate:** foreign/recycled pane, changed branch/head, moved or unregistered worktree, corrupt journal, concurrent reconcile, and second-repository fixtures perform zero close/remove/merge. If Herdr cannot expose the required identity, return capability unavailable rather than weakening the check.
+
+#### B4. Stage 1 release gate
+
+Run Node 20/current LTS, macOS Bash 3.2, ShellCheck, Actionlint, manifest/docs gates, destructive negative tests, and independent review. Recommend Conductor `0.2.0` for the private-state break, but do not tag or repin until the maintainer approves that version and the exact tree passes an opt-in disposable-repository live smoke.
+
+### Phase C — Wave 1 canonical schemas and static descriptors
+
+Implement `TODO-14dd2716` only after the schema semantics below are reviewed and frozen.
+
+#### C1. Site-owned schemas and corpus
+
+Add canonical `capabilities-v1` and `evidence-v1` schemas, positive examples, invalid mutation fixtures, and a pinned development-only validator. Schemas use closed objects, bounded ASCII IDs, explicit contract majors, separate plugin-release/Herdr compatibility fields, explicit outcomes, normalized POSIX relative artifact paths, and structured limitations.
+
+Freeze these evidence kinds before implementation:
+
+- `observation` — outcomes `observed`, `inconclusive`, or `unavailable`; zero to sixteen artifacts; approval fields forbidden;
+- `check_result` — the only kind allowed outcomes `passed` or `failed`, plus `inconclusive`/`unavailable`; requires a named check ID and subject digest; zero to sixteen artifacts; approval fields forbidden;
+- `operation_preview` — outcomes `observed`, `inconclusive`, or `unavailable`; requires operation ID, preview digest, revision, explicit preconditions, and `mutation_kind: read_only | mutating`;
+- `operation_result` — outcomes `observed`, `inconclusive`, or `unavailable`; requires operation status (`succeeded`, `failed`, `stale`, `refused`, or `needs_attention`), journal identity, and the same mutation kind;
+- `approval_receipt` — outcome `observed`, `inconclusive`, or `unavailable`; requires actor kind, scoped preview digest, expected revision, one-use nonce digest, and approval status.
+
+Operation conditionals are closed and explicit:
+
+- `read_only` preview/result objects forbid `approval_scope` and `approval_consumption`;
+- `mutating` previews require `approval_scope` with `operation_id`, `preview_digest`, nonnegative `expected_revision`, and one to sixty-four bounded `subject_ids`; Git subjects additionally require a full expected base SHA and full target ref, while non-Git subjects forbid them;
+- `mutating` results require `approval_consumption` with `approval_id`, `operation_id`, nonce SHA-256, `revision_before`, `revision_after`, and status `not_consumed | consuming | consumed | refused | needs_attention`;
+- `succeeded` requires `consumed`; `stale` requires `not_consumed`; `refused` requires `refused` or `not_consumed`; `needs_attention` requires `consuming` or `needs_attention`; `failed` records whether failure occurred before consumption (`not_consumed`) or after it (`consumed | needs_attention`);
+- approval receipts use status `approved | refused | superseded | consumed | needs_attention`; only `approved` carries an unused nonce, and only `consumed` names the exact consuming operation ID.
+
+Every evidence object also declares `subject_kind: git | non_git`. Git subjects require repository/workspace/base identity; non-Git subjects forbid those fields. IDs are 1–128 characters from the contract's bounded ASCII grammar. `limitations` contains at most thirty-two closed objects with bounded code, severity (`info | warning | blocking`), and sanitized message. Artifact arrays contain at most sixteen entries; artifact-free receipts use an empty array. Artifact paths are at most 512 characters with 1–128-character slash-separated ASCII segments and reject backslashes, percent-encoded separators/dot segments, empty segments, controls, absolute prefixes, and `.`/`..`.
+
+Static capability availability is exactly one of:
+
+- `native` — informational support through explicit `supporting_refs`; action references are `{kind: "action", id}` and startup references are `{kind: "startup", index, command}`, where the zero-based index and exact command must match one `[[startup]]` manifest entry. Native support is human/Herdr-action-facing and never a normalized coordinator invocation surface;
+- `adapter` — a real one-shot coordinator-callable executable operation exists;
+- `unavailable` — the operation cannot run and cannot silently pass.
+
+No placeholder adapter is allowed. Wave 1 validates evidence examples but does not add producer adapters.
+
+**Gate:** positive corpus passes; unknown kind/major, duplicate IDs, missing required capability, unsupported required descriptor, invalid kind/outcome combination, missing/forbidden Git or approval fields, outcome inflation, invalid artifact cardinality/path, malformed digests, and unknown fields fail.
+
+#### C2. Plugin static descriptors
+
+After schema review, add static descriptors in this order: Guard, Swarm, Conductor, Browser. Every descriptor is derived from and tested against its plugin manifest/package, lists exact `supporting_refs` for each `native` capability (action ID or startup index plus exact command), and passes with sibling checkouts absent.
+
+Required descriptor bases are:
+
+- Guard: verified `v0.1.1` tag target; `guard.rendered-text-audit/1` native; bounded export unavailable.
+- Swarm: main containing merged reviewed safety tree `18fcc7b`; `explore.candidates/1` native; suite preview/apply unavailable.
+- Conductor: reviewed Stage 1 main, not Stage 0; `deliver.roles/1` native; reports/preview/apply unavailable until later stages.
+- Browser: released Browser main/0.5.x, not `8ccc8b8`; native recording actions, suite export unavailable.
+
+Every adapter field remains null and no `bin/suite-adapter.mjs` is created in Wave 1. Before any later Browser 0.6 promotion, integrate the reviewed Browser descriptor commit into the held `8ccc8b8` tree (or rebase the equivalent trees), then rerun the complete test/static/live-evidence matrix and independent review against the composite commit.
+
+#### C3. Descriptor evidence matrix
+
+Store descriptor evidence in a nested `suite_descriptor` object in each `data/plugins.json` plugin record: `contract`, `commit`, `path`, `sha256`, and reviewed evidence date. Updating `suite_descriptor` is atomic and must not alter or imply the runtime release commit, manifest digest, minimum/tested Herdr versions, or compatibility evidence. Site CI checks out each exact plugin descriptor commit into a temporary path, validates schema and digest, cross-checks package/manifest identity, and proves sibling repositories are unnecessary.
+
+**Gate:** all four exact descriptors validate in clean checkouts; mutated digest, commit, path, version, missing required capability, and false availability fixtures fail. Do not add automatic composition, adapter-operation, or E2E-readiness claims.
+
+## Current Holds and Decisions
+
+The following remain intentionally unmerged or unpinned:
+
+- Browser 0.6.0 evidence work until Wave 1 schemas and later receipt/live gates;
+- Guard site compatibility restoration until merge, manual smoke, and `v0.1.1` exist;
+- Conductor runtime evidence updates until Stage 1 and its live gate;
+- Swarm projection/apply under `TODO-4b31f11e` until Wave 2/3;
+- Guard export under `TODO-ec8596c2` until Wave 2;
+- public coordinator/run lifecycle, automatic Conductor→Swarm composition, and concurrent cross-plugin mutation.
+
+Maintainer decisions required before execution:
+
+1. approve merging exact Guard, Swarm, and Conductor reviewed heads;
+2. choose a merge strategy that preserves the reviewed trees, or accept revalidation of changed merge trees;
+3. approve Guard's non-destructive manual smoke and `v0.1.1` tag/release;
+4. approve a read-only site CI workflow plus a pinned development-only JSON Schema dependency;
+5. confirm whether Conductor Stage 1 targets version `0.2.0`.
+
+## Next Go/No-Go Order
+
+1. **GO only with maintainer approval:** merge reviewed Guard, Swarm, and Conductor heads.
+2. **GO after Guard smoke:** tag/release 0.1.1 and repin the site atomically.
+3. **GO after Stage 0 merge:** implement Conductor Stage 1 B0→B4; B0's independently reviewed live identity report is a hard prerequisite to B1, and execution stops on any unavailable required identity, weakened identity check, or destructive invariant.
+4. **GO after schema review:** implement site schemas/corpus, then isolated static descriptors.
+5. **NO-GO throughout Wave 1:** Browser 0.6.0 promotion, suite adapters, approval-aware mutators, automatic pipeline claims, or E2E-readiness claims.

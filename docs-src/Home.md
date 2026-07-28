@@ -26,11 +26,11 @@ The pinned runtime does not provide product-enforced approval gates, durable aut
 | Plugin | ID | Pinned release | Minimum Herdr | Explicitly tested | Purpose |
 | --- | --- | --- | --- | --- | --- |
 | [Browser](Browser) | `structupath.browser` | `0.5.0` | `0.7.0` | `0.7.4` | Supporting browser visibility and recording |
-| [Guard](Guard) | `structupath.guard` | `0.1.0` | `0.7.5` | `0.7.5` | Supporting advisory text policy, audit, alert, and best-effort interrupt |
+| [Guard](Guard) | `structupath.guard` | `0.1.0` | `0.7.5` | `pending transport hotfix` | Supporting advisory text policy, audit, alert, and best-effort interrupt |
 | [Swarm](Swarm) | `structupath.swarm` | `0.1.0` | `0.7.4` | `0.7.4`, `0.7.5` | Ready Explore workflow: parallel candidates and review-first harvest |
 | [Conductor](Conductor) | `structupath.conductor` | `0.1.0` | `0.7.5` | `0.7.5` | Advanced Deliver pattern: role workers, reports, and reconciliation |
 
-Versions are plugin-specific evidence pinned in [`data/plugins.json`](https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json), not a claim that every plugin was tested on one suite-wide Herdr version.
+Versions are plugin-specific evidence pinned in [`data/plugins.json`](https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json), not a claim that every plugin was tested on one suite-wide Herdr version. Guard's prior 0.7.5 evidence is temporarily withdrawn because the pinned 0.1.0 socket transport fails after one RPC; it will be restored only after the repaired release passes a live smoke.
 
 ## Composition and supervision boundaries
 

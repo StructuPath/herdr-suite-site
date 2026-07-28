@@ -10,8 +10,10 @@ Repo: [StructuPath/herdr-guard](https://github.com/StructuPath/herdr-guard) · D
 | --- | --- |
 | Plugin release | `0.1.0` |
 | Minimum Herdr | `0.7.5` |
-| Explicitly tested Herdr | `0.7.5` |
+| Explicitly tested Herdr | `pending transport hotfix` |
 | Evidence commit | `fa8ebcaaf6731976b9c208ebb4bcd61339deac97` |
+
+> **Compatibility evidence withdrawn:** the pinned `0.1.0` client was later shown to fail a second Herdr 0.7.5 RPC because it reused a socket that Herdr closes after one response. The preserved one-shot RPC repair must be committed, live-smoked, and released before 0.7.5 is listed as explicitly tested again.
 
 ## Actions
 

@@ -66,7 +66,7 @@
 </tr>
 <tr>
 <td>Explicitly tested Herdr</td>
-<td><code>0.7.5</code></td>
+<td><code>pending transport hotfix</code></td>
 </tr>
 <tr>
 <td>Evidence commit</td>
@@ -74,6 +74,9 @@
 </tr>
 </tbody>
 </table></div>
+<blockquote>
+<p><strong>Compatibility evidence withdrawn:</strong> the pinned <code>0.1.0</code> client was later shown to fail a second Herdr 0.7.5 RPC because it reused a socket that Herdr closes after one response. The preserved one-shot RPC repair must be committed, live-smoked, and released before 0.7.5 is listed as explicitly tested again.</p>
+</blockquote>
 <h2>Actions</h2>
 <div class="table-scroll"><table>
 <thead>

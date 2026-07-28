@@ -46,7 +46,10 @@ PUBLIC_TEXT_FILES = [
 
 
 def load_plugins() -> list[dict[str, Any]]:
-    payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    try:
+        payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"unable to load {DATA_FILE.relative_to(SITE)}: {error}") from error
     if payload.get("schema_version") != 1:
         raise ValueError("data/plugins.json schema_version must be 1")
     plugins = payload.get("plugins")
@@ -63,7 +66,7 @@ def expected_tested(plugin: dict[str, Any]) -> str:
         raise ValueError(
             f"{plugin['slug']}: tested_herdr_versions must be a string list"
         )
-    return "`, `".join(versions)
+    return "`, `".join(versions) if versions else "pending transport hotfix"
 
 
 def check_plugin_doc(plugin: dict[str, Any], text: str) -> list[str]:

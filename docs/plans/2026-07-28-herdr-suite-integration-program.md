@@ -29,12 +29,14 @@ Wave 0 captured every repository's branch, HEAD, staged diff, working diff, and 
 
 The Browser patch is formatting-only and should remain a separate commit. The Guard patch is a release-blocking compatibility repair: the released multiplexed socket fails on the second Herdr 0.7.5 RPC, while the preserved one-shot RPC/dedicated-subscription implementation succeeds.
 
+Before the first write in either dirty repository, regenerate `git diff --binary`, verify it against the recorded SHA-256, record the prepared CI branch tip, and make the first mutation an isolated commit containing only the preserved files. Push or otherwise durably mirror that preservation commit before follow-on edits. `/tmp` is evidence, not durable recovery.
+
 ## Current Safety Priorities
 
 These issues block mutating integration work:
 
 1. **Swarm abort can delete ignored-only work.** Abort checks ordinary porcelain status but lacks Harvest's ignored-file inventory guard.
-2. **Guard 0.1.0 transport is incompatible with observed Herdr 0.7.5 socket behavior.** The preserved repair must land and be live-smoked first.
+2. **Guard 0.1.0 transport is incompatible with observed Herdr 0.7.5 socket behavior.** The preserved repair must land and be live-smoked first. The site's current `tested_herdr_versions: ["0.7.5"]` evidence is invalid now and must be removed or marked pending in Wave 0, then restored only for the fixed release.
 3. **Conductor active-run selection is global and workspace-blind.** Current status/harvest/stand-down can select another repository's newest run.
 4. **Conductor state is executable shell data and teardown does not prove pane ownership.** Current stand-down must not be used as a cleanup mechanism for ambiguous legacy state.
 5. **Conductor read-only mode is contradictory.** It neither enforces read-only launch behavior nor supplies a writable report outbox to a genuinely read-only reviewer.
@@ -50,25 +52,18 @@ Site copy remains bounded until these issues and the corresponding live gates cl
 
 `herdr-suite-site` owns schemas, examples, compatibility pins, the stubbed E2E harness, and claim checks. This is a test/documentation responsibility, not a fifth runtime product.
 
-No plugin imports site code at runtime. Released schema copies are validated locally by each plugin's tests and pinned by digest in the site.
+No plugin imports site code at runtime. Canonical schemas remain in the site; plugin-local golden fixtures test exact emitted shapes without vendoring mutable site schemas into every repository.
 
-### ADR-2 — Plugins expose one-shot adapters
+### ADR-2 — Static descriptors first; one-shot adapters only with real operations
 
-Each plugin exposes a zero-dependency command with strict JSON stdin/stdout:
+Wave 1 adds static capability descriptors derived from and tested against each plugin manifest/package. A plugin adds `bin/suite-adapter.mjs` only when its first concrete operation ships: Browser recording export, Guard bounded export, Swarm projection/preview, or Conductor report/reconciliation preview. There are no placeholder `negotiate`/`inspect` executables.
 
-```text
-node bin/suite-adapter.mjs negotiate
-node bin/suite-adapter.mjs inspect
-node bin/suite-adapter.mjs preview   # mutators only
-node bin/suite-adapter.mjs apply     # mutators only; approval required
-```
-
-Rules:
+Adapter rules:
 
 - exactly one JSON object on stdin and stdout;
 - human diagnostics only on stderr;
 - no sibling checkout discovery or private sibling-state parsing;
-- absent adapter means suite contract unsupported, not plugin failure;
+- absent adapter means that suite operation is unsupported, not plugin failure;
 - existing Herdr actions remain independently usable.
 
 Typed exit classes:
@@ -82,13 +77,14 @@ Typed exit classes:
 | `75` | stale or retryable state |
 | `77` | approval refused or already consumed |
 
-### ADR-3 — Three small versioned contracts
+### ADR-3 — Two small public contracts
 
 The first public contract family contains:
 
-1. `herdr-suite-capabilities/v1` — static descriptor and live negotiation result.
-2. `herdr-suite-run/v1` — coordinator-owned run snapshot and transition history.
-3. `herdr-suite-evidence/v1` — immutable producer receipt, artifact references, limitations, and scoped approval receipts.
+1. `herdr-suite-capabilities/v1` — static descriptors and operation availability.
+2. `herdr-suite-evidence/v1` — producer operation/evidence receipts, artifact references, limitations, and scoped approval receipts.
+
+The E2E harness may keep private fixture run state and transitions under temporary test state, but there is no public coordinator/run lifecycle API until a second real coordinator needs one.
 
 Required common identity:
 
@@ -101,22 +97,13 @@ Required common identity:
 
 Only a named test/check can report `passed`. Browser recordings and Guard observations normally report `observed`. SHA-256 proves content integrity after capture, not identity, provenance, or correctness.
 
-### ADR-4 — The coordinator is the sole suite-run writer
+### ADR-4 — The test coordinator is the sole bundle writer
 
-The human helper, trusted orchestrator, or E2E harness that starts a run is the sole writer of the portable run bundle:
+The E2E harness is non-installed test code, not a general-purpose run/resume/apply CLI. It alone writes its private fixture state, approvals, imported receipt index, and artifacts. Plugins retain private operational state and return normalized receipts; they never write another plugin's state or artifact directory.
 
-```text
-run.json
-transitions.ndjson
-approvals/
-evidence/
-artifacts/browser/
-artifacts/guard/
-artifacts/swarm/
-artifacts/conductor/
-```
+Artifact import is fail-closed: validate bounded ASCII path-derived IDs; resolve only beneath a negotiated plugin-owned export root; reject absolute/parent/control paths, empty segments, intermediate or leaf symlinks, non-regular files, duplicate destinations, and files over capability-specific limits. Copy from a no-follow source descriptor where available into a private sibling temp, enforce the byte cap while streaming, fsync, compare actual size/SHA-256, then atomically rename. Failure removes only the temp and does not publish a success receipt.
 
-Plugins retain their private operational state and return normalized receipts. The coordinator validates and copies artifacts, rejects symlinks/path traversal, and re-hashes after copy. Plugins never write another plugin's state or artifact directory.
+Fixture/bundle directories are `0700`, files are `0600`, and diagnostics never print artifact contents or secrets. Browser recordings, Guard text/process metadata, repository paths, reports, and logs are sensitive local data. Default retention is explicit retain; deletion requires a separate inventory preview and approval.
 
 ### ADR-5 — Capability negotiation is explicit
 
@@ -136,28 +123,15 @@ Examples:
 
 Unknown required capability IDs or contract majors fail closed. Optional missing capabilities become `skipped` or `unavailable`, never silently successful.
 
-### ADR-6 — Lifecycle and approval are explicit
+### ADR-6 — Approval-aware mutators use explicit, atomic state
 
-Run lifecycle:
+Approval binds actor kind (`human` or `trusted-orchestrator`), operation, preview evidence digest, expected base SHA/target ref, exact candidate or branch-tip set, and a one-use nonce.
 
-```text
-declared -> negotiating -> running -> awaiting_review
-awaiting_review -> approved | rejected | cancelled
-approved -> applying
-applying -> succeeded | needs_attention | failed
-needs_attention -> awaiting_review | cancelled
-```
+Under the owning plugin's repository mutation lock, `apply` atomically transitions `{approved, nonce: unused, revision: N}` to `{consuming, operation_id, revision: N+1}` before any side effect. A retry with the same operation ID may only recover/return the journaled result; another replay is refused. A crash after consumption becomes `needs_attention` and cannot silently reapply. Failed precondition checks before consumption leave the nonce unused; any ambiguous crash or side effect requires a fresh preview and approval.
 
-Approval binds:
+Immediately before mutation, the adapter re-computes the preview subject. Any changed base, branch tip, report digest, config digest, integration SHA, cleanup inventory, or revision performs zero mutation and supersedes the approval.
 
-- actor kind (`human` or `trusted-orchestrator`);
-- operation;
-- preview evidence digest;
-- expected base SHA and target ref;
-- exact candidate or branch-tip set;
-- one-use nonce.
-
-Before mutation, the owning adapter re-computes the preview subject. Any changed base, branch tip, report digest, config digest, or integration SHA supersedes the approval and performs zero mutation.
+V1 actor kinds are cooperative same-user assertions, not authentication against a malicious same-UID process. Approvals live outside declared worker writable roots with private modes, but hashes and permissions do not create an authorization boundary.
 
 ### ADR-7 — Swarm and Conductor remain separate owners
 
@@ -174,7 +148,15 @@ Guard may observe either workflow; native harness/OS controls enforce.
 Browser may contribute reviewable observation artifacts to either workflow.
 ```
 
-A neutral repository-mutation lease keyed by physical Git common-directory identity prevents concurrent Swarm and Conductor mutation without creating a runtime dependency.
+Concurrent Swarm and Conductor mutation of one Git common directory is unsupported. The harness executes them sequentially, and each plugin keeps its own repository-scoped lock/active-run refusal. A shared cross-plugin lease is deferred unless concurrent independent mutation becomes a real supported scenario.
+
+## Fail-Closed Security Invariants
+
+- Every mutator requires one exact, schema-valid, regular non-symlink state generation whose repo/workspace/run identity matches the request. Missing, truncated, duplicate, incompatible, symlinked, or mismatched state returns `state_unknown`/`bookkeeping_unknown` with zero mutation. `.bak` is recovery inventory, never automatic mutation authority.
+- Destructive cleanup is preview/apply. The preview emits a canonical recursive inventory digest bound to physical Git common-dir identity, run, resource, and operation ID. Apply re-verifies ownership and re-computes inventory immediately before removal; any change refuses without deletion.
+- Conductor pane identity includes workspace ID, pane ID, terminal ID, agent session/name, canonical cwd, run ID, and resource generation. Worktree identity includes canonical path, physical Git common dir, exact full branch ref, fork/head SHA, and `git worktree list --porcelain` membership. Missing, duplicate, changed, or foreign identity performs no close/remove.
+- Stand-down closes only identity-proven panes and archives state. It does not delete worktrees, branches, or artifacts. Deletion is a separate future design.
+- Private legacy state is not silently migrated or adopted. Finish a proven live Swarm v0 run with current code or start a fresh format; Conductor legacy state is read-only administrative inventory.
 
 ## Repository Tracks
 
@@ -199,7 +181,7 @@ A neutral repository-mutation lease keyed by physical Git common-directory ident
 
 **Wave 0B:** correct the demo and audit vocabulary. Record interrupt decision, request acceptance/failure, and `prevention: unknown` separately. Never say Guard cancelled or prevented a command.
 
-**Wave 2:** add strict versioned run evidence with run/event IDs, monotonic sequence, producer version, policy digest, limitation states, and bounded immutable export. Every string leaf uses the same sanitize/redact/truncate pipeline. Legacy JSONL remains unversioned diagnostics.
+**Wave 2:** add one bounded immutable export receipt over selected sanitized events, with producer version, policy digest, coordinator-supplied correlation, explicit omission/corruption limitations, and truthful decision/request/prevention fields. Every string leaf uses the same sanitize/redact/truncate pipeline. Keep operational rotating JSONL as the one Guard log system; defer producer run/event journals until a replay/resume consumer exists.
 
 ### Swarm
 
@@ -210,9 +192,9 @@ A neutral repository-mutation lease keyed by physical Git common-directory ident
 - fail-closed prune when bookkeeping is corrupt or unknown;
 - idempotent full-harvest run finalization/archive and exclude cleanup.
 
-**Wave 1/2:** add semantic manifest versioning, a read-only adapter, explicit candidate submission/readiness bound to `head_sha`, normalized comparison facts, evidence references, and append-only events.
+**Wave 1/2:** add a read-only JSON projection/preview over the existing private manifest. Report recorded fork, current base, candidate head, dirty state, diff/comparison facts, and limitations. Keep candidate selection and evidence in the fixture/coordinator receipt; defer internal manifest migration, producer event journals, and readiness state until a real non-human resumable consumer needs them.
 
-**Wave 3:** add approval-aware apply with expected revision/base/head, idempotency keys, one JSON result envelope, and stable failure codes. Swarm never ranks or selects a winner.
+**Wave 3:** add approval-aware apply bound to expected base and expected candidate head, with idempotency keys, one JSON result envelope, and stable failure codes. Swarm never ranks or selects a winner.
 
 ### Conductor
 
@@ -222,7 +204,7 @@ A neutral repository-mutation lease keyed by physical Git common-directory ident
 
 **Stage 2:** add strict task/report schemas and atomic report outbox. Review runs against the exact integration SHA with source read-only and a separate writable outbox. Validate runs at the exact integration SHA and fails on tracked or non-allowlisted source changes.
 
-**Stage 3:** add deterministic preview, validated verdicts, explicit approval receipts, approval-aware reconcile/apply, crash recovery, identity-checked stand-down, archived state, and dry-run-first prune.
+**Stage 3:** add deterministic preview, validated verdicts, explicit approval receipts, approval-aware reconcile/apply, crash recovery, identity-checked stand-down, and archived state. Deletion/prune is deferred; E2E verifies retained cleanup inventory.
 
 Conductor remains an advanced assembly pattern until a live E2E proves these stages.
 
@@ -231,11 +213,10 @@ Conductor remains an advanced assembly pattern until a live E2E proves these sta
 Add:
 
 - `contracts/capabilities-v1.schema.json`
-- `contracts/run-v1.schema.json`
 - `contracts/evidence-v1.schema.json`
 - `contracts/examples/`
 - `scripts/validate_suite_contract.py`
-- `scripts/suite_e2e.py`
+- `scripts/suite_e2e.py` (non-installed test code with private fixture state)
 - descriptor digests and E2E evidence pins in `data/plugins.json`
 
 `check_docs.py` continues rejecting unsupported automatic, unattended, secure, enforced, prevented, or attested-pipeline claims.
@@ -246,16 +227,16 @@ After Waves 1–3, the neutral harness runs with explicit repository roots in a 
 
 Scenario:
 
-1. Negotiate all four exact adapters and record limitations.
+1. Validate all four exact static descriptors; invoke only adapters whose real operations have shipped; record limitations.
 2. Start Browser recording; later import it as `observed` evidence.
 3. Start Guard observer, inject one visible dangerous line and one unseen popup-equivalent event; require an interrupt-attempt observation plus `inconclusive` coverage.
-4. Create two Swarm candidates from the same base: one passing and one failing. Retain evidence for both.
-5. Record a trusted selection approval for the passing candidate; apply it with expected-base/journal guards.
+4. Create two Swarm candidates from the same base: fixture candidate A passes and candidate B fails. Retain both receipts.
+5. The fixture predeclares candidate A's ID/SHA and supplies a test approval; the harness never infers or ranks the winner. Apply A with expected-base/head/journal guards.
 6. Assemble Conductor against the selected SHA; produce writer, validator, and reviewer reports bound to exact input/output SHAs.
 7. Preview Conductor reconciliation and grant scoped approval.
 8. Inject target/base drift after approval. First apply must return stale approval and perform zero mutation.
 9. Re-preview, re-approve, and apply successfully.
-10. Import Browser and Guard bounded artifacts, validate every digest, run final tests, and verify cleanup inventory.
+10. Import Browser and Guard bounded artifacts, validate every digest, assert the exact Conductor validator receipt already produced, and verify retained cleanup inventory. The harness does not become a generic test runner or product orchestrator.
 
 Required assertions:
 
@@ -274,7 +255,8 @@ A separate opt-in live Herdr matrix is required before changing public readiness
 
 ### Wave 0 — preserve, repair, and freeze truthful boundaries
 
-- Commit/preserve Browser formatting and Guard transport work separately.
+- Before any dirty-repo write, re-hash Browser/Guard diffs, record CI branch tips, make isolated preservation commits, and durably mirror them.
+- Immediately remove or mark pending the invalid Guard 0.1.0 / Herdr 0.7.5 tested-version evidence in `data/plugins.json`, canonical Guard docs, and generated output.
 - Land minimal CI/static validation tracks.
 - Fix Swarm's current destructive/lifecycle blockers.
 - Correct Conductor claims and remove/archival-label unrelated or stale material.
@@ -282,28 +264,28 @@ A separate opt-in live Herdr matrix is required before changing public readiness
 
 **Gate:** preservation hashes still match; all current tests pass; no staged/unrelated files; Guard hotfix live-smoked; site still says no automatic pipeline.
 
-### Wave 1 — schemas and negotiation only
+### Wave 1 — schemas and static capability descriptors
 
-- Add site schemas/examples/validator.
-- Add capability descriptors and `negotiate` adapters in all four plugins.
-- Do not change plugin mutation behavior.
+- Add site capability/evidence schemas, examples, and validator.
+- Add static descriptors in all four plugins, derived from/tested against manifests and package metadata.
+- Do not add placeholder adapters or change plugin lifecycle/mutation behavior.
 
-**Gate:** positive/negative schema corpus, major mismatch, missing optional/required plugin, descriptor digest pins, and isolated installation tests with siblings absent.
+**Gate:** positive/negative schema corpus, major mismatch, missing optional/required descriptor, descriptor digest pins, and isolated plugin tests with siblings absent.
 
 ### Wave 2 — observational evidence
 
 - Browser run-scoped recording receipt.
 - Guard bounded immutable evidence export with limitations.
-- Swarm candidate projection/preview/readiness/evidence receipts.
+- Swarm candidate projection/preview receipts over its private manifest.
 - Conductor report completion and reconciliation preview receipts.
 
 **Gate:** traversal/symlink rejection, copy/re-hash validation, corrupt-state handling, no private cross-read, and no evidence outcome inflated to approval or pass.
 
 ### Wave 3 — approval-aware mutation and stubbed E2E
 
-- Add Swarm/Conductor suite apply paths with scoped one-use approvals.
-- Add neutral repo mutation lease.
-- Run stale-approval, drift, conflict, failure, replay, and cleanup scenarios.
+- Add Swarm/Conductor suite apply paths with scoped one-use approvals and atomic consume/journal semantics under each plugin's own repository lock.
+- Keep Swarm and Conductor sequential; concurrent cross-plugin mutation remains unsupported.
+- Run stale/concurrent approval, crash-after-consume, drift, conflict, failure, replay, corrupt-state, foreign-resource, artifact-import, and inventory-change scenarios.
 
 **Gate:** stale apply performs zero mutation; replay is refused; failures remain recoverable; final fixture tests pass; all four receipts correlate.
 
@@ -326,14 +308,19 @@ A separate opt-in live Herdr matrix is required before changing public readiness
 - No cryptographic worker identity or report attestation in v1.
 - No automatic base update, push, PR, deployment, or branch deletion.
 - No speculative compatibility shims for unsupported contract majors.
+- No public coordinator/run lifecycle API from the test harness.
+- No runtime migration, backfill, or silent adoption of private legacy Swarm/Conductor state.
+- No concurrent Swarm/Conductor mutation support.
+- No automatic deletion or cleanup under a selection/reconcile approval.
 
 ## Wave 0 Acceptance
 
 Wave 0 is complete only when:
 
-1. Browser and Guard preservation hashes are rechecked after every write.
+1. Browser and Guard preservation hashes are rechecked before the first write and after every write; exact preserved commits are durably mirrored before follow-on edits.
 2. Browser formatting and Guard transport changes are committed independently and remain recoverable from remote branches.
-3. Swarm's ignored-file Abort, repo-scoped mutation identity, full-run finalization, and fail-closed backup protection have regression tests.
-4. Conductor's public docs no longer claim Swarm-backed lifecycle, Guard enforcement, verified pane ownership, durable recovery, or enforced read-only behavior.
-5. All plugin tests, shell/static checks, site generation, and site claim checks pass.
-6. No integration-runtime claim is added to the site.
+3. The invalid Guard 0.1.0 / Herdr 0.7.5 tested-version evidence is removed or marked pending until the fixed release is live-smoked.
+4. Swarm's digest-bound ignored-file cleanup, repo-scoped mutation identity, full-run finalization, and fail-closed backup protection have negative regression tests.
+5. Conductor's public docs no longer claim Swarm-backed lifecycle, Guard enforcement, verified pane ownership, durable recovery, or enforced read-only behavior.
+6. All plugin tests, shell/static checks, site generation, and site claim checks pass.
+7. No integration-runtime claim is added to the site.

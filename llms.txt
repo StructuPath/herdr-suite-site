@@ -28,7 +28,7 @@ Guide: https://herdr.structupath.ai/docs/conductor/
 ## Supporting trust capabilities
 
 - Browser (`structupath.browser`) release 0.5.0: Herdr >=0.7.0; evidence records testing with 0.7.4. Drivable workspace browser session and WebM recording. Sessions are a trusted same-user boundary; recordings may be sensitive. https://herdr.structupath.ai/docs/browser/
-- Guard (`structupath.guard`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. Advisory rendered-text policy: audit, alert, and best-effort interrupt. It is not a sandbox or authorization boundary. https://herdr.structupath.ai/docs/guard/
+- Guard (`structupath.guard`) release 0.1.0: manifest minimum Herdr 0.7.5; explicit tested-version evidence is withdrawn pending the one-shot RPC transport hotfix. Advisory rendered-text policy: audit, alert, and best-effort interrupt. It is not a sandbox or authorization boundary. https://herdr.structupath.ai/docs/guard/
 
 ## Trust and composition boundaries
 

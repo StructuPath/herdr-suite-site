@@ -113,9 +113,7 @@ def check_plugin_doc(plugin: dict[str, Any], text: str) -> list[str]:
     return errors
 
 
-def check_llms_summaries(
-    plugins: list[dict[str, Any]], text: str
-) -> list[str]:
+def check_llms_summaries(plugins: list[dict[str, Any]], text: str) -> list[str]:
     errors = []
     for plugin in plugins:
         release = re.compile(
@@ -458,7 +456,9 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
         if marker.casefold() not in quickstart.casefold():
             errors.append(f"Conductor quickstart missing safety boundary: {marker!r}")
 
-    public_text = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", rendered_html)))
+    public_text = re.sub(
+        r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", rendered_html))
+    )
     required_contract = (
         "selects the newest run globally rather than by repository/workspace identity",
         "without live ownership verification",

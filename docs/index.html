@@ -82,10 +82,10 @@
 <tr>
 <td><a href="/docs/guard/">Guard</a></td>
 <td><code>structupath.guard</code></td>
-<td><code>0.1.0</code></td>
+<td><code>0.1.1</code></td>
 <td><code>0.7.5</code></td>
-<td><code>pending transport hotfix</code></td>
-<td>Supporting advisory text policy, audit, alert, and best-effort interrupt</td>
+<td><code>0.7.5</code></td>
+<td>Supporting advisory text policy, audit, alert, and best-effort interrupt request</td>
 </tr>
 <tr>
 <td><a href="/docs/swarm/">Swarm</a></td>
@@ -105,7 +105,7 @@
 </tr>
 </tbody>
 </table></div>
-<p>Versions are plugin-specific evidence pinned in <a href="https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json"><code>data/plugins.json</code></a>, not a claim that every plugin was tested on one suite-wide Herdr version. Guard's prior 0.7.5 evidence is temporarily withdrawn because the pinned 0.1.0 socket transport fails after one RPC; it will be restored only after the repaired release passes a live smoke.</p>
+<p>Versions are plugin-specific evidence pinned in <a href="https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json"><code>data/plugins.json</code></a>, not a claim that every plugin was tested on one suite-wide Herdr version. Guard 0.1.1 passed its non-destructive Herdr 0.7.5 live smoke. Guard remains best-effort rendered-text policy: an accepted interrupt request is observable, but command prevention is unknown.</p>
 <h2>Composition and supervision boundaries</h2>
 <p>These plugins can be installed together, but the current runtime is not a single automatic pipeline.</p>
 <div class="table-scroll"><table>

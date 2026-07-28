@@ -113,6 +113,34 @@ def check_plugin_doc(plugin: dict[str, Any], text: str) -> list[str]:
     return errors
 
 
+def check_llms_summaries(
+    plugins: list[dict[str, Any]], text: str
+) -> list[str]:
+    errors = []
+    for plugin in plugins:
+        release = re.compile(
+            rf"^(?:-\s+)?{re.escape(str(plugin['name']))}\s+"
+            rf"\(`{re.escape(str(plugin['id']))}`\)\s+release\s+"
+            rf"{re.escape(str(plugin['version']))}:",
+            re.MULTILINE,
+        )
+        if not release.search(text):
+            errors.append(f"llms.txt release summary drift for {plugin['slug']}")
+
+    guard = next(plugin for plugin in plugins if plugin["slug"] == "guard")
+    tested = ", ".join(guard["tested_herdr_versions"])
+    guard_evidence = re.compile(
+        rf"^-\s+Guard\s+\(`{re.escape(str(guard['id']))}`\)\s+release\s+"
+        rf"{re.escape(str(guard['version']))}:\s+manifest minimum Herdr\s+"
+        rf"{re.escape(str(guard['min_herdr_version']))};\s+"
+        rf"evidence records testing with\s+{re.escape(tested)}\.",
+        re.MULTILINE,
+    )
+    if not guard_evidence.search(text):
+        errors.append("llms.txt tested-version summary drift for guard")
+    return errors
+
+
 def check_data_and_docs(plugins: list[dict[str, Any]]) -> list[str]:
     errors = []
     seen_slugs = set()
@@ -157,6 +185,7 @@ def check_data_and_docs(plugins: list[dict[str, Any]]) -> list[str]:
         )
 
     home = (DOCS_SRC / "Home.md").read_text(encoding="utf-8")
+    llms = (SITE / "llms.txt").read_text(encoding="utf-8")
     for plugin in plugins:
         tested = expected_tested(plugin)
         row = re.compile(
@@ -167,6 +196,7 @@ def check_data_and_docs(plugins: list[dict[str, Any]]) -> list[str]:
         )
         if not row.search(home):
             errors.append(f"docs-src/Home.md summary drift for {plugin['slug']}")
+    errors.extend(check_llms_summaries(plugins, llms))
     return errors
 
 
@@ -540,6 +570,24 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     version = str(plugin["version"])
     if not check_plugin_doc(plugin, source.replace(f"`{version}`", "`999.0.0`", 1)):
         failures.append("self-test did not detect version drift")
+
+    llms = (SITE / "llms.txt").read_text(encoding="utf-8")
+    guard = next(item for item in plugins if item["slug"] == "guard")
+    inflated_release = llms.replace(
+        f"Guard (`{guard['id']}`) release {guard['version']}:",
+        f"Guard (`{guard['id']}`) release {guard['version']}0:",
+        1,
+    )
+    if not check_llms_summaries(plugins, inflated_release):
+        failures.append("self-test did not detect llms release boundary drift")
+    tested = ", ".join(guard["tested_herdr_versions"])
+    inflated_tested = llms.replace(
+        f"evidence records testing with {tested}.",
+        f"evidence records testing with {tested}0.",
+        1,
+    )
+    if not check_llms_summaries(plugins, inflated_tested):
+        failures.append("self-test did not detect llms tested-version boundary drift")
     forbidden_samples = {
         "Guard enforcement claim": ("Guard enforces every agent command.",),
         "verified Conductor teardown": (
@@ -604,8 +652,8 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
         failures.append("self-test did not detect a weakened Explore trust boundary")
     if not failures:
         print(
-            "OK: self-test detected action, version, forbidden-claim, Conductor "
-            "quickstart/safety-contract, and Explore-boundary mutations"
+            "OK: self-test detected action, version, llms-version, forbidden-claim, "
+            "Conductor quickstart/safety-contract, and Explore-boundary mutations"
         )
     return failures
 

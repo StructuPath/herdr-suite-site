@@ -1,6 +1,6 @@
-# 🎩 Conductor (`structupath.conductor`)
+# 🎩 Deliver with Conductor (`structupath.conductor`)
 
-Conductor runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. An orchestrating agent drives dispatch; completion is a report-file sentinel, not an agent's `idle` state.
+**Advanced assembly pattern.** Conductor runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. A human or trusted orchestrating agent drives dispatch, review, and harvest; completion is a report-file sentinel, not an agent's `idle` state.
 
 Repo: [StructuPath/herdr-conductor](https://github.com/StructuPath/herdr-conductor) · Detailed reference: the repo [README](https://github.com/StructuPath/herdr-conductor#readme)
 

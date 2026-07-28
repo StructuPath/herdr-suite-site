@@ -1,6 +1,6 @@
 # 🛡️ Guard (`structupath.guard`)
 
-Guard is an **advisory, best-effort** cross-agent command policy layer for Herdr. It audits and alerts on matching terminal text and may interrupt visible shell input, but it is not an authorization boundary for agent TUIs.
+**Supporting text-policy capability.** Guard is an **advisory, best-effort** cross-agent command policy layer for Herdr. It audits and alerts on matching terminal text and may interrupt visible shell input, but it is not a sandbox or authorization boundary for agent TUIs.
 
 Repo: [StructuPath/herdr-guard](https://github.com/StructuPath/herdr-guard) · Detailed reference: the repo [README](https://github.com/StructuPath/herdr-guard#readme)
 

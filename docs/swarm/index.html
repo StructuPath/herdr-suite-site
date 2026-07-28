@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Swarm guide — Herdr Suite docs</title>
-<meta name="description" content="Swarm tries one task several ways in parallel. Each agent gets a Swarm-owned git worktree and branch from a recorded base SHA; agents commit locally and th">
+<title>Explore · Swarm guide — Herdr Suite docs</title>
+<meta name="description" content="Repo: StructuPath/herdr-swarm · Detailed reference: the repo README">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,16 +16,13 @@
   <div class="nav-inner">
     <a class="wordmark" href="/"><span class="mark">H</span>herdr&nbsp;suite</a>
     <div class="nav-links">
-      <a href="/#plugins">Plugins</a>
-      <a href="/#install">Install</a>
-      <a href="/docs/" aria-current="page">Docs</a>
-      <a href="/llms.txt">llms.txt</a>
+      <a href="/#explore">Explore</a>
+      <a href="/#deliver">Deliver · advanced</a>
+      <a href="/#trust">Trust</a>
     </div>
     <div class="nav-spacer"></div>
-    <a class="nav-gh" href="https://github.com/StructuPath" aria-label="StructuPath on GitHub">
-      <svg width="19" height="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-    </a>
-    <a class="btn" href="/#install">Install</a>
+    <a class="nav-docs" href="/docs/" aria-current="page">Docs</a>
+    <a class="btn" href="/#first-run">Start Explore</a>
   </div>
 </nav>
 
@@ -33,12 +30,15 @@
   <aside class="sidebar" aria-label="Docs navigation">
     <h4>Docs</h4>
     <ul><li><a href="/docs/">Overview</a></li></ul>
-    <h4>Plugins</h4>
+    <h4>Workflows</h4>
     <ul>
-      <li><a href="/docs/browser/">🌐 Browser</a></li>
-      <li><a href="/docs/guard/">🛡️ Guard</a></li>
-      <li><a href="/docs/swarm/" class="active">🐝 Swarm</a></li>
-      <li><a href="/docs/conductor/">🎩 Conductor</a></li>
+      <li><a href="/docs/swarm/" class="active">Explore · Swarm</a></li>
+      <li><a href="/docs/conductor/">Deliver · Conductor <small>advanced</small></a></li>
+    </ul>
+    <h4>Trust capabilities</h4>
+    <ul>
+      <li><a href="/docs/browser/">Browser</a></li>
+      <li><a href="/docs/guard/">Guard</a></li>
     </ul>
     <h4>Links</h4>
     <ul>
@@ -50,8 +50,8 @@
 
   <main class="prose">
 <div class="crumb">Docs / Plugins</div>
-<h1>🐝 Swarm (<code>structupath.swarm</code>)</h1>
-<p>Swarm tries one task several ways in parallel. Each agent gets a Swarm-owned git worktree and branch from a recorded base SHA; agents commit locally and the operator reviews and harvests selected work.</p>
+<h1>🐝 Explore with Swarm (<code>structupath.swarm</code>)</h1>
+<p><strong>Explore is the suite's ready first workflow.</strong> Swarm tries one bounded task several ways in parallel. Each agent gets a Swarm-owned git worktree and branch from a recorded base SHA; agents commit locally and the operator reviews and harvests selected work.</p>
 <p>Repo: <a href="https://github.com/StructuPath/herdr-swarm">StructuPath/herdr-swarm</a> · Detailed reference: the repo <a href="https://github.com/StructuPath/herdr-swarm#readme">README</a></p>
 <h2>Pinned evidence</h2>
 <div class="table-scroll"><table>
@@ -112,6 +112,50 @@
 </tbody>
 </table></div>
 <p>Everyday flow: <strong>Fan out → Status → Harvest → Prune</strong>. Abort is available at any point.</p>
+<h2>First Explore run</h2>
+<p>Use a clean Git repository and choose a task small enough to review. The operator—not an agent's displayed state—is the merge gate.</p>
+<h3>1. Install and prove registration</h3>
+<p>Requirements: Herdr <code>&gt;=0.7.4</code>, Git <code>&gt;=2.38</code> recommended, Node.js <code>&gt;=20</code>, and macOS or Linux.</p>
+<pre><code class="language-bash">herdr plugin install StructuPath/herdr-swarm
+herdr plugin list
+herdr plugin action list
+</code></pre>
+<p><strong>Ready branch:</strong> <code>structupath.swarm</code> is enabled and the five action IDs in the table above are visible.</p>
+<p><strong>Failure branch:</strong> do not fan out if the plugin or actions are missing. Verify the requirements, then inspect:</p>
+<pre><code class="language-bash">herdr plugin log list --plugin structupath.swarm
+herdr status server
+</code></pre>
+<h3>2. Open Fan out</h3>
+<p>Choose <strong>Fan out agents</strong> from Herdr's plugin actions menu. Herdr plugins cannot ship default keybindings; this optional user-owned binding opens the same action:</p>
+<pre><code class="language-toml"># ~/.config/herdr/config.toml
+[[keys.command]]
+key = &quot;prefix+s&quot;
+type = &quot;plugin_action&quot;
+command = &quot;structupath.swarm.fanout&quot;
+description = &quot;swarm fan-out&quot;
+</code></pre>
+<h3>3. Enter one bounded task and comparison criterion</h3>
+<p>Start with two or three slots. In the interactive prompt, finish the task with a single <code>.</code> on its own line. For example:</p>
+<pre><code class="language-text">Add retry with exponential backoff to the HTTP client.
+Keep the public API unchanged.
+Add a test for two failures followed by success.
+Run the existing test suite.
+
+Comparison criterion: among passing candidates, choose the smallest diff
+with the clearest failure-path test.
+.
+</code></pre>
+<p>Fresh worktrees omit ignored dependencies, <code>.env</code> files, and caches. If every agent fails immediately, add a reviewed plugin-config <code>setup.sh</code> or tell agents to install required dependencies, then start a new run.</p>
+<h3>4. Inspect every credible candidate</h3>
+<p>Open Status and use <code>1</code>–<code>9</code> to visit each slot. Compare committed and uncommitted counts against the recorded fork SHA. A 0.7.5+ slot can remain labeled <code>working</code> after it finishes until Harvest previews it; state is informative, not a completion gate.</p>
+<p>Open Harvest, preview each candidate's diff, run its tests, and compare it against the criterion declared before fan-out. Dirty slots offer WIP commit, skip, or discard; review the backup behavior before discarding.</p>
+<h3>5. Treat clean-slot selection as approval</h3>
+<blockquote>
+<p><strong>Merge warning:</strong> selecting a clean slot in Harvest performs a review-first <code>--no-ff</code> merge. If the base branch is checked out, Swarm asks for explicit confirmation. If the base is not checked out anywhere, a plugin-owned detached worktree can advance the base ref after the preview without another confirmation screen. Treat slot selection as the approval action.</p>
+</blockquote>
+<p>Use <code>q</code> to leave Status or Harvest without selecting a candidate. Invoke Abort to stop an active run: it closes Swarm-owned panes and removes clean plugin-owned worktrees, while keeping branches and anything questionable.</p>
+<h3>Success definition</h3>
+<p>A first Explore run is successful when one chosen branch is merged without conflict, its tests pass on the base, the resulting diff meets the stated comparison criterion, and skipped work remains recoverable on branches until deliberate pruning.</p>
 <h2>Safety and trust boundary</h2>
 <p>Swarm isolates working trees and provides reviewable branches; it does not sandbox agents. Write agents are trusted same-user principals and can access anything their operating-system user can access. Agents are instructed to commit locally and never push, while the operator remains the merge gate.</p>
 <p>Harvest uses review-first, <code>--no-ff</code> merges and checks base drift. Dirty discards first create backup refs. Abort keeps branches, and prune is dry-run/env-gated. Ignored files remain outside Git's safety net; inspect the archive inventory before removing a worktree.</p>
@@ -124,8 +168,17 @@ HERDR_SWARM_DETRITUS=rename \
 HERDR_WORKSPACE_ID=&lt;repo-workspace-id&gt; \
   bash &quot;$(herdr plugin list --json | jq -r '.plugins[] | select(.id==&quot;structupath.swarm&quot;).root')/scripts/fanout-pane.sh&quot;
 </code></pre>
-<p>Fresh worktrees omit ignored dependencies, <code>.env</code> files, and caches. Use a reviewed plugin-config <code>setup.sh</code> or instruct workers to install required dependencies.</p>
-    <nav class="pager" aria-label="Docs pages"><a href="/docs/guard/"><span class="lbl">Previous</span>Guard</a><a href="/docs/conductor/" style="text-align:right"><span class="lbl">Next</span>Conductor</a></nav>
+<p>Per-slot overrides remain interactive-only. If a zero-TTY input is missing, the script exits with a named-variable error instead of waiting on an unreadable prompt.</p>
+<h2>Safe exit and cleanup</h2>
+<ul>
+<li><code>q</code> closes Status or Harvest without selecting work.</li>
+<li>Abort stops the active run and preserves branches; it never deletes branches.</li>
+<li>Prune is a dry run by default and is separately gated for merged branches and backup refs.</li>
+<li>Closing the parent workspace stops Swarm agents silently. Committed work remains harvestable; uncommitted editor state may not.</li>
+<li>Ignored files are not included in WIP commits or discard snapshots. Inspect the archive-time inventory before acknowledging worktree removal.</li>
+</ul>
+<p>Use the plugin README's <a href="https://github.com/StructuPath/herdr-swarm#safety-model">Safety model</a> and <a href="https://github.com/StructuPath/herdr-swarm#uninstall--cleanup">Uninstall / cleanup</a> sections before destructive cleanup.</p>
+    <nav class="pager" aria-label="Docs pages"><a href="/docs/"><span class="lbl">Previous</span>Overview</a><a href="/docs/conductor/" style="text-align:right"><span class="lbl">Next</span>Deliver · Conductor</a></nav>
   </main>
 </div>
 

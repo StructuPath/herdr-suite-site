@@ -1,43 +1,48 @@
 # StructuPath Herdr Suite
 
-> Canonical suite documentation for four open-source MIT-licensed Herdr plugins. Compatibility and testing evidence is plugin-specific and pinned in https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json.
+> Herdr-native tools for human-supervised agent work. Explore is the ready first workflow; Deliver is an advanced assembly pattern; Browser and Guard are supporting capabilities.
 
+Landing and first Explore run: https://herdr.structupath.ai/
 Canonical docs: https://herdr.structupath.ai/docs/
 Source Markdown: https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src
+Pinned evidence: https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json
+
+## Workflow taxonomy
+
+### Explore — ready first workflow
+
+Swarm (`structupath.swarm`) release 0.1.0: Herdr >=0.7.4; evidence records 0.7.4 and 0.7.5 paths. It gives one bounded task to parallel worktree agents, reports candidate changes, and provides review-first harvest. Agents commit locally and never push. The operator defines comparison criteria, reviews diffs/tests, and selects what lands.
+
+A clean-slot selection in Harvest performs a `--no-ff` merge. When the base is not checked out, a plugin-owned merge worktree can advance the base ref after preview without another confirmation screen. Treat selection as approval. Abort preserves branches.
+
+Guide: https://herdr.structupath.ai/docs/swarm/
+
+### Deliver — advanced assembly pattern
+
+Conductor (`structupath.conductor`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. It runs role-differentiated workers as visible panes, exchanges `.conductor/task.md` and `.conductor/report.md`, and reconciles writing branches in a Conductor integration worktree.
+
+A human or trusted orchestrating agent dispatches work, validates reports/diffs/tests, approves reconciliation, and handles conflicts. The pinned runtime does not provide product-enforced approval gates, durable autonomous recovery, cryptographic report attestation, or Swarm-backed worktree creation/harvest.
+
+Guide: https://herdr.structupath.ai/docs/conductor/
+
+## Supporting trust capabilities
+
+- Browser (`structupath.browser`) release 0.5.0: Herdr >=0.7.0; evidence records testing with 0.7.4. Drivable workspace browser session and WebM recording. Sessions are a trusted same-user boundary; recordings may be sensitive. https://herdr.structupath.ai/docs/browser/
+- Guard (`structupath.guard`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. Advisory rendered-text policy: audit, alert, and best-effort interrupt. It is not a sandbox or authorization boundary. https://herdr.structupath.ai/docs/guard/
 
 ## Trust and composition boundaries
 
-- Guard is advisory/best-effort for agent TUIs. It sees rendered terminal text, not authoritative tool intent; native harness or sandbox controls remain authoritative.
+- The four plugins do not form one automatic runtime pipeline.
 - Swarm independently creates and harvests Swarm-owned worktrees for interchangeable fan-out agents.
-- Conductor currently creates and reconciles Conductor-owned worktrees itself. It does not delegate worktree creation or harvest to Swarm.
+- Conductor creates and reconciles Conductor-owned worktrees itself; it does not delegate worktree creation or harvest to Swarm.
 - Write-capable agents and plugins are trusted same-user principals. Worktrees isolate changes for review, not filesystem or process access.
+- Guard sees rendered terminal text, not authoritative tool intent. Native harness, sandbox, and operating-system controls remain authoritative.
 
-## Plugins and pinned compatibility
+## Install by capability
 
-- Browser (`structupath.browser`) release 0.5.0: Herdr >=0.7.0; README evidence records testing with 0.7.4. Live/drivable workspace browser session, separate interactive browse, and WebM recording. https://herdr.structupath.ai/docs/browser/
-- Guard (`structupath.guard`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. Advisory command policy: audit, alert, and best-effort interrupt. https://herdr.structupath.ai/docs/guard/
-- Swarm (`structupath.swarm`) release 0.1.0: Herdr >=0.7.4; evidence records 0.7.4 and 0.7.5 paths. Worktree-per-agent fan-out and review-first harvest. https://herdr.structupath.ai/docs/swarm/
-- Conductor (`structupath.conductor`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. Role-differentiated agent team as visible panes with file-sentinel completion. https://herdr.structupath.ai/docs/conductor/
-
-## Conductor actions
-
-Conductor exposes exactly five actions:
-
-1. `structupath.conductor.assemble` — stand up the declared team and open the board.
-2. `structupath.conductor.board` — open the live worker board.
-3. `structupath.conductor.status` — print one-shot run status.
-4. `structupath.conductor.harvest` — reconcile writer branches in a Conductor integration worktree.
-5. `structupath.conductor.stand-down` — close verified Conductor-owned worker panes while keeping Git work.
-
-The supervised quickstart is at https://herdr.structupath.ai/docs/conductor/ and explicitly identifies autonomous supervisor approval, Swarm delegation, and report attestation as not implemented in the pinned runtime.
-
-## Install
-
-Commands documented by the plugin repositories:
-
-`herdr plugin install StructuPath/herdr-browser`
-`herdr plugin install StructuPath/herdr-guard`
 `herdr plugin install StructuPath/herdr-swarm`
 `herdr plugin install StructuPath/herdr-conductor`
+`herdr plugin install StructuPath/herdr-browser`
+`herdr plugin install StructuPath/herdr-guard`
 
 These commands are not a blanket marketplace-availability claim. Inspect each manifest and repository before installing same-user plugin code.

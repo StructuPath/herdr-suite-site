@@ -1,8 +1,10 @@
 # Herdr Suite
 
 - [Overview](Home)
-- [Browser](Browser)
-- [Guard](Guard)
-- [Swarm](Swarm)
-- [Conductor](Conductor)
+- **Workflows**
+  - [Explore · Swarm](Swarm)
+  - [Deliver · Conductor (advanced)](Conductor)
+- **Trust capabilities**
+  - [Browser](Browser)
+  - [Guard](Guard)
 - [Suite repository](https://github.com/StructuPath/herdr-suite-site)

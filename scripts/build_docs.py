@@ -18,11 +18,11 @@ DOCS_SRC = SITE / "docs-src"
 
 # (source file stem, slug, nav title, site URL)
 PAGES = [
-    ("Home",      "index",     "Overview",  "/docs/"),
-    ("Browser",   "browser",   "Browser",   "/docs/browser/"),
-    ("Guard",     "guard",     "Guard",     "/docs/guard/"),
-    ("Swarm",     "swarm",     "Swarm",     "/docs/swarm/"),
-    ("Conductor", "conductor", "Conductor", "/docs/conductor/"),
+    ("Home",      "index",     "Overview",            "/docs/"),
+    ("Swarm",     "swarm",     "Explore · Swarm",     "/docs/swarm/"),
+    ("Conductor", "conductor", "Deliver · Conductor", "/docs/conductor/"),
+    ("Browser",   "browser",   "Browser",             "/docs/browser/"),
+    ("Guard",     "guard",     "Guard",               "/docs/guard/"),
 ]
 
 # docs-src internal links -> published site URLs
@@ -46,16 +46,13 @@ TEMPLATE = """<!doctype html>
   <div class="nav-inner">
     <a class="wordmark" href="/"><span class="mark">H</span>herdr&nbsp;suite</a>
     <div class="nav-links">
-      <a href="/#plugins">Plugins</a>
-      <a href="/#install">Install</a>
-      <a href="/docs/" aria-current="page">Docs</a>
-      <a href="/llms.txt">llms.txt</a>
+      <a href="/#explore">Explore</a>
+      <a href="/#deliver">Deliver · advanced</a>
+      <a href="/#trust">Trust</a>
     </div>
     <div class="nav-spacer"></div>
-    <a class="nav-gh" href="https://github.com/StructuPath" aria-label="StructuPath on GitHub">
-      <svg width="19" height="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-    </a>
-    <a class="btn" href="/#install">Install</a>
+    <a class="nav-docs" href="/docs/" aria-current="page">Docs</a>
+    <a class="btn" href="/#first-run">Start Explore</a>
   </div>
 </nav>
 
@@ -63,12 +60,15 @@ TEMPLATE = """<!doctype html>
   <aside class="sidebar" aria-label="Docs navigation">
     <h4>Docs</h4>
     <ul><li><a href="/docs/"{a_index}>Overview</a></li></ul>
-    <h4>Plugins</h4>
+    <h4>Workflows</h4>
     <ul>
-      <li><a href="/docs/browser/"{a_browser}>🌐 Browser</a></li>
-      <li><a href="/docs/guard/"{a_guard}>🛡️ Guard</a></li>
-      <li><a href="/docs/swarm/"{a_swarm}>🐝 Swarm</a></li>
-      <li><a href="/docs/conductor/"{a_conductor}>🎩 Conductor</a></li>
+      <li><a href="/docs/swarm/"{a_swarm}>Explore · Swarm</a></li>
+      <li><a href="/docs/conductor/"{a_conductor}>Deliver · Conductor <small>advanced</small></a></li>
+    </ul>
+    <h4>Trust capabilities</h4>
+    <ul>
+      <li><a href="/docs/browser/"{a_browser}>Browser</a></li>
+      <li><a href="/docs/guard/"{a_guard}>Guard</a></li>
     </ul>
     <h4>Links</h4>
     <ul>

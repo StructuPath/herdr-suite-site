@@ -156,6 +156,57 @@ def check_forbidden_claims(files: list[pathlib.Path] = PUBLIC_TEXT_FILES) -> lis
     return errors
 
 
+def check_explore_contract() -> list[str]:
+    """Keep the ready workflow, onboarding safety, and media contract visible."""
+    required_markers = {
+        SITE / "index.html": [
+            "Explore a change three ways.",
+            "Start Explore",
+            "plugin actions menu",
+            "Comparison criterion:",
+            "Clean-slot merge warning",
+            "Success means",
+            "Abort keeps branches",
+            "product-enforced approval gates",
+            "not a sandbox",
+        ],
+        DOCS_SRC / "Home.md": [
+            "**Explore** is the ready first workflow",
+            "**Deliver** is an advanced assembly pattern",
+            "current runtime is not a single automatic pipeline",
+        ],
+        DOCS_SRC / "Swarm.md": [
+            "First Explore run",
+            "plugin actions menu",
+            'key = "prefix+s"',
+            "Comparison criterion:",
+            "Merge warning:",
+            "Success definition",
+            "preserves branches",
+        ],
+    }
+    errors = []
+    for path, markers in required_markers.items():
+        text = path.read_text(encoding="utf-8")
+        for marker in markers:
+            if marker.casefold() not in text.casefold():
+                errors.append(f"{path.relative_to(SITE)} missing Explore contract marker: {marker!r}")
+
+    landing = (SITE / "index.html").read_text(encoding="utf-8")
+    video = re.search(r"<video\b([^>]*)>", landing, re.IGNORECASE | re.DOTALL)
+    if video is None:
+        errors.append("index.html missing Explore proof video")
+    else:
+        attributes = video.group(1)
+        if "controls" not in attributes:
+            errors.append("index.html Explore proof video must be user-controlled")
+        if "poster=" not in attributes:
+            errors.append("index.html Explore proof video must have a poster")
+        if "autoplay" in attributes:
+            errors.append("index.html Explore proof video must not autoplay")
+    return errors
+
+
 def check_generated_docs() -> list[str]:
     result = subprocess.run(
         [sys.executable, str(SITE / "scripts" / "build_docs.py"), "--check"],
@@ -332,6 +383,7 @@ def main() -> int:
     errors = []
     errors.extend(check_data_and_docs(plugins))
     errors.extend(check_forbidden_claims())
+    errors.extend(check_explore_contract())
     errors.extend(check_generated_docs())
     errors.extend(check_conductor_quickstart())
     errors.extend(check_local_links())
@@ -344,7 +396,10 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print(f"OK: canonical docs, {len(plugins)} plugin evidence records, generated HTML, and local links")
+    print(
+        f"OK: Explore contract, canonical docs, {len(plugins)} plugin evidence "
+        "records, generated HTML, and local links"
+    )
     return 0
 
 

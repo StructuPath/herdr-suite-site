@@ -1,6 +1,6 @@
 # 🌐 Browser (`structupath.browser`)
 
-Browser supplies a drivable Herdr pane around [agent-browser](https://github.com/vercel-labs/agent-browser). It can show and control the same workspace browser session used by a coding agent, or open a separate interactive Carbonyl browser.
+**Supporting visibility capability.** Browser supplies a drivable Herdr pane around [agent-browser](https://github.com/vercel-labs/agent-browser). It can show and control the same workspace browser session used by a coding agent, or open a separate interactive Carbonyl browser.
 
 Repo: [StructuPath/herdr-browser](https://github.com/StructuPath/herdr-browser) · Detailed reference: the repo [README](https://github.com/StructuPath/herdr-browser#readme)
 

@@ -45,7 +45,7 @@
   <main class="prose" id="main-content" tabindex="-1">
 <div class="crumb">Docs / Plugins</div>
 <h1>🎩 Deliver with Conductor (<code>structupath.conductor</code>)</h1>
-<p><strong>Advanced assembly pattern.</strong> Conductor runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. A human or trusted orchestrating agent drives dispatch, review, and harvest; completion is a report-file sentinel, not an agent's <code>idle</code> state.</p>
+<p><strong>Advanced assembly pattern.</strong> Conductor runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. A human or trusted orchestrating agent drives every step; the current runtime is not safe for unattended or persisted-state use.</p>
 <p>Repo: <a href="https://github.com/StructuPath/herdr-conductor">StructuPath/herdr-conductor</a> · Detailed reference: the repo <a href="https://github.com/StructuPath/herdr-conductor#readme">README</a></p>
 <h2>Pinned evidence</h2>
 <div class="table-scroll"><table>
@@ -79,7 +79,7 @@
 <thead>
 <tr>
 <th>Action ID</th>
-<th>Behavior</th>
+<th>Current behavior</th>
 </tr>
 </thead>
 <tbody>
@@ -93,72 +93,39 @@
 </tr>
 <tr>
 <td><code>structupath.conductor.status</code></td>
-<td>Print the board's role/kind/pane/state/cwd data once</td>
+<td>Print the board's recorded role/kind/pane/state/cwd data once</td>
 </tr>
 <tr>
 <td><code>structupath.conductor.harvest</code></td>
-<td>Merge writing-role branches into a Conductor integration worktree, reporting conflicts without forcing</td>
+<td>Select the newest global run and merge writing-role branches into an integration worktree, reporting conflicts without forcing</td>
 </tr>
 <tr>
 <td><code>structupath.conductor.stand-down</code></td>
-<td>Close verified Conductor-owned worker panes while keeping branches and worktrees</td>
+<td>Read recorded pane IDs from executable run state and request their closure without live ownership verification</td>
 </tr>
 </tbody>
 </table></div>
-<p>Conductor currently owns its worktree lifecycle and harvest implementation. It does <strong>not</strong> call Swarm to create worktrees or to harvest branches. Swarm is a separate, independently invoked fan-out tool, not a hidden Conductor runtime dependency.</p>
-<h2>Minimal supervised quickstart</h2>
 <blockquote>
-<p><strong>Supervised/manual today.</strong> This example requires a human or trusted orchestrating agent to inspect reports and diffs, approve reconciliation, and handle conflicts. An autonomous supervisor/approval runtime, cross-plugin delegation to Swarm, and cryptographic worker/report attestation are <strong>not implemented prerequisites</strong> in the pinned runtime. Do not describe this flow as unattended or as a security boundary.</p>
+<p><strong>Current safety boundary:</strong> do not invoke <code>harvest</code> or <code>stand-down</code> on existing, persisted, shared, or ambiguous state. The pinned runtime selects the newest run globally rather than by repository/workspace identity, sources executable state, and does not compare a live pane identity before closing it. Typing a run ID confirms only the selected ID; it does not make that selection repository-safe.</p>
 </blockquote>
-<h3>1. Declare the team</h3>
-<p>Start from a clean Git repository and add a reviewed <code>.herdr-conductor.json</code> defining a <code>builder-engine</code> writing role (using the shipped <code>builder-engine</code> template) and at least one review role.</p>
-<h3>2. Assemble the team</h3>
-<p>Invoke the actions from the target repository's Herdr workspace, then inspect the team:</p>
+<p>Conductor owns its worktree lifecycle and harvest implementation. It does <strong>not</strong> call Swarm to create worktrees or harvest branches. Swarm is a separate workflow that a human or trusted orchestrator may invoke later with an explicitly selected commit; there is no automatic Conductor→Swarm pipeline.</p>
+<h2>Inspection-only quickstart</h2>
+<p>Use a clean, disposable Git repository and a reviewed <code>.herdr-conductor.json</code>. These commands assemble and inspect the team; they do not establish a safe mutation, reconciliation, or teardown path:</p>
 <pre><code class="language-bash">herdr plugin action invoke assemble --plugin structupath.conductor
 herdr plugin action invoke status --plugin structupath.conductor
 herdr plugin action invoke board --plugin structupath.conductor
 </code></pre>
-<h3>3. Pin, verify, and dispatch the assembled run</h3>
-<p>Run this entire block in one trusted orchestrator shell. The plugin action assembled the team in another process, so source <code>scripts/lib.sh</code> and pin its active run before calling the run-scoped transport functions. The block prints the selected run directory and roster, then requires the human or trusted orchestrator to confirm that exact run ID before dispatch can proceed.</p>
-<pre><code class="language-bash">(
-  . /path/to/herdr-conductor/scripts/lib.sh
-
-  if ! conductor_pin_active_run &gt;/dev/null; then
-    printf '%s\n' 'No assembled Conductor run found.' &gt;&amp;2
-    exit 1
-  fi
-
-  selected_run=&quot;$CONDUCTOR_STATE_DIR/run-$CONDUCTOR_RUN_ID&quot;
-  printf 'Selected Conductor run: %s\n' &quot;$selected_run&quot;
-  conductor_status
-
-  printf 'Type %s to verify this run before dispatch: ' &quot;$CONDUCTOR_RUN_ID&quot;
-  verified_run=
-  read -r verified_run
-  case &quot;$verified_run&quot; in
-    &quot;$CONDUCTOR_RUN_ID&quot;)
-      task_file=&quot;$(
-        CONDUCTOR_MISSION='Implement the reviewed task.' \
-          conductor_render_role builder-engine
-      )&quot;
-      conductor_dispatch builder-engine &quot;$task_file&quot;
-      conductor_await builder-engine &amp;&amp; conductor_collect builder-engine
-      ;;
-    *)
-      printf '%s\n' 'Dispatch cancelled; inspect the selected run and try again.'
-      ;;
-  esac
-)
-</code></pre>
-<h3>4. Review and reconcile</h3>
-<p>Review each report, role branch, and test result. Only then invoke reconciliation:</p>
-<pre><code class="language-bash">herdr plugin action invoke harvest --plugin structupath.conductor
-herdr plugin action invoke stand-down --plugin structupath.conductor
-</code></pre>
-<p>Use the plugin README for the exact role-template/config schema and transport API before running this flow.</p>
-<h2>Trust and completion model</h2>
-<p>Write-capable workers and the orchestrator are trusted same-user principals. Their worktrees isolate changes for review but do not limit filesystem/process access. <code>read-only</code> launch flags or agent-native sandbox controls provide the intended reviewer restriction; Guard drops are an audit trail, not a sandbox.</p>
-<p>Workers exchange <code>.conductor/task.md</code> and <code>.conductor/report.md</code>. A worker becoming <code>idle</code> can mean it asked a question or finished any turn; only a fresh report containing the completion sentinel satisfies <code>conductor_await</code>.</p>
+<p>Stop after inspection in the pinned runtime. Do not use the current transport helpers to dispatch work, and do not invoke the current harvest or stand-down actions. Wait for a release with repository-bound run identity, non-executable durable state, live resource verification, explicit approval consumption, and recovery semantics before treating Deliver as an operational workflow.</p>
+<h2>Current trust and completion limits</h2>
+<ul>
+<li>Write-capable workers and the orchestrator are trusted same-user principals. Worktrees separate changes for review; they are not sandboxes or same-user security boundaries.</li>
+<li><code>read-only</code> is role metadata and prompt intent in the pinned runtime, not product-enforced filesystem or process isolation.</li>
+<li>Guard is a best-effort rendered-text policy observer. Its audit and interrupt-request records do not prove that a command was prevented.</li>
+<li>Run state is shell-sourced executable text. There is no durable restart/adoption protocol, repository-bound active-run index, atomic approval journal, or trusted attestation.</li>
+<li>Dry-run still writes run state and <code>.conductor</code> scaffolding in the base checkout, although it does not create role worktrees or branches; it is not filesystem-immutable.</li>
+<li>The validator worktree and reviewer's base checkout remain at the original base branch; neither is advanced to the reconciled integration result. Their PASS/APPROVE output cannot certify that integration tree.</li>
+<li>Workers exchange <code>.conductor/task.md</code> and <code>.conductor/report.md</code>. An agent becoming <code>idle</code> can mean it asked a question or completed any turn; only a fresh report containing the completion sentinel satisfies the current await helper, and that sentinel is not an identity or correctness proof.</li>
+</ul>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/swarm/"><span class="lbl">Previous</span>Explore · Swarm</a><a href="/docs/browser/" style="text-align:right"><span class="lbl">Next</span>Browser</a></nav>
   </main>
 

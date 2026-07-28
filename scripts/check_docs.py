@@ -35,6 +35,15 @@ FORBIDDEN_CLAIMS = {
     "unimplemented Conductor-to-Swarm pipeline": re.compile(
         r"conductor\s+decides[^\n]{0,120}swarm\s+isolates", re.IGNORECASE
     ),
+    "verified Conductor teardown": re.compile(
+        r"(?:verified\s+conductor-owned\s+(?:worker\s+)?panes|"
+        r"stand-down[^.\n]{0,120}verif(?:y|ies|ied)[^.\n]{0,80}(?:ownership|owned))",
+        re.IGNORECASE,
+    ),
+    "unsafe Conductor stand-down quickstart": re.compile(
+        r"herdr\s+plugin\s+action\s+invoke\s+stand-down\s+--plugin\s+structupath\.conductor",
+        re.IGNORECASE,
+    ),
 }
 
 PUBLIC_TEXT_FILES = [
@@ -49,7 +58,9 @@ def load_plugins() -> list[dict[str, Any]]:
     try:
         payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
-        raise ValueError(f"unable to load {DATA_FILE.relative_to(SITE)}: {error}") from error
+        raise ValueError(
+            f"unable to load {DATA_FILE.relative_to(SITE)}: {error}"
+        ) from error
     if payload.get("schema_version") != 1:
         raise ValueError("data/plugins.json schema_version must be 1")
     plugins = payload.get("plugins")
@@ -367,7 +378,7 @@ def check_generated_docs() -> list[str]:
 
 
 def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
-    """Require every quickstart shell example to render as a fenced code block."""
+    """Keep the pinned Conductor quickstart inspection-only and visibly bounded."""
     if rendered_html is None:
         page = SITE / "docs" / "conductor" / "index.html"
         try:
@@ -375,10 +386,10 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
         except OSError as error:
             return [f"unable to read generated Conductor guide: {error}"]
 
-    start = "<h2>Minimal supervised quickstart</h2>"
-    end = "<h2>Trust and completion model</h2>"
+    start = "<h2>Inspection-only quickstart</h2>"
+    end = "<h2>Current trust and completion limits</h2>"
     if start not in rendered_html or end not in rendered_html:
-        return ["generated Conductor guide is missing the quickstart section"]
+        return ["generated Conductor guide is missing the inspection-only quickstart"]
     quickstart = rendered_html.split(start, 1)[1].split(end, 1)[0]
     bash_blocks = [
         html.unescape(block)
@@ -388,24 +399,49 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
             re.DOTALL,
         )
     ]
-    expected_blocks = {
-        "assemble action": ("herdr plugin action invoke assemble",),
-        "pinned run dispatch": (
-            ". /path/to/herdr-conductor/scripts/lib.sh",
-            "conductor_pin_active_run",
-            "Selected Conductor run:",
-            "read -r verified_run",
-            "conductor_dispatch builder-engine",
-        ),
-        "harvest action": ("herdr plugin action invoke harvest",),
-    }
-    return [
-        f"Conductor quickstart {label} is not a rendered bash code block"
-        for label, snippets in expected_blocks.items()
-        if not any(
-            all(snippet in block for snippet in snippets) for block in bash_blocks
+    expected = (
+        "herdr plugin action invoke assemble",
+        "herdr plugin action invoke status",
+        "herdr plugin action invoke board",
+    )
+    errors = []
+    if not any(all(snippet in block for snippet in expected) for block in bash_blocks):
+        errors.append(
+            "Conductor inspection actions are not one rendered bash code block"
         )
-    ]
+    forbidden = (
+        "conductor_pin_active_run",
+        "conductor_dispatch",
+        "herdr plugin action invoke harvest",
+        "herdr plugin action invoke stand-down",
+    )
+    for command in forbidden:
+        if command in quickstart:
+            errors.append(
+                f"Conductor inspection-only quickstart contains unsafe command: {command}"
+            )
+    required_boundaries = (
+        "Stop after inspection",
+        "do not invoke the current harvest or stand-down actions",
+    )
+    for marker in required_boundaries:
+        if marker.casefold() not in quickstart.casefold():
+            errors.append(f"Conductor quickstart missing safety boundary: {marker!r}")
+
+    public_text = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", rendered_html)))
+    required_contract = (
+        "selects the newest run globally rather than by repository/workspace identity",
+        "without live ownership verification",
+        "sources executable state",
+        "not product-enforced filesystem or process isolation",
+        "does not create role worktrees or branches",
+        "neither is advanced to the reconciled integration result",
+        "there is no automatic Conductor→Swarm pipeline",
+    )
+    for marker in required_contract:
+        if marker.casefold() not in public_text.casefold():
+            errors.append(f"Conductor guide missing safety contract: {marker!r}")
+    return errors
 
 
 def local_target(url: str) -> pathlib.Path | None:
@@ -504,11 +540,21 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     version = str(plugin["version"])
     if not check_plugin_doc(plugin, source.replace(f"`{version}`", "`999.0.0`", 1)):
         failures.append("self-test did not detect version drift")
-    forbidden_sample = "Guard enforces every agent command."
-    if not any(
-        pattern.search(forbidden_sample) for pattern in FORBIDDEN_CLAIMS.values()
-    ):
-        failures.append("self-test did not detect a forbidden claim")
+    forbidden_samples = {
+        "Guard enforcement claim": ("Guard enforces every agent command.",),
+        "verified Conductor teardown": (
+            "Close verified Conductor-owned worker panes.",
+            "Stand-down closes worker panes after Conductor verifies their ownership.",
+        ),
+        "unsafe Conductor stand-down quickstart": (
+            "herdr plugin action invoke stand-down --plugin structupath.conductor",
+        ),
+    }
+    for label, samples in forbidden_samples.items():
+        pattern = FORBIDDEN_CLAIMS.get(label)
+        if pattern is None or not all(pattern.search(sample) for sample in samples):
+            failures.append(f"self-test did not detect {label}")
+
     conductor_html = (SITE / "docs" / "conductor" / "index.html").read_text(
         encoding="utf-8"
     )
@@ -517,6 +563,39 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     )
     if not check_conductor_quickstart(broken_fences):
         failures.append("self-test did not detect broken quickstart code fences")
+    quickstart_end = "<h2>Current trust and completion limits</h2>"
+    unsafe_commands = (
+        "conductor_pin_active_run",
+        "conductor_dispatch",
+        "herdr plugin action invoke harvest",
+        "herdr plugin action invoke stand-down",
+    )
+    for command in unsafe_commands:
+        mutated = conductor_html.replace(
+            quickstart_end, f"<p>{command}</p>{quickstart_end}", 1
+        )
+        findings = check_conductor_quickstart(mutated)
+        if not any(command in finding for finding in findings):
+            failures.append(
+                f"self-test did not reject Conductor quickstart command: {command}"
+            )
+    safety_markers = (
+        "Stop after inspection",
+        "do not invoke the current harvest or stand-down actions",
+        "selects the newest run globally rather than by repository/workspace identity",
+        "without live ownership verification",
+        "sources executable state",
+        "not product-enforced filesystem or process isolation",
+        "does not create role worktrees or branches",
+        "neither is advanced to the reconciled integration result",
+        "there is no automatic Conductor→Swarm pipeline",
+    )
+    for marker in safety_markers:
+        mutated = conductor_html.replace(marker, "REMOVED SAFETY CONTRACT", 1)
+        if mutated == conductor_html or not check_conductor_quickstart(mutated):
+            failures.append(
+                f"self-test did not detect missing Conductor safety marker: {marker}"
+            )
     landing = (SITE / "index.html").read_text(encoding="utf-8")
     weakened_boundary = re.sub(
         r"trusted\s+same-user\s+principals", "agents", landing, count=1
@@ -525,8 +604,8 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
         failures.append("self-test did not detect a weakened Explore trust boundary")
     if not failures:
         print(
-            "OK: self-test detected action, version, forbidden-claim, "
-            "quickstart-rendering, and Explore-boundary mutations"
+            "OK: self-test detected action, version, forbidden-claim, Conductor "
+            "quickstart/safety-contract, and Explore-boundary mutations"
         )
     return failures
 

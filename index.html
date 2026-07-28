@@ -16,8 +16,36 @@
       property="og:description"
       content="Start with Explore: fan out a bounded task, compare reviewable worktrees, and choose what lands."
     />
+    <link rel="canonical" href="https://herdr.structupath.ai/" />
     <meta property="og:url" content="https://herdr.structupath.ai/" />
     <meta property="og:type" content="website" />
+    <meta
+      property="og:image"
+      content="https://herdr.structupath.ai/media/herdr-suite-social.jpg"
+    />
+    <meta
+      property="og:image:alt"
+      content="Herdr Swarm terminal footage showing worktree candidates ready for review"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Herdr Suite — supervised agent work in the terminal"
+    />
+    <meta
+      name="twitter:description"
+      content="Start with Explore: fan out a bounded task, compare reviewable worktrees, and choose what lands."
+    />
+    <meta
+      name="twitter:image"
+      content="https://herdr.structupath.ai/media/herdr-suite-social.jpg"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Herdr Swarm terminal footage showing worktree candidates ready for review"
+    />
     <meta name="theme-color" content="#0a0d10" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -34,7 +62,7 @@
         --line-bright: #46535d;
         --text: #edf1f2;
         --muted: #9ba8ae;
-        --faint: #6e7b81;
+        --faint: #78868d;
         --orange: #f08a3c;
         --orange-hot: #ffa35e;
         --teal: #62c4b1;
@@ -1019,10 +1047,10 @@
           </h1>
           <p class="hero-lede">
             <strong>Start with Explore.</strong> Swarm gives one bounded coding
-            task to isolated agents, shows the work, and lets you choose what
-            reaches your branch. Browser, Guard, and Conductor support different
-            parts of supervised agent work without pretending to be one
-            automatic runtime.
+            task to agents in separate worktrees, shows the work, and lets you
+            choose what reaches your branch. Browser, Guard, and Conductor
+            support different parts of supervised agent work without pretending
+            to be one automatic runtime.
           </p>
           <div class="hero-actions">
             <a class="btn" href="#first-run">Run your first Explore</a>
@@ -1044,7 +1072,7 @@
             </p>
             <div class="signal" aria-label="Explore workflow stages">
               <div><span>INPUT</span><span>one bounded task</span></div>
-              <div><span>RUN</span><span>2–6 isolated slots</span></div>
+              <div><span>RUN</span><span>2–6 worktree slots</span></div>
               <div><span>PROOF</span><span>diffs + local commits</span></div>
               <div>
                 <span>GATE</span><span class="hot">you choose the merge</span>
@@ -1081,7 +1109,7 @@
             </div>
             <div class="workflow-step">
               <span class="step-no">02</span>
-              <h3>Fan out safely</h3>
+              <h3>Separate the changes</h3>
               <p>
                 Each agent starts from the recorded fork SHA in a plugin-owned
                 worktree and branch.
@@ -1154,7 +1182,9 @@
               <h2 class="display">Your first Explore run.</h2>
               <p>
                 Use a clean Git repository and a task small enough to review.
-                The operator—not agent state—is the merge gate.
+                Worktrees separate changes for review, but they are not
+                sandboxes: write-capable agents are trusted same-user
+                principals. The operator—not agent state—is the merge gate.
               </p>
             </div>
           </div>

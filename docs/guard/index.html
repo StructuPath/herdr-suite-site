@@ -4,7 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guard guide — Herdr Suite docs</title>
-<meta name="description" content="Repo: StructuPath/herdr-guard · Detailed reference: the repo README">
+<meta name="description" content="Audit rendered terminal text with advisory policy, alerts, and best-effort interrupts while relying on native controls for enforcement.">
+<link rel="canonical" href="https://herdr.structupath.ai/docs/guard/">
+<meta property="og:title" content="Guard guide — Herdr Suite docs">
+<meta property="og:description" content="Audit rendered terminal text with advisory policy, alerts, and best-effort interrupts while relying on native controls for enforcement.">
+<meta property="og:url" content="https://herdr.structupath.ai/docs/guard/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://herdr.structupath.ai/media/herdr-suite-social.jpg">
+<meta property="og:image:alt" content="Herdr Swarm terminal footage showing worktree candidates ready for review">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Guard guide — Herdr Suite docs">
+<meta name="twitter:description" content="Audit rendered terminal text with advisory policy, alerts, and best-effort interrupts while relying on native controls for enforcement.">
+<meta name="twitter:image" content="https://herdr.structupath.ai/media/herdr-suite-social.jpg">
+<meta name="twitter:image:alt" content="Herdr Swarm terminal footage showing worktree candidates ready for review">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -12,6 +26,7 @@
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Skip to content</a>
 <nav class="nav" aria-label="Main">
   <div class="nav-inner">
     <a class="wordmark" href="/"><span class="mark">H</span>herdr&nbsp;suite</a>
@@ -27,28 +42,7 @@
 </nav>
 
 <div class="layout">
-  <aside class="sidebar" aria-label="Docs navigation">
-    <h4>Docs</h4>
-    <ul><li><a href="/docs/">Overview</a></li></ul>
-    <h4>Workflows</h4>
-    <ul>
-      <li><a href="/docs/swarm/">Explore · Swarm</a></li>
-      <li><a href="/docs/conductor/">Deliver · Conductor <small>advanced</small></a></li>
-    </ul>
-    <h4>Trust capabilities</h4>
-    <ul>
-      <li><a href="/docs/browser/">Browser</a></li>
-      <li><a href="/docs/guard/" class="active">Guard</a></li>
-    </ul>
-    <h4>Links</h4>
-    <ul>
-      <li><a class="ext" href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">Docs source</a></li>
-      <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
-      <li><a href="/llms.txt">llms.txt</a></li>
-    </ul>
-  </aside>
-
-  <main class="prose">
+  <main class="prose" id="main-content" tabindex="-1">
 <div class="crumb">Docs / Plugins</div>
 <h1>🛡️ Guard (<code>structupath.guard</code>)</h1>
 <p><strong>Supporting text-policy capability.</strong> Guard is an <strong>advisory, best-effort</strong> cross-agent command policy layer for Herdr. It audits and alerts on matching terminal text and may interrupt visible shell input, but it is not a sandbox or authorization boundary for agent TUIs.</p>
@@ -154,6 +148,27 @@
 <p>The plugin itself is ordinary local code with the user's privileges. Review the source and policy before use, and protect audit logs because they can contain sensitive metadata even after redaction.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/browser/"><span class="lbl">Previous</span>Browser</a><span></span></nav>
   </main>
+
+  <aside class="sidebar" aria-label="Docs navigation">
+    <h4>Docs</h4>
+    <ul><li><a href="/docs/">Overview</a></li></ul>
+    <h4>Workflows</h4>
+    <ul>
+      <li><a href="/docs/swarm/">Explore · Swarm</a></li>
+      <li><a href="/docs/conductor/">Deliver · Conductor <small>advanced</small></a></li>
+    </ul>
+    <h4>Trust capabilities</h4>
+    <ul>
+      <li><a href="/docs/browser/">Browser</a></li>
+      <li><a href="/docs/guard/" class="active">Guard</a></li>
+    </ul>
+    <h4>Links</h4>
+    <ul>
+      <li><a class="ext" href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">Docs source</a></li>
+      <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
+      <li><a href="/llms.txt">llms.txt</a></li>
+    </ul>
+  </aside>
 </div>
 
 <footer class="foot-slim">

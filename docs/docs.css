@@ -38,6 +38,21 @@ a:focus-visible {
 	outline-offset: 3px;
 	border-radius: 2px;
 }
+.skip-link {
+	position: fixed;
+	top: 10px;
+	left: 12px;
+	z-index: 100;
+	padding: 9px 13px;
+	border-radius: 3px;
+	background: var(--accent);
+	color: #14100b;
+	font-weight: 700;
+	transform: translateY(-150%);
+}
+.skip-link:focus-visible {
+	transform: translateY(0);
+}
 
 /* nav (shared with landing) */
 .nav {
@@ -179,6 +194,7 @@ a:focus-visible {
 .layout {
 	display: grid;
 	grid-template-columns: 230px 1fr;
+	grid-template-areas: "sidebar prose";
 	gap: 56px;
 	max-width: 1180px;
 	margin: 0 auto;
@@ -187,11 +203,15 @@ a:focus-visible {
 @media (max-width: 860px) {
 	.layout {
 		grid-template-columns: 1fr;
-		gap: 28px;
+		grid-template-areas:
+			"prose"
+			"sidebar";
+		gap: 42px;
 	}
 }
 
 .sidebar {
+	grid-area: sidebar;
 	position: sticky;
 	top: 84px;
 	align-self: start;
@@ -199,8 +219,8 @@ a:focus-visible {
 @media (max-width: 860px) {
 	.sidebar {
 		position: static;
-		border-bottom: 1px solid var(--border);
-		padding-bottom: 20px;
+		border-top: 1px solid var(--border);
+		padding-top: 20px;
 	}
 }
 .sidebar h4 {
@@ -253,6 +273,7 @@ a:focus-visible {
 
 /* prose */
 .prose {
+	grid-area: prose;
 	max-width: 720px;
 	min-width: 0;
 }

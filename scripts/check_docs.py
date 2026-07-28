@@ -9,6 +9,7 @@ import html
 import json
 import pathlib
 import re
+import struct
 import subprocess
 import sys
 import tomllib
@@ -18,6 +19,9 @@ from urllib.parse import unquote, urlsplit
 SITE = pathlib.Path(__file__).resolve().parent.parent
 DOCS_SRC = SITE / "docs-src"
 DATA_FILE = SITE / "data" / "plugins.json"
+BASE_URL = "https://herdr.structupath.ai"
+SOCIAL_IMAGE = SITE / "media" / "herdr-suite-social.jpg"
+SOCIAL_IMAGE_URL = f"{BASE_URL}/media/herdr-suite-social.jpg"
 
 FORBIDDEN_CLAIMS = {
     "blanket marketplace claim": re.compile(
@@ -178,7 +182,6 @@ def check_explore_contract() -> list[str]:
             "Success means",
             "Abort keeps branches",
             "product-enforced approval gates",
-            "not a sandbox",
         ],
         DOCS_SRC / "Home.md": [
             "**Explore** is the ready first workflow",
@@ -205,6 +208,7 @@ def check_explore_contract() -> list[str]:
                 )
 
     landing = (SITE / "index.html").read_text(encoding="utf-8")
+    errors.extend(check_landing_explore_boundary(landing))
     video = re.search(r"<video\b([^>]*)>", landing, re.IGNORECASE | re.DOTALL)
     if video is None:
         errors.append("index.html missing Explore proof video")
@@ -216,6 +220,133 @@ def check_explore_contract() -> list[str]:
             errors.append("index.html Explore proof video must have a poster")
         if "autoplay" in attributes:
             errors.append("index.html Explore proof video must not autoplay")
+    return errors
+
+
+def check_landing_explore_boundary(landing: str) -> list[str]:
+    """Require the same-user boundary inside Explore onboarding, before Deliver."""
+    start = '<section class="explore" id="explore">'
+    end = '<section id="deliver">'
+    if start not in landing or end not in landing:
+        return ["index.html missing scoped Explore/onboarding region"]
+    region = re.sub(r"\s+", " ", landing.split(start, 1)[1].split(end, 1)[0])
+    required = [
+        "Worktrees separate changes for review",
+        "not sandboxes",
+        "trusted same-user principals",
+    ]
+    return [
+        f"index.html Explore/onboarding region missing trust boundary: {marker!r}"
+        for marker in required
+        if marker.casefold() not in region.casefold()
+    ]
+
+
+def jpeg_dimensions(path: pathlib.Path) -> tuple[int, int]:
+    """Read JPEG dimensions without adding an image-library dependency."""
+    data = path.read_bytes()
+    if not data.startswith(b"\xff\xd8"):
+        raise ValueError("not a JPEG file")
+    offset = 2
+    start_of_frame = {
+        0xC0,
+        0xC1,
+        0xC2,
+        0xC3,
+        0xC5,
+        0xC6,
+        0xC7,
+        0xC9,
+        0xCA,
+        0xCB,
+        0xCD,
+        0xCE,
+        0xCF,
+    }
+    while offset < len(data):
+        if data[offset] != 0xFF:
+            offset += 1
+            continue
+        while offset < len(data) and data[offset] == 0xFF:
+            offset += 1
+        marker = data[offset]
+        offset += 1
+        if marker in {0xD8, 0xD9}:
+            continue
+        length = struct.unpack(">H", data[offset : offset + 2])[0]
+        if marker in start_of_frame:
+            height, width = struct.unpack(">HH", data[offset + 3 : offset + 7])
+            return width, height
+        offset += length
+    raise ValueError("JPEG dimensions not found")
+
+
+def tag_attributes(tag: str) -> dict[str, str]:
+    return {
+        key.casefold(): html.unescape(value)
+        for key, _, value in re.findall(
+            r"([:\w-]+)\s*=\s*([\"'])(.*?)\2", tag, re.DOTALL
+        )
+    }
+
+
+def check_social_metadata() -> list[str]:
+    errors = []
+    routes = {SITE / "index.html": f"{BASE_URL}/"}
+    for page in sorted((SITE / "docs").glob("**/*.html")):
+        route = f"/{page.relative_to(SITE).as_posix().removesuffix('index.html')}"
+        routes[page] = f"{BASE_URL}{route}"
+    for page, canonical_url in routes.items():
+        text = page.read_text(encoding="utf-8")
+        tags = [
+            tag_attributes(tag)
+            for tag in re.findall(r"<(?:meta|link)\b[^>]*>", text, re.IGNORECASE)
+        ]
+        canonical = next(
+            (tag.get("href") for tag in tags if tag.get("rel") == "canonical"),
+            None,
+        )
+        if canonical != canonical_url:
+            errors.append(
+                f"{page.relative_to(SITE)} canonical {canonical!r} != {canonical_url!r}"
+            )
+        metadata = {
+            tag.get("property") or tag.get("name"): tag.get("content")
+            for tag in tags
+            if tag.get("property") or tag.get("name")
+        }
+        expected = {
+            "og:url": canonical_url,
+            "og:image": SOCIAL_IMAGE_URL,
+            "og:image:width": "1200",
+            "og:image:height": "630",
+            "twitter:card": "summary_large_image",
+            "twitter:image": SOCIAL_IMAGE_URL,
+        }
+        for key, value in expected.items():
+            if metadata.get(key) != value:
+                errors.append(
+                    f"{page.relative_to(SITE)} metadata {key} {metadata.get(key)!r} != {value!r}"
+                )
+        for key in (
+            "description",
+            "og:description",
+            "og:image:alt",
+            "twitter:description",
+            "twitter:image:alt",
+        ):
+            value = metadata.get(key) or ""
+            if len(value) < 40 or value.startswith("Repo:"):
+                errors.append(
+                    f"{page.relative_to(SITE)} metadata {key} is missing or not useful"
+                )
+    try:
+        dimensions = jpeg_dimensions(SOCIAL_IMAGE)
+    except (OSError, ValueError, struct.error) as error:
+        errors.append(f"unable to validate social image: {error}")
+    else:
+        if dimensions != (1200, 630):
+            errors.append(f"social image dimensions {dimensions} != (1200, 630)")
     return errors
 
 
@@ -383,10 +514,16 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     )
     if not check_conductor_quickstart(broken_fences):
         failures.append("self-test did not detect broken quickstart code fences")
+    landing = (SITE / "index.html").read_text(encoding="utf-8")
+    weakened_boundary = re.sub(
+        r"trusted\s+same-user\s+principals", "agents", landing, count=1
+    )
+    if not check_landing_explore_boundary(weakened_boundary):
+        failures.append("self-test did not detect a weakened Explore trust boundary")
     if not failures:
         print(
             "OK: self-test detected action, version, forbidden-claim, "
-            "and quickstart-rendering mutations"
+            "quickstart-rendering, and Explore-boundary mutations"
         )
     return failures
 
@@ -413,6 +550,7 @@ def main() -> int:
     errors.extend(check_data_and_docs(plugins))
     errors.extend(check_forbidden_claims())
     errors.extend(check_explore_contract())
+    errors.extend(check_social_metadata())
     errors.extend(check_generated_docs())
     errors.extend(check_conductor_quickstart())
     errors.extend(check_local_links())

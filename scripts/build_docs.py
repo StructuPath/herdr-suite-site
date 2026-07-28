@@ -8,8 +8,8 @@ Usage:
 The check mode fails when committed HTML differs from a clean regeneration.
 """
 
+import html
 import pathlib
-import re
 import sys
 
 import markdown
@@ -17,17 +17,53 @@ import markdown
 SITE = pathlib.Path(__file__).resolve().parent.parent
 DOCS_SRC = SITE / "docs-src"
 
-# (source file stem, slug, nav title, site URL)
+BASE_URL = "https://herdr.structupath.ai"
+SOCIAL_IMAGE_URL = f"{BASE_URL}/media/herdr-suite-social.jpg"
+SOCIAL_IMAGE_ALT = (
+    "Herdr Swarm terminal footage showing worktree candidates ready for review"
+)
+
+# (source file stem, slug, nav title, site URL, useful page summary)
 PAGES = [
-    ("Home", "index", "Overview", "/docs/"),
-    ("Swarm", "swarm", "Explore · Swarm", "/docs/swarm/"),
-    ("Conductor", "conductor", "Deliver · Conductor", "/docs/conductor/"),
-    ("Browser", "browser", "Browser", "/docs/browser/"),
-    ("Guard", "guard", "Guard", "/docs/guard/"),
+    (
+        "Home",
+        "index",
+        "Overview",
+        "/docs/",
+        "Explore bounded coding tasks with reviewable worktree candidates, then use the Herdr Suite's supporting tools for supervised agent work.",
+    ),
+    (
+        "Swarm",
+        "swarm",
+        "Explore · Swarm",
+        "/docs/swarm/",
+        "Run one bounded coding task in separate worktrees, compare candidate diffs and tests, and harvest the reviewed result with Swarm.",
+    ),
+    (
+        "Conductor",
+        "conductor",
+        "Deliver · Conductor",
+        "/docs/conductor/",
+        "Coordinate visible role workers, inspect report files, and reconcile reviewed branches with Conductor's advanced supervised assembly pattern.",
+    ),
+    (
+        "Browser",
+        "browser",
+        "Browser",
+        "/docs/browser/",
+        "Open, drive, and record a Herdr workspace browser session while keeping its trusted same-user privacy boundary explicit.",
+    ),
+    (
+        "Guard",
+        "guard",
+        "Guard",
+        "/docs/guard/",
+        "Audit rendered terminal text with advisory policy, alerts, and best-effort interrupts while relying on native controls for enforcement.",
+    ),
 ]
 
 # docs-src internal links -> published site URLs
-LINK_MAP = {stem: url for stem, _, _, url in PAGES}
+LINK_MAP = {stem: url for stem, _, _, url, _ in PAGES}
 
 TEMPLATE = """<!doctype html>
 <html lang="en">
@@ -36,6 +72,20 @@ TEMPLATE = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{tab_title} — Herdr Suite docs</title>
 <meta name="description" content="{desc}">
+<link rel="canonical" href="{canonical_url}">
+<meta property="og:title" content="{social_title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:url" content="{canonical_url}">
+<meta property="og:type" content="article">
+<meta property="og:image" content="{social_image_url}">
+<meta property="og:image:alt" content="{social_image_alt}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{social_title}">
+<meta name="twitter:description" content="{desc}">
+<meta name="twitter:image" content="{social_image_url}">
+<meta name="twitter:image:alt" content="{social_image_alt}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -43,6 +93,7 @@ TEMPLATE = """<!doctype html>
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Skip to content</a>
 <nav class="nav" aria-label="Main">
   <div class="nav-inner">
     <a class="wordmark" href="/"><span class="mark">H</span>herdr&nbsp;suite</a>
@@ -58,6 +109,12 @@ TEMPLATE = """<!doctype html>
 </nav>
 
 <div class="layout">
+  <main class="prose" id="main-content" tabindex="-1">
+<div class="crumb">{crumb}</div>
+{content}
+{pager}
+  </main>
+
   <aside class="sidebar" aria-label="Docs navigation">
     <h4>Docs</h4>
     <ul><li><a href="/docs/"{a_index}>Overview</a></li></ul>
@@ -78,12 +135,6 @@ TEMPLATE = """<!doctype html>
       <li><a href="/llms.txt">llms.txt</a></li>
     </ul>
   </aside>
-
-  <main class="prose">
-<div class="crumb">{crumb}</div>
-{content}
-{pager}
-  </main>
 </div>
 
 <footer class="foot-slim">
@@ -110,16 +161,6 @@ def convert(md_text: str) -> str:
     return html
 
 
-def first_sentence(md_text: str) -> str:
-    for line in md_text.splitlines():
-        line = line.strip()
-        if line and not line.startswith(("#", ">", "|", "```", "-", "*")):
-            plain = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line)
-            plain = re.sub(r"[`*_]", "", plain)
-            return plain[:155].replace('"', "'")
-    return "StructuPath Herdr Suite documentation."
-
-
 def pager_html(i: int) -> str:
     prev = PAGES[i - 1] if i > 0 else None
     nxt = PAGES[i + 1] if i + 1 < len(PAGES) else None
@@ -143,14 +184,21 @@ def rendered_pages() -> list[tuple[pathlib.Path, str]]:
         raise FileNotFoundError(f"docs source pages missing: {missing} in {DOCS_SRC}")
 
     pages = []
-    for i, (stem, slug, title, _url) in enumerate(PAGES):
+    for i, (stem, slug, title, url, summary) in enumerate(PAGES):
         md_text = (DOCS_SRC / f"{stem}.md").read_text(encoding="utf-8")
         actives = {
-            f"a_{s}": (' class="active"' if s == slug else "") for _, s, _, _ in PAGES
+            f"a_{s}": (' class="active"' if s == slug else "")
+            for _, s, _, _, _ in PAGES
         }
-        html = TEMPLATE.format(
-            tab_title=("Overview" if slug == "index" else f"{title} guide"),
-            desc=first_sentence(md_text),
+        tab_title = "Overview" if slug == "index" else f"{title} guide"
+        social_title = f"{tab_title} — Herdr Suite docs"
+        page_html = TEMPLATE.format(
+            tab_title=html.escape(tab_title),
+            social_title=html.escape(social_title, quote=True),
+            desc=html.escape(summary, quote=True),
+            canonical_url=html.escape(f"{BASE_URL}{url}", quote=True),
+            social_image_url=html.escape(SOCIAL_IMAGE_URL, quote=True),
+            social_image_alt=html.escape(SOCIAL_IMAGE_ALT, quote=True),
             crumb=("Docs" if slug == "index" else "Docs / Plugins"),
             content=convert(md_text),
             pager=pager_html(i),
@@ -159,7 +207,7 @@ def rendered_pages() -> list[tuple[pathlib.Path, str]]:
         out = (
             SITE / "docs" / ("index.html" if slug == "index" else f"{slug}/index.html")
         )
-        pages.append((out, html))
+        pages.append((out, page_html))
     return pages
 
 
@@ -176,14 +224,14 @@ def main() -> int:
         print(f"ERROR: {error}")
         return 1
 
-    for out, html in pages:
+    for out, page_html in pages:
         relative = out.relative_to(SITE)
         if check:
-            if not out.exists() or out.read_text(encoding="utf-8") != html:
+            if not out.exists() or out.read_text(encoding="utf-8") != page_html:
                 stale.append(str(relative))
             continue
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(html, encoding="utf-8")
+        out.write_text(page_html, encoding="utf-8")
         print(f"wrote {relative}")
 
     if stale:

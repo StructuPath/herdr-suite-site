@@ -35,15 +35,6 @@ FORBIDDEN_CLAIMS = {
     "unimplemented Conductor-to-Swarm pipeline": re.compile(
         r"conductor\s+decides[^\n]{0,120}swarm\s+isolates", re.IGNORECASE
     ),
-    "verified Conductor teardown": re.compile(
-        r"(?:verified\s+conductor-owned\s+(?:worker\s+)?panes|"
-        r"stand-down[^.\n]{0,120}verif(?:y|ies|ied)[^.\n]{0,80}(?:ownership|owned))",
-        re.IGNORECASE,
-    ),
-    "unsafe Conductor stand-down quickstart": re.compile(
-        r"herdr\s+plugin\s+action\s+invoke\s+stand-down\s+--plugin\s+structupath\.conductor",
-        re.IGNORECASE,
-    ),
 }
 
 PUBLIC_TEXT_FILES = [
@@ -226,8 +217,8 @@ def check_explore_contract() -> list[str]:
             "product-enforced approval gates",
         ],
         DOCS_SRC / "Home.md": [
-            "**Explore** is the ready first workflow",
-            "**Deliver** is an advanced assembly pattern",
+            "**Explore** is the ready first",
+            "**Deliver** is an attended Stage 1 lifecycle",
             "current runtime is not a single automatic pipeline",
         ],
         DOCS_SRC / "Swarm.md": [
@@ -406,7 +397,7 @@ def check_generated_docs() -> list[str]:
 
 
 def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
-    """Keep the pinned Conductor quickstart inspection-only and visibly bounded."""
+    """Keep the Conductor 0.2 quickstart attended and visibly bounded."""
     if rendered_html is None:
         page = SITE / "docs" / "conductor" / "index.html"
         try:
@@ -414,10 +405,10 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
         except OSError as error:
             return [f"unable to read generated Conductor guide: {error}"]
 
-    start = "<h2>Inspection-only quickstart</h2>"
-    end = "<h2>Current trust and completion limits</h2>"
+    start = "<h2>Attended quickstart</h2>"
+    end = "<h2>Trust and completion limits</h2>"
     if start not in rendered_html or end not in rendered_html:
-        return ["generated Conductor guide is missing the inspection-only quickstart"]
+        return ["generated Conductor guide is missing the attended quickstart"]
     quickstart = rendered_html.split(start, 1)[1].split(end, 1)[0]
     bash_blocks = [
         html.unescape(block)
@@ -427,30 +418,19 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
             re.DOTALL,
         )
     ]
-    expected = (
-        "herdr plugin action invoke assemble",
-        "herdr plugin action invoke status",
-        "herdr plugin action invoke board",
+    expected = tuple(
+        f"herdr plugin action invoke {action}"
+        for action in ("assemble", "status", "board", "harvest", "stand-down")
     )
     errors = []
     if not any(all(snippet in block for snippet in expected) for block in bash_blocks):
-        errors.append(
-            "Conductor inspection actions are not one rendered bash code block"
-        )
-    forbidden = (
-        "conductor_pin_active_run",
-        "conductor_dispatch",
-        "herdr plugin action invoke harvest",
-        "herdr plugin action invoke stand-down",
-    )
-    for command in forbidden:
+        errors.append("Conductor attended actions are not one rendered bash code block")
+    for command in ("conductor_pin_active_run", "conductor_dispatch"):
         if command in quickstart:
-            errors.append(
-                f"Conductor inspection-only quickstart contains unsafe command: {command}"
-            )
+            errors.append(f"Conductor quickstart contains retired command: {command}")
     required_boundaries = (
-        "Stop after inspection",
-        "do not invoke the current harvest or stand-down actions",
+        "harvest and stand-down are mutating attended actions",
+        "needs_attention",
     )
     for marker in required_boundaries:
         if marker.casefold() not in quickstart.casefold():
@@ -460,13 +440,12 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
         r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", rendered_html))
     )
     required_contract = (
-        "selects the newest run globally rather than by repository/workspace identity",
-        "without live ownership verification",
-        "sources executable state",
-        "not product-enforced filesystem or process isolation",
-        "does not create role worktrees or branches",
-        "neither is advanced to the reconciled integration result",
-        "there is no automatic Conductor→Swarm pipeline",
+        "Attended Stage 1 delivery",
+        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, or same-user security boundary",
+        "Missing, malformed, duplicate, foreign, stale, or ambiguous identity fails closed",
+        "same-user TOCTOU window remains",
+        "does not remove worktrees, branches, reports, artifacts, recordings, logs, or Guard files",
+        "does not invoke Swarm or provide an automatic Conductor→Swarm pipeline",
     )
     for marker in required_contract:
         if marker.casefold() not in public_text.casefold():
@@ -590,13 +569,6 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
         failures.append("self-test did not detect llms tested-version boundary drift")
     forbidden_samples = {
         "Guard enforcement claim": ("Guard enforces every agent command.",),
-        "verified Conductor teardown": (
-            "Close verified Conductor-owned worker panes.",
-            "Stand-down closes worker panes after Conductor verifies their ownership.",
-        ),
-        "unsafe Conductor stand-down quickstart": (
-            "herdr plugin action invoke stand-down --plugin structupath.conductor",
-        ),
     }
     for label, samples in forbidden_samples.items():
         pattern = FORBIDDEN_CLAIMS.get(label)
@@ -611,12 +583,10 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     )
     if not check_conductor_quickstart(broken_fences):
         failures.append("self-test did not detect broken quickstart code fences")
-    quickstart_end = "<h2>Current trust and completion limits</h2>"
+    quickstart_end = "<h2>Trust and completion limits</h2>"
     unsafe_commands = (
         "conductor_pin_active_run",
         "conductor_dispatch",
-        "herdr plugin action invoke harvest",
-        "herdr plugin action invoke stand-down",
     )
     for command in unsafe_commands:
         mutated = conductor_html.replace(
@@ -628,15 +598,14 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
                 f"self-test did not reject Conductor quickstart command: {command}"
             )
     safety_markers = (
-        "Stop after inspection",
-        "do not invoke the current harvest or stand-down actions",
-        "selects the newest run globally rather than by repository/workspace identity",
-        "without live ownership verification",
-        "sources executable state",
-        "not product-enforced filesystem or process isolation",
-        "does not create role worktrees or branches",
-        "neither is advanced to the reconciled integration result",
-        "there is no automatic Conductor→Swarm pipeline",
+        "Harvest and stand-down are mutating attended actions",
+        "needs_attention",
+        "Attended Stage 1 delivery",
+        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, or same-user security boundary",
+        "Missing, malformed, duplicate, foreign, stale, or ambiguous identity fails closed",
+        "same-user TOCTOU window remains",
+        "does not remove worktrees, branches, reports, artifacts, recordings, logs, or Guard files",
+        "does <strong>not</strong> invoke Swarm or provide an automatic Conductor→Swarm pipeline",
     )
     for marker in safety_markers:
         mutated = conductor_html.replace(marker, "REMOVED SAFETY CONTRACT", 1)

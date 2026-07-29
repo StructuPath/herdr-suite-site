@@ -361,6 +361,22 @@ Missing, malformed, ambiguous, or unavailable required identity is a Stage 1 no-
 
 **Gate:** an independently reviewed live capability report maps every required identity field to an exact source and negative fixture; absent or duplicate fields produce zero close/remove/merge.
 
+**B0 checkpoint — 2026-07-28:** PASS on Conductor branch
+`stage1/b0-live-identity-probe` at
+`28d518c036b9dfae76f3f7313d15db70f99712fc`. A disposable Herdr `0.7.5`
+workspace (protocol `17`) exposed workspace, pane, terminal, named-agent session,
+cwd, and foreground-cwd identity. Conductor-owned run/generation tokens were
+published through pane metadata and read back from both pane and agent views.
+The retained 32-case harness proves its positive mutation spies are observable
+and all 31 missing, malformed, duplicate, foreign, or stale fixtures reach zero
+mock close/remove/merge attempts. Independent re-review reported no blocker,
+high, or medium findings. B1 may proceed under the report's strict tuple and
+read-back constraints; pane close remains disabled until B3 production mutation
+seams and immediately-before-close revalidation pass. Herdr `0.7.5` has no
+conditional close parameter beyond `pane_id`, so the same-user TOCTOU boundary
+remains explicit. This checkpoint does not authorize Browser promotion, runtime
+evidence repinning, or any public readiness claim.
+
 #### B1. Strict state and identity kernel
 
 Add a private strict JSON state schema and a zero-dependency state helper. State is keyed by physical Git common-directory identity, workspace ID, run ID, and resource generation. Require exact keys/types/versions, bounded IDs, `0700` directories, `0600` files, no-follow regular-file reads, atomic temp/fsync/rename/directory-fsync writes, repository-scoped locks, and write-ahead resource journals.
@@ -368,6 +384,23 @@ Add a private strict JSON state schema and a zero-dependency state helper. State
 Legacy shell state is read-only administrative inventory. Never source, migrate, adopt, or use it as mutation authority.
 
 **Gate:** malformed, truncated, extra-key, wrong-version, symlinked, duplicate-active, foreign-repo/workspace, stale-generation, and lock-race inputs perform zero external mutation. Pre-intent durability failures also perform zero external mutation. A failure after state publication or an external side effect leaves the operation journaled as ambiguous/`needs_attention`, prohibits replay, and requires explicit recovery; temporary or published private state files are not counted as external mutation.
+
+**B1 checkpoint — 2026-07-28:** PASS on Conductor branch
+`stage1/b1-state-identity-kernel` at
+`68d4ebefe0dd2361da6a754987f8829c52f8825a`. The additive, zero-dependency
+kernel provides duplicate-key-rejecting strict JSON, physical Git common-dir
+identity, private `0700`/`0600` no-follow state, file/directory-fsynced atomic
+publication, repository-scoped locks, exclusive active-run identity, and guarded
+hash-chained write-ahead journals. Durable activation and operation uncertainty
+guards prevent partially published state from authorizing effects; run,
+generation, pointer, journal, and guard paths are bound to their validated
+document identity. Legacy shell state remains untouched and no current plugin
+action imports the kernel. The exact head passed all 88 repository tests and
+static gates on the current Node runtime, 35 targeted B1 tests on Node `20.20.2`,
+ShellCheck, Actionlint, LSP/lens diagnostics, and independent security review with
+no blocker, high, or medium findings. B2 may proceed; B1 does not authorize pane
+close, reconcile, runtime evidence repinning, Browser promotion, or a public
+readiness claim.
 
 #### B2. Context-bound assemble, board, and status
 
@@ -388,6 +421,23 @@ Stand-down may archive state and close identity-proven panes only. It must not d
 #### B4. Stage 1 release gate
 
 Run Node 20/current LTS, macOS Bash 3.2, ShellCheck, Actionlint, manifest/docs gates, destructive negative tests, and independent review. Recommend Conductor `0.2.0` for the private-state break, but do not tag or repin until the maintainer approves that version and the exact tree passes an opt-in disposable-repository live smoke.
+
+**Stage 1 release checkpoint — 2026-07-29:** PASS. Clean candidate
+`274f809192fd2bfa82b3fc5922cc6710c058ef0f` passed the opt-in Herdr
+`0.7.5`/protocol `17` lifecycle through all five installed actions. The retained
+operator-observed evidence records thirteen strict action invocations, eight
+same-repository/second-repository mutation refusals with unchanged live authority
+snapshots, retained worktree/branch/artifact inventory, and zero exact-run cleanup
+residue. Current Node and Node `20.20.2` passed 94 tests; macOS Bash `3.2`,
+ShellCheck, Actionlint, manifest, documentation, B0, and B4 evidence gates passed.
+Independent final review reported no blocker, high, or medium findings. PR
+[#3](https://github.com/StructuPath/herdr-conductor/pull/3) merged as
+`c982b61d6d55fa2e6ea9771b2e981fd6abe53ef8`; main CI run
+[`30432652345`](https://github.com/StructuPath/herdr-conductor/actions/runs/30432652345)
+passed, and release [`v0.2.0`](https://github.com/StructuPath/herdr-conductor/releases/tag/v0.2.0)
+was published. Stage 1 is attended-operational, not Stage 2 approval/reporting,
+a suite adapter, unattended automation, automatic recovery, or protection against
+malicious same-UID processes. Browser promotion remains held.
 
 ### Phase C — Wave 1 canonical schemas and static descriptors
 
@@ -450,7 +500,6 @@ The following remain intentionally unmerged or unpinned:
 
 - Browser 0.6.0 evidence work until Wave 1 schemas and later receipt/live gates;
 - Guard site compatibility restoration until merge, manual smoke, and `v0.1.1` exist;
-- Conductor runtime evidence updates until Stage 1 and its live gate;
 - Swarm projection/apply under `TODO-4b31f11e` until Wave 2/3;
 - Guard export under `TODO-ec8596c2` until Wave 2;
 - public coordinator/run lifecycle, automatic Conductor→Swarm composition, and concurrent cross-plugin mutation.
@@ -461,12 +510,12 @@ Maintainer decisions required before execution:
 2. choose a merge strategy that preserves the reviewed trees, or accept revalidation of changed merge trees;
 3. approve Guard's non-destructive manual smoke and `v0.1.1` tag/release;
 4. approve a read-only site CI workflow plus a pinned development-only JSON Schema dependency;
-5. confirm whether Conductor Stage 1 targets version `0.2.0`.
+5. **Resolved 2026-07-29:** Conductor Stage 1 targets and released `0.2.0`.
 
 ## Next Go/No-Go Order
 
 1. **GO only with maintainer approval:** merge reviewed Guard, Swarm, and Conductor heads.
 2. **GO after Guard smoke:** tag/release 0.1.1 and repin the site atomically.
-3. **GO after Stage 0 merge:** implement Conductor Stage 1 B0→B4; B0's independently reviewed live identity report is a hard prerequisite to B1, and execution stops on any unavailable required identity, weakened identity check, or destructive invariant.
+3. **DONE 2026-07-29:** Conductor Stage 1 B0→B4 released as `v0.2.0` after exact-tree live evidence, independent review, merge, and green main CI.
 4. **GO after schema review:** implement site schemas/corpus, then isolated static descriptors.
 5. **NO-GO throughout Wave 1:** Browser 0.6.0 promotion, suite adapters, approval-aware mutators, automatic pipeline claims, or E2E-readiness claims.

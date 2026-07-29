@@ -17,11 +17,11 @@ A clean-slot selection in Harvest performs a `--no-ff` merge. When the base is n
 
 Guide: https://herdr.structupath.ai/docs/swarm/
 
-### Deliver — advanced assembly pattern
+### Deliver — attended Stage 1
 
-Conductor (`structupath.conductor`) release 0.1.0: Herdr >=0.7.5; evidence records 0.7.5. It runs role-differentiated workers as visible panes, exchanges `.conductor/task.md` and `.conductor/report.md`, and reconciles writing branches in a Conductor integration worktree.
+Conductor (`structupath.conductor`) release 0.2.0: Herdr >=0.7.5; evidence records 0.7.5. It runs role-differentiated agents as visible panes with repository/workspace-bound strict state, live status, identity-checked harvest, and archival stand-down.
 
-A human or trusted orchestrating agent dispatches work, validates reports/diffs/tests, approves reconciliation, and handles conflicts. The pinned runtime does not provide product-enforced approval gates, durable autonomous recovery, cryptographic report attestation, or Swarm-backed worktree creation/harvest.
+A human or trusted orchestrating agent directs work, reviews branches and tests, explicitly invokes reconciliation, and handles conflicts or ambiguous recovery. The pinned runtime does not provide Stage 2 task/report or approval contracts, suite adapters, unattended automation, automatic recovery, or protection against malicious same-UID processes.
 
 Guide: https://herdr.structupath.ai/docs/conductor/
 

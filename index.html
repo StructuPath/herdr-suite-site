@@ -1058,7 +1058,7 @@
           </div>
           <p class="claim-boundary">
             <b>Truth boundary:</b> Explore is the ready first workflow. Deliver
-            is an advanced assembly pattern operated by a human or trusted
+            is an attended Stage 1 lifecycle operated by a human or trusted
             orchestrating agent—not an autonomous approval system.
           </p>
         </div>
@@ -1337,10 +1337,10 @@ Comparison criterion: among passing candidates, choose
             <span class="advanced">Deliver pattern</span>
             <h2>Assemble visible roles around a reviewed mission.</h2>
             <p>
-              Conductor is for advanced, agent-driven coordination: a human or
-              trusted orchestrator dispatches role workers, inspects their
-              task/report files, and invokes harvest into an integration
-              worktree.
+              Conductor is for attended, agent-driven coordination: a human or
+              trusted orchestrator directs visible role panes, reviews branches,
+              and explicitly invokes identity-checked harvest and archival
+              stand-down.
             </p>
             <dl class="contract">
               <div>
@@ -1350,17 +1350,17 @@ Comparison criterion: among passing candidates, choose
                 </dd>
               </div>
               <div>
-                <dt>Completion</dt>
+                <dt>State</dt>
                 <dd>
-                  A fresh <code>.conductor/report.md</code> sentinel—not an
-                  agent becoming idle.
+                  Repository/workspace-bound strict JSON with generations,
+                  locks, and hash-chained operation journals.
                 </dd>
               </div>
               <div>
                 <dt>Integration</dt>
                 <dd>
-                  Conductor-owned branches reconciled in a Conductor integration
-                  worktree.
+                  Immutable writer SHAs reconciled into the assemble-bound
+                  target with compare-and-swap ref updates.
                 </dd>
               </div>
               <div>
@@ -1381,7 +1381,7 @@ Comparison criterion: among passing candidates, choose
               <li>Swarm-backed worktree creation or harvest</li>
             </ul>
             <a class="text-link" href="/docs/conductor/"
-              >Read the advanced assembly contract</a
+              >Read the attended delivery contract</a
             >
           </aside>
         </div>
@@ -1461,11 +1461,12 @@ Comparison criterion: among passing candidates, choose
               <div class="matrix-row" role="row">
                 <span role="rowheader">Deliver</span>
                 <p role="cell">
-                  Role panes, task/report files, run board, integration harvest
+                  Role panes, strict run state, live status, identity-checked
+                  harvest
                 </p>
                 <p role="cell">
-                  Dispatch, report validation, approval, conflict handling,
-                  recovery
+                  Work direction, branch review, approval, conflict handling,
+                  ambiguous recovery
                 </p>
               </div>
               <div class="matrix-row" role="row">
@@ -1518,9 +1519,12 @@ herdr plugin install \
               </div>
             </article>
             <article class="reference-item">
-              <span class="rail-label">Advanced pattern</span>
+              <span class="rail-label">Attended Stage 1</span>
               <h3>Deliver · Conductor</h3>
-              <p>Visible role workers and orchestrator-driven integration.</p>
+              <p>
+                Visible role panes with strict state and identity-checked
+                integration.
+              </p>
               <pre>
 herdr plugin install \
   StructuPath/herdr-conductor</pre

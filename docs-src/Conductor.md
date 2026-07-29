@@ -1,50 +1,66 @@
 # 🎩 Deliver with Conductor (`structupath.conductor`)
 
-**Advanced assembly pattern.** Conductor runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. A human or trusted orchestrating agent drives every step; the current runtime is not safe for unattended or persisted-state use.
+**Attended Stage 1 delivery.** Conductor `0.2.0` runs a role-differentiated team—such as builder, validator, and reviewer—as visible Herdr agent panes. A human or trusted orchestrating agent explicitly drives every action. This release is operational for its strict five-action lifecycle on exactly Herdr `0.7.5`; it is not an approval system, suite adapter, unattended pipeline, automatic recovery service, or same-user security boundary.
 
-Repo: [StructuPath/herdr-conductor](https://github.com/StructuPath/herdr-conductor) · Detailed reference: the repo [README](https://github.com/StructuPath/herdr-conductor#readme)
+Repo: [StructuPath/herdr-conductor](https://github.com/StructuPath/herdr-conductor) · [Release `v0.2.0`](https://github.com/StructuPath/herdr-conductor/releases/tag/v0.2.0) · Detailed reference: the repo [README](https://github.com/StructuPath/herdr-conductor#readme)
 
 ## Pinned evidence
 
 | Field | Value |
 | --- | --- |
-| Plugin release | `0.1.0` |
+| Plugin release | `0.2.0` |
 | Minimum Herdr | `0.7.5` |
 | Explicitly tested Herdr | `0.7.5` |
-| Evidence commit | `d4c6527e36991b234861781af34fe16c7ef16f4b` |
+| Evidence commit | `c982b61d6d55fa2e6ea9771b2e981fd6abe53ef8` |
+| Manifest SHA-256 | `ad8719baa0d08b23b85dfb41811256c244ea96fefe24ea5a072477b0ad0d7fc3` |
+
+The release retains its [B0 identity-capability evidence](https://github.com/StructuPath/herdr-conductor/blob/v0.2.0/docs/evidence/2026-07-28-herdr-0.7.5-identity-capability.md) and [B4 live lifecycle report](https://github.com/StructuPath/herdr-conductor/blob/v0.2.0/docs/evidence/2026-07-28-stage1-b4-live-smoke.md). The live report is sanitized, operator-observed local evidence—not cryptographic remote attestation or authentication against malicious same-UID processes.
 
 ## All five actions
 
-| Action ID | Current behavior |
+| Action ID | Attended behavior |
 | --- | --- |
-| `structupath.conductor.assemble` | Read `.herdr-conductor.json`, create the declared team, and open the board |
-| `structupath.conductor.board` | Open the live board with one row per worker |
-| `structupath.conductor.status` | Print the board's recorded role/kind/pane/state/cwd data once |
-| `structupath.conductor.harvest` | Select the newest global run and merge writing-role branches into an integration worktree, reporting conflicts without forcing |
-| `structupath.conductor.stand-down` | Read recorded pane IDs from executable run state and request their closure without live ownership verification |
+| `structupath.conductor.assemble` | Resolve the exact repository/workspace, record a fixed fork, create run-unique writer worktrees/refs, start named agent panes, and journal exact observed identities. |
+| `structupath.conductor.board` | Print one JSON snapshot for the invoking repository/workspace; it does not open or focus a pane. |
+| `structupath.conductor.status` | Print the same context-bound run as a table after re-reading live pane and named-agent identity. |
+| `structupath.conductor.harvest` | Under the repository mutation lock, validate exact source/target identities, compute from immutable SHAs, and compare-and-swap the assemble-bound target ref. |
+| `structupath.conductor.stand-down` | Revalidate the complete live pane/agent tuple immediately before close, archive strict state, and retain worktrees, branches, reports, recordings, logs, artifacts, and Guard files. |
 
-> **Current safety boundary:** do not invoke `harvest` or `stand-down` on existing, persisted, shared, or ambiguous state. The pinned runtime selects the newest run globally rather than by repository/workspace identity, sources executable state, and does not compare a live pane identity before closing it. Typing a run ID confirms only the selected ID; it does not make that selection repository-safe.
+Conductor owns this lifecycle. It does **not** invoke Swarm or provide an automatic Conductor→Swarm pipeline. The supported composition remains human-selected and sequential.
 
-Conductor owns its worktree lifecycle and harvest implementation. It does **not** call Swarm to create worktrees or harvest branches. Swarm is a separate workflow that a human or trusted orchestrator may invoke later with an explicitly selected commit; there is no automatic Conductor→Swarm pipeline.
+## Attended quickstart
 
-## Inspection-only quickstart
+Create `.herdr-conductor.json` in a clean Git repository:
 
-Use a clean, disposable Git repository and a reviewed `.herdr-conductor.json`. These commands assemble and inspect the team; they do not establish a safe mutation, reconciliation, or teardown path:
+```json
+{
+  "version": 1,
+  "roles": [
+    { "name": "builder", "kind": "pi", "mode": "write" },
+    { "name": "reviewer", "kind": "codex", "mode": "read-only" }
+  ]
+}
+```
+
+Then explicitly drive the lifecycle from that Herdr workspace:
 
 ```bash
 herdr plugin action invoke assemble --plugin structupath.conductor
 herdr plugin action invoke status --plugin structupath.conductor
 herdr plugin action invoke board --plugin structupath.conductor
+# Interact with and inspect the visible role panes and writer branches.
+herdr plugin action invoke harvest --plugin structupath.conductor
+herdr plugin action invoke stand-down --plugin structupath.conductor
 ```
 
-Stop after inspection in the pinned runtime. Do not use the current transport helpers to dispatch work, and do not invoke the current harvest or stand-down actions. Wait for a release with repository-bound run identity, non-executable durable state, live resource verification, explicit approval consumption, and recovery semantics before treating Deliver as an operational workflow.
+Harvest and stand-down are mutating attended actions. Inspect status, exact branches, and retained evidence before invoking them. Failed or timed-out external effects become `needs_attention` and are not silently replayed.
 
-## Current trust and completion limits
+## Trust and completion limits
 
-- Write-capable workers and the orchestrator are trusted same-user principals. Worktrees separate changes for review; they are not sandboxes or same-user security boundaries.
-- `read-only` is role metadata and prompt intent in the pinned runtime, not product-enforced filesystem or process isolation.
-- Guard is a best-effort rendered-text policy observer. Its audit and interrupt-request records do not prove that a command was prevented.
-- Run state is shell-sourced executable text. There is no durable restart/adoption protocol, repository-bound active-run index, atomic approval journal, or trusted attestation.
-- Dry-run still writes run state and `.conductor` scaffolding in the base checkout, although it does not create role worktrees or branches; it is not filesystem-immutable.
-- The validator worktree and reviewer's base checkout remain at the original base branch; neither is advanced to the reconciled integration result. Their PASS/APPROVE output cannot certify that integration tree.
-- Workers exchange `.conductor/task.md` and `.conductor/report.md`. An agent becoming `idle` can mean it asked a question or completed any turn; only a fresh report containing the completion sentinel satisfies the current await helper, and that sentinel is not an identity or correctness proof.
+- State is strict, non-executable private JSON indexed by physical Git common-directory and Herdr workspace identity. Atomic writes, repository locks, generations, and hash-chained journals are cooperative coordination controls—not authentication.
+- Missing, malformed, duplicate, foreign, stale, or ambiguous identity fails closed. Negative fixtures cover cross-repository/workspace selection, recycled panes, moved worktrees, changed refs/heads, corrupt journals, and concurrent reconciliation.
+- Herdr `0.7.5` accepts only `pane_id` for close. Conductor re-reads workspace, pane, terminal, agent session/name, canonical `cwd` and `foreground_cwd`, run ID, and generation immediately before close, but a same-user TOCTOU window remains.
+- The Conductor repository lock does not stop unrelated Git or same-user processes. Harvest uses immutable source SHAs, target-ref compare-and-swap, and final identity/index/worktree checks, but these are still attended coordination semantics.
+- Role modes and launch arguments are cooperative configuration. Worktrees are review boundaries, not sandboxes. Guard observes rendered text and cannot prove filesystem prevention.
+- Stage 1 does not provide strict task/report schemas, writable report outboxes, approval receipts, automatic apply, suite adapters, unattended orchestration, or automatic recovery. Those remain later-stage work.
+- Stand-down archives Conductor state and closes only identity-proven panes. It does not remove worktrees, branches, reports, artifacts, recordings, logs, or Guard files.

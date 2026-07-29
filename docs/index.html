@@ -45,14 +45,21 @@
   <main class="prose" id="main-content" tabindex="-1">
 <div class="crumb">Docs</div>
 <h1>Herdr Suite: supervised AgentOps</h1>
-<p>Herdr-native tools for human-supervised agent work, built and maintained by <a href="https://github.com/StructuPath">StructuPath</a>. <strong>Explore</strong> is the ready first workflow. <strong>Deliver</strong> is an advanced assembly pattern. Browser and Guard provide supporting visibility and text-policy capabilities.</p>
+<p>Herdr-native tools for human-supervised agent work, built and maintained by
+<a href="https://github.com/StructuPath">StructuPath</a>. <strong>Explore</strong> is the ready first
+workflow. <strong>Deliver</strong> is an attended Stage 1 lifecycle. Browser and Guard provide
+supporting visibility and text-policy capabilities.</p>
 <p>This repository is the canonical suite documentation source; each plugin README remains the detailed runtime reference.</p>
 <h2>Start with Explore</h2>
 <p><a href="/docs/swarm/">Explore with Swarm</a> when you have one bounded coding task and want to compare several implementations. Swarm records a base SHA, gives each agent a separate worktree and branch, reports concrete change counts, and lets the operator preview and harvest a selected candidate.</p>
 <p>The operator defines the comparison criterion, reviews diffs and tests, and chooses what lands. Agents commit locally and never push.</p>
-<h2>Deliver is advanced</h2>
-<p><a href="/docs/conductor/">Deliver with Conductor</a> is a human/trusted-orchestrator assembly pattern: visible role workers, <code>.conductor/task.md</code> and <code>.conductor/report.md</code> files, a run board, and reconciliation in a Conductor integration worktree.</p>
-<p>The pinned runtime does not provide product-enforced approval gates, durable autonomous recovery, cryptographic report attestation, or Swarm-backed worktree creation/harvest.</p>
+<h2>Deliver is attended</h2>
+<p><a href="/docs/conductor/">Deliver with Conductor</a> is an attended Stage 1 workflow: visible role
+panes, repository/workspace-bound strict state, live status, identity-checked
+reconciliation, and archival stand-down.</p>
+<p>The pinned runtime does not provide Stage 2 task/report or approval contracts,
+suite adapters, unattended automation, automatic recovery, or protection against
+malicious same-UID processes.</p>
 <h2>Supporting trust capabilities</h2>
 <ul>
 <li><a href="/docs/browser/">Browser</a> exposes a workspace browser session that an agent or operator can drive and record. The session is a trusted same-user boundary, and recordings may contain sensitive content.</li>
@@ -98,10 +105,10 @@
 <tr>
 <td><a href="/docs/conductor/">Conductor</a></td>
 <td><code>structupath.conductor</code></td>
-<td><code>0.1.0</code></td>
+<td><code>0.2.0</code></td>
 <td><code>0.7.5</code></td>
 <td><code>0.7.5</code></td>
-<td>Advanced Deliver pattern: role workers, reports, and reconciliation</td>
+<td>Attended Deliver lifecycle: role panes, strict state, reconciliation, and archival stand-down</td>
 </tr>
 </tbody>
 </table></div>
@@ -124,8 +131,8 @@
 </tr>
 <tr>
 <td>Deliver / Conductor</td>
-<td>Role panes, task/report files, run board, integration harvest</td>
-<td>Dispatch, report validation, approval, conflict handling, recovery</td>
+<td>Role panes, strict run state, live status, identity-checked harvest and stand-down</td>
+<td>Work direction, branch review, approval, conflict handling, ambiguous recovery</td>
 </tr>
 <tr>
 <td>Browser</td>
@@ -144,7 +151,7 @@
 <pre><code class="language-bash"># Ready first workflow
 herdr plugin install StructuPath/herdr-swarm
 
-# Advanced assembly pattern
+# Attended Stage 1 delivery
 herdr plugin install StructuPath/herdr-conductor
 
 # Supporting visibility and policy

@@ -43,11 +43,11 @@
       "name": "Conductor",
       "id": "structupath.conductor",
       "repository": "https://github.com/StructuPath/herdr-conductor",
-      "commit": "d4c6527e36991b234861781af34fe16c7ef16f4b",
-      "version": "0.1.0",
+      "commit": "c982b61d6d55fa2e6ea9771b2e981fd6abe53ef8",
+      "version": "0.2.0",
       "min_herdr_version": "0.7.5",
       "tested_herdr_versions": ["0.7.5"],
-      "manifest_sha256": "1ab62a6a3b77dd52fb1184a2f3d06c6ac0d21349e3abe6e29928356407458572",
+      "manifest_sha256": "ad8719baa0d08b23b85dfb41811256c244ea96fefe24ea5a072477b0ad0d7fc3",
       "actions": ["assemble", "board", "status", "harvest", "stand-down"]
     }
   ]

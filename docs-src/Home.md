@@ -2,8 +2,8 @@
 
 Herdr-native tools for human-supervised agent work, built and maintained by
 [StructuPath](https://github.com/StructuPath). **Explore** is the ready first
-workflow. **Deliver** is an attended Stage 1 lifecycle. Browser and Guard provide
-supporting visibility and text-policy capabilities.
+workflow. **Deliver** is an attended Stage 2 lifecycle with strict task/report
+contracts. Browser and Guard provide supporting visibility and text-policy capabilities.
 
 This repository is the canonical suite documentation source; each plugin README remains the detailed runtime reference.
 
@@ -15,13 +15,14 @@ The operator defines the comparison criterion, reviews diffs and tests, and choo
 
 ## Deliver is attended
 
-[Deliver with Conductor](Conductor) is an attended Stage 1 workflow: visible role
-panes, repository/workspace-bound strict state, live status, identity-checked
-reconciliation, and archival stand-down.
+[Deliver with Conductor](Conductor) is an attended Stage 2 workflow: visible
+role panes, repository/workspace-bound strict state, immutable task contracts,
+private report outboxes, deterministic one-CAS integration, exact-SHA reviewer
+and validator gates, and archival stand-down.
 
-The pinned runtime does not provide Stage 2 task/report or approval contracts,
-suite adapters, unattended automation, automatic recovery, or protection against
-malicious same-UID processes.
+The pinned runtime does not provide approval receipts or approval-aware apply,
+suite adapters, unattended automation, automatic recovery, cryptographic report
+attestation, or protection against malicious same-UID processes.
 
 ## Supporting trust capabilities
 
@@ -35,7 +36,7 @@ malicious same-UID processes.
 | [Browser](Browser) | `structupath.browser` | `0.5.0` | `0.7.0` | `0.7.4` | Supporting browser visibility and recording |
 | [Guard](Guard) | `structupath.guard` | `0.1.1` | `0.7.5` | `0.7.5` | Supporting advisory text policy, audit, alert, and best-effort interrupt request |
 | [Swarm](Swarm) | `structupath.swarm` | `0.1.0` | `0.7.4` | `0.7.4`, `0.7.5` | Ready Explore workflow: parallel candidates and review-first harvest |
-| [Conductor](Conductor) | `structupath.conductor` | `0.2.0` | `0.7.5` | `0.7.5` | Attended Deliver lifecycle: role panes, strict state, reconciliation, and archival stand-down |
+| [Conductor](Conductor) | `structupath.conductor` | `0.3.0` | `0.7.5` | `0.7.5` | Attended Deliver Stage 2: strict tasks/reports, one-CAS integration, exact-SHA gates, and archival stand-down |
 
 Versions are plugin-specific evidence pinned in [`data/plugins.json`](https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json), not a claim that every plugin was tested on one suite-wide Herdr version. Guard 0.1.1 passed its non-destructive Herdr 0.7.5 live smoke. Guard remains best-effort rendered-text policy: an accepted interrupt request is observable, but command prevention is unknown.
 
@@ -46,7 +47,7 @@ These plugins can be installed together, but the current runtime is not a single
 | Component | System provides | Operator remains responsible for |
 | --- | --- | --- |
 | Explore / Swarm | Worktree fan-out, change counts, previews, guarded harvest | Task bounds, candidate review, tests, slot selection, cleanup |
-| Deliver / Conductor | Role panes, strict run state, live status, identity-checked harvest and stand-down | Work direction, branch review, approval, conflict handling, ambiguous recovery |
+| Deliver / Conductor | Task-bound role panes, private report outboxes, deterministic integration, exact-SHA gates, and stand-down | Work direction, assertion review, approval decisions, conflicts, and ambiguous recovery |
 | Browser | Shared visual browser surface and recording | Session privacy, action review, sensitive recording handling |
 | Guard | Best-effort text matching, audit, alerts, interrupt attempts | Authoritative hooks, sandboxing, access control, log protection |
 
@@ -58,7 +59,7 @@ Herdr plugins and write-capable agents run as the same operating-system user. Tr
 # Ready first workflow
 herdr plugin install StructuPath/herdr-swarm
 
-# Attended Stage 1 delivery
+# Attended Stage 2 delivery
 herdr plugin install StructuPath/herdr-conductor
 
 # Supporting visibility and policy

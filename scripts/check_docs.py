@@ -218,7 +218,7 @@ def check_explore_contract() -> list[str]:
         ],
         DOCS_SRC / "Home.md": [
             "**Explore** is the ready first",
-            "**Deliver** is an attended Stage 1 lifecycle",
+            "**Deliver** is an attended Stage 2 lifecycle",
             "current runtime is not a single automatic pipeline",
         ],
         DOCS_SRC / "Swarm.md": [
@@ -397,7 +397,7 @@ def check_generated_docs() -> list[str]:
 
 
 def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
-    """Keep the Conductor 0.2 quickstart attended and visibly bounded."""
+    """Keep the Conductor 0.3 quickstart attended and visibly bounded."""
     if rendered_html is None:
         page = SITE / "docs" / "conductor" / "index.html"
         try:
@@ -440,11 +440,11 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
         r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", rendered_html))
     )
     required_contract = (
-        "Attended Stage 1 delivery",
-        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, or same-user security boundary",
-        "Missing, malformed, duplicate, foreign, stale, or ambiguous identity fails closed",
+        "Attended Stage 2 delivery",
+        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, cryptographic attestation system, or same-user security boundary",
+        "Missing, malformed, duplicate, foreign, stale, replayed, ambiguous, dirty, or durability-uncertain authority fails closed",
         "same-user TOCTOU window remains",
-        "does not remove worktrees, branches, reports, artifacts, recordings, logs, or Guard files",
+        "does not remove worktrees, branches, tasks, outboxes, reports, gate sources, artifacts, recordings, logs, or Guard files",
         "does not invoke Swarm or provide an automatic Conductor→Swarm pipeline",
     )
     for marker in required_contract:
@@ -600,11 +600,11 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     safety_markers = (
         "Harvest and stand-down are mutating attended actions",
         "needs_attention",
-        "Attended Stage 1 delivery",
-        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, or same-user security boundary",
-        "Missing, malformed, duplicate, foreign, stale, or ambiguous identity fails closed",
+        "Attended Stage 2 delivery",
+        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, cryptographic attestation system, or same-user security boundary",
+        "Missing, malformed, duplicate, foreign, stale, replayed, ambiguous, dirty, or durability-uncertain authority fails closed",
         "same-user TOCTOU window remains",
-        "does not remove worktrees, branches, reports, artifacts, recordings, logs, or Guard files",
+        "does not remove worktrees, branches, tasks, outboxes, reports, gate sources, artifacts, recordings, logs, or Guard files",
         "does <strong>not</strong> invoke Swarm or provide an automatic Conductor→Swarm pipeline",
     )
     for marker in safety_markers:

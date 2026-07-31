@@ -47,19 +47,20 @@
 <h1>Herdr Suite: supervised AgentOps</h1>
 <p>Herdr-native tools for human-supervised agent work, built and maintained by
 <a href="https://github.com/StructuPath">StructuPath</a>. <strong>Explore</strong> is the ready first
-workflow. <strong>Deliver</strong> is an attended Stage 1 lifecycle. Browser and Guard provide
-supporting visibility and text-policy capabilities.</p>
+workflow. <strong>Deliver</strong> is an attended Stage 2 lifecycle with strict task/report
+contracts. Browser and Guard provide supporting visibility and text-policy capabilities.</p>
 <p>This repository is the canonical suite documentation source; each plugin README remains the detailed runtime reference.</p>
 <h2>Start with Explore</h2>
 <p><a href="/docs/swarm/">Explore with Swarm</a> when you have one bounded coding task and want to compare several implementations. Swarm records a base SHA, gives each agent a separate worktree and branch, reports concrete change counts, and lets the operator preview and harvest a selected candidate.</p>
 <p>The operator defines the comparison criterion, reviews diffs and tests, and chooses what lands. Agents commit locally and never push.</p>
 <h2>Deliver is attended</h2>
-<p><a href="/docs/conductor/">Deliver with Conductor</a> is an attended Stage 1 workflow: visible role
-panes, repository/workspace-bound strict state, live status, identity-checked
-reconciliation, and archival stand-down.</p>
-<p>The pinned runtime does not provide Stage 2 task/report or approval contracts,
-suite adapters, unattended automation, automatic recovery, or protection against
-malicious same-UID processes.</p>
+<p><a href="/docs/conductor/">Deliver with Conductor</a> is an attended Stage 2 workflow: visible
+role panes, repository/workspace-bound strict state, immutable task contracts,
+private report outboxes, deterministic one-CAS integration, exact-SHA reviewer
+and validator gates, and archival stand-down.</p>
+<p>The pinned runtime does not provide approval receipts or approval-aware apply,
+suite adapters, unattended automation, automatic recovery, cryptographic report
+attestation, or protection against malicious same-UID processes.</p>
 <h2>Supporting trust capabilities</h2>
 <ul>
 <li><a href="/docs/browser/">Browser</a> exposes a workspace browser session that an agent or operator can drive and record. The session is a trusted same-user boundary, and recordings may contain sensitive content.</li>
@@ -105,10 +106,10 @@ malicious same-UID processes.</p>
 <tr>
 <td><a href="/docs/conductor/">Conductor</a></td>
 <td><code>structupath.conductor</code></td>
-<td><code>0.2.0</code></td>
+<td><code>0.3.0</code></td>
 <td><code>0.7.5</code></td>
 <td><code>0.7.5</code></td>
-<td>Attended Deliver lifecycle: role panes, strict state, reconciliation, and archival stand-down</td>
+<td>Attended Deliver Stage 2: strict tasks/reports, one-CAS integration, exact-SHA gates, and archival stand-down</td>
 </tr>
 </tbody>
 </table></div>
@@ -131,8 +132,8 @@ malicious same-UID processes.</p>
 </tr>
 <tr>
 <td>Deliver / Conductor</td>
-<td>Role panes, strict run state, live status, identity-checked harvest and stand-down</td>
-<td>Work direction, branch review, approval, conflict handling, ambiguous recovery</td>
+<td>Task-bound role panes, private report outboxes, deterministic integration, exact-SHA gates, and stand-down</td>
+<td>Work direction, assertion review, approval decisions, conflicts, and ambiguous recovery</td>
 </tr>
 <tr>
 <td>Browser</td>
@@ -151,7 +152,7 @@ malicious same-UID processes.</p>
 <pre><code class="language-bash"># Ready first workflow
 herdr plugin install StructuPath/herdr-swarm
 
-# Attended Stage 1 delivery
+# Attended Stage 2 delivery
 herdr plugin install StructuPath/herdr-conductor
 
 # Supporting visibility and policy

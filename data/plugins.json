@@ -47,7 +47,7 @@
       "name": "Swarm",
       "id": "structupath.swarm",
       "repository": "https://github.com/StructuPath/herdr-swarm",
-      "commit": "b7c8c46d98653de6ce22d79d541fa230f989c0e2",
+      "commit": "4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb",
       "version": "0.3.0",
       "min_herdr_version": "0.7.4",
       "tested_herdr_versions": [

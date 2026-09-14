@@ -11,9 +11,9 @@ Repo: [StructuPath/herdr-swarm](https://github.com/StructuPath/herdr-swarm) · D
 | Plugin release | `0.3.0` |
 | Minimum Herdr | `0.7.4` |
 | Explicitly tested Herdr | `0.7.4`, `0.7.5` |
-| Evidence commit | `b7c8c46d98653de6ce22d79d541fa230f989c0e2` |
+| Evidence commit | `4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb` |
 
-The pinned source also records a [bounded Herdr 0.8.2 live smoke](https://github.com/StructuPath/herdr-swarm/blob/b7c8c46d98653de6ce22d79d541fa230f989c0e2/docs/readiness.md): fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's `done` agent state. These are unreleased fixes on version 0.3.0; broad compatibility evidence remains 0.7.4/0.7.5.
+The pinned source also records a [bounded Herdr 0.8.2 live smoke](https://github.com/StructuPath/herdr-swarm/blob/4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb/docs/readiness.md): fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's `done` agent state. These are unreleased fixes on version 0.3.0; broad compatibility evidence remains 0.7.4/0.7.5.
 
 ## Actions
 

@@ -56,6 +56,8 @@ the suite's pinned `data/plugins.json`; Conductor requires exactly Herdr 0.7.5.
   kind `herdr-browser-qa`. A current result must match clean HEAD and report a
   clean, unchanged checkout. Screenshot/diagnostic files stay in the runner's
   private output directory; this server does not serve arbitrary artifacts.
+  Relaxed error policies are labeled explicitly. Contradictory success reports
+  are unavailable; a genuine failed or interrupted run still displays failure.
 - **GitHub handoff:** save Swarm `scripts/harvest-step.sh pr-status <slot>` output
   to the configured TSV file. The single `ci_status` JSON record supplies the
   PR URL and CI summary. Reported commit must match the configured clean HEAD

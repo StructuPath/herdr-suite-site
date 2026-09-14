@@ -43,7 +43,7 @@ function projectCard(p) {
     const stats = element('div', undefined, 'stats');
     row(stats, 'Branch', p.git.branch); row(stats, 'Commit', p.git.commit.slice(0, 12)); row(stats, 'Changed files', p.git.changedFiles); row(stats, 'Worktrees', p.git.worktrees); card.append(stats);
   }
-  const details = element('details'); details.open = true;
+  const details = element('details'); details.open = data.projects.length === 1;
   details.append(element('summary', 'Run status & validation evidence'));
   const grid = element('div', undefined, 'evidence-grid');
   const swarm = panel('Swarm', p.swarm);

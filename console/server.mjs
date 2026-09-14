@@ -73,6 +73,7 @@ export function parseArgs(args) {
 }
 
 async function main() {
+  if (Number(process.versions.node.split('.')[0]) < 20) throw new Error('Node 20 or newer is required');
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     console.log('Herdr Console (Node 20+)\n  npm run console -- --config /private/console.json [--port 4317] [--check]\n  npm run console -- --demo\nRead-only. Binds to 127.0.0.1 only. No plugin operations or remote requests.');

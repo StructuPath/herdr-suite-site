@@ -120,7 +120,7 @@ export function parseQA(content, current) {
   if (!object(q) || q.schemaVersion !== 1 || q.kind !== 'herdr-browser-qa' ||
       !['passed', 'failed'].includes(q.status) || !object(q.git) || !SHA.test(q.git.commit) ||
       typeof q.git.dirty !== 'boolean' || typeof q.git.changedDuringRun !== 'boolean' ||
-      !object(q.summary) || !object(q.scenario?.policy) ||
+      !object(q.summary) || !['passed','failed'].includes(q.cleanup?.status) || !object(q.scenario?.policy) ||
       ['failOnConsoleError','failOnPageError','failOnFailedRequest'].some(k => typeof q.scenario.policy[k] !== 'boolean') ||
       !Array.isArray(q.runs) || q.runs.length > 20 ||
       !Number.isFinite(Date.parse(q.finishedAt))) throw new Error('Unsupported QA report');
@@ -129,7 +129,18 @@ export function parseQA(content, current) {
       summary.passed + summary.failed !== summary.viewports || summary.viewports < 1) throw new Error('Invalid QA summary');
   const policy = q.scenario.policy;
   const strict = policy.failOnConsoleError && policy.failOnPageError && policy.failOnFailedRequest;
+  const validRuns = q.runs.every(r => object(r) && ['passed','failed'].includes(r.status) &&
+    ['steps','artifacts','consoleErrors','pageErrors','failedRequests'].every(k => Array.isArray(r[k])));
+  if (!validRuns) throw new Error('Invalid QA viewport runs');
+  const actual = {
+    assertions: q.runs.reduce((n,r) => n + r.steps.filter(s => typeof s?.type === 'string' && s.type.startsWith('assert')).length, 0),
+    consoleErrors: q.runs.reduce((n,r) => n + r.consoleErrors.length, 0),
+    pageErrors: q.runs.reduce((n,r) => n + r.pageErrors.length, 0),
+    failedRequests: q.runs.reduce((n,r) => n + r.failedRequests.length, 0)
+  };
   const inconsistent = q.status === 'passed' && (summary.failed > 0 || summary.viewports !== q.runs.length || q.cleanup?.status !== 'passed' ||
+    q.git.changedDuringRun || Boolean(q.error) || Object.keys(actual).some(k => actual[k] !== summary[k]) ||
+    q.runs.some(r => r.steps.some(s => s?.status !== 'passed') || r.error || r.evidenceError || r.telemetryError || r.cleanupError || (policy.failOnFailedRequest && r.unresolvedRequests !== 0)) ||
     (policy.failOnConsoleError && summary.consoleErrors > 0) ||
     (policy.failOnPageError && summary.pageErrors > 0) ||
     (policy.failOnFailedRequest && summary.failedRequests > 0) || q.runs.some(r => r.status !== 'passed'));
@@ -200,7 +211,7 @@ export async function inspectProject(p) {
   return { ...result, swarm, conductor, guard, qa, pullRequest };
 }
 
-const parseVersion = (s) => /(?:^|\s|v)(\d+\.\d+\.\d+)(?:\b|$)/.exec(s)?.[1] || null;
+const parseVersion = (s) => /(?:^|\s|v)(\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?(?:\+[A-Za-z0-9.-]+)?)(?:\s|$)/.exec(s)?.[1] || null;
 export function compatibility(plugin, version) {
   if (!version) return 'unknown';
   if (plugin.slug === 'conductor') return version === '0.7.5' ? 'version_match' : 'incompatible';

@@ -23,7 +23,7 @@ async function fixture(t) {
 function qa(commit) {
   return { schemaVersion:1,kind:'herdr-browser-qa',status:'passed',cleanup:{status:'passed'},git:{commit,dirty:false,changedDuringRun:false},
     finishedAt:new Date().toISOString(),scenario:{name:'Homepage',policy:{failOnConsoleError:true,failOnPageError:true,failOnFailedRequest:true}},summary:{viewports:2,passed:2,failed:0,assertions:2,consoleErrors:0,pageErrors:0,failedRequests:0},
-    runs:[{viewport:{name:'desktop'},status:'passed',artifacts:['desktop.png']},{viewport:{name:'mobile'},status:'passed',artifacts:['mobile.png']}] };
+    runs:['desktop','mobile'].map(name => ({viewport:{name},status:'passed',steps:[{type:'assertTitle',status:'passed'}],artifacts:[`${name}.png`],consoleErrors:[],pageErrors:[],failedRequests:[],unresolvedRequests:0})) };
 }
 test('configuration explicitly selects repositories and rejects unknown, duplicate and executable fields', async t => {
   const { root } = await fixture(t); const file = join(root, 'config.json');
@@ -61,17 +61,20 @@ test('Git environment strips inherited repository and config redirections', () =
 test('QA freshness requires exact clean unchanged HEAD and rejects contradictory success', () => {
   const commit='a'.repeat(40), report=qa(commit), current={commit,dirty:false};
   assert.equal(parseQA(JSON.stringify(report),current).freshness,'matches_clean_head');
-  for (const git of [{...report.git,dirty:true},{...report.git,changedDuringRun:true},{...report.git,commit:'b'.repeat(40)}]) {
+  for (const git of [{...report.git,dirty:true},{...report.git,commit:'b'.repeat(40)}]) {
     assert.equal(parseQA(JSON.stringify({...report,git}),current).freshness,'not_current_clean_head');
   }
   assert.equal(parseQA(JSON.stringify(report),{...current,dirty:true}).freshness,'not_current_clean_head');
   assert.throws(()=>parseQA(JSON.stringify({...report,summary:{...report.summary,failedRequests:1}}),current));
   assert.throws(()=>parseQA(JSON.stringify({...report,kind:'something-else'}),current));
-  const relaxed={...report,scenario:{...report.scenario,policy:{...report.scenario.policy,failOnConsoleError:false}},summary:{...report.summary,consoleErrors:2}};
+  const relaxed={...report,scenario:{...report.scenario,policy:{...report.scenario.policy,failOnConsoleError:false}},summary:{...report.summary,consoleErrors:2},runs:report.runs.map(r=>({...r,consoleErrors:[{message:'expected'}]}))};
   assert.equal(parseQA(JSON.stringify(relaxed),current).validationPolicy,'relaxed');
   const earlyFailure={...report,status:'failed',runs:[],summary:{...report.summary,passed:0,failed:2,assertions:0}};
   assert.equal(parseQA(JSON.stringify(earlyFailure),current).outcome,'failed');
   assert.throws(()=>parseQA(JSON.stringify({...report,cleanup:{status:'failed'}}),current));
+  assert.throws(()=>parseQA(JSON.stringify({...report,git:{...report.git,changedDuringRun:true}}),current));
+  assert.throws(()=>parseQA(JSON.stringify({...report,runs:[]}),current));
+  assert.throws(()=>parseQA(JSON.stringify({...report,runs:report.runs.map(r=>({...r,status:'failed'}))}),current));
 });
 test('observations are projected, repository-bound, missing sources stay unknown', async t => {
   const {root,repo}=await fixture(t), info=await inspectGit(repo);

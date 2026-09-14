@@ -33,6 +33,13 @@ PAGES = [
         "Explore bounded coding tasks with reviewable worktree candidates, then use the Herdr Suite's supporting tools for supervised agent work.",
     ),
     (
+        "Console",
+        "console",
+        "Local Console",
+        "/docs/console/",
+        "Run a read-only local dashboard for explicitly configured projects, tool health, saved run observations, and browser QA evidence.",
+    ),
+    (
         "Swarm",
         "swarm",
         "Explore · Swarm",
@@ -102,6 +109,7 @@ TEMPLATE = """<!doctype html>
       <a href="/#explore">Explore</a>
       <a href="/#deliver">Deliver · advanced</a>
       <a href="/#trust">Trust</a>
+      <a href="/docs/console/">Console</a>
     </div>
     <div class="nav-spacer"></div>
     <a class="nav-docs" href="/docs/" aria-current="page">Docs</a>
@@ -119,6 +127,8 @@ TEMPLATE = """<!doctype html>
   <aside class="sidebar" aria-label="Docs navigation">
     <h4>Docs</h4>
     <ul><li><a href="/docs/"{a_index}>Overview</a></li></ul>
+    <h4>Local app</h4>
+    <ul><li><a href="/docs/console/"{a_console}>Console</a></li></ul>
     <h4>Workflows</h4>
     <ul>
       <li><a href="/docs/swarm/"{a_swarm}>Explore · Swarm</a></li>
@@ -200,7 +210,7 @@ def rendered_pages() -> list[tuple[pathlib.Path, str]]:
             canonical_url=html.escape(f"{BASE_URL}{url}", quote=True),
             social_image_url=html.escape(SOCIAL_IMAGE_URL, quote=True),
             social_image_alt=html.escape(SOCIAL_IMAGE_ALT, quote=True),
-            crumb=("Docs" if slug == "index" else "Docs / Plugins"),
+            crumb={"index": "Docs", "console": "Docs / Local app"}.get(slug, "Docs / Plugins"),
             content=convert(md_text),
             pager=pager_html(i),
             **actives,

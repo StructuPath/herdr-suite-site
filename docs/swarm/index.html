@@ -35,6 +35,7 @@
       <a href="/#explore">Explore</a>
       <a href="/#deliver">Deliver · advanced</a>
       <a href="/#trust">Trust</a>
+      <a href="/docs/console/">Console</a>
     </div>
     <div class="nav-spacer"></div>
     <a class="nav-docs" href="/docs/" aria-current="page">Docs</a>
@@ -155,6 +156,23 @@ with the clearest failure-path test.
 <p>A first Explore run is successful when one chosen branch is merged without conflict, its tests pass on the base, the resulting diff meets the stated comparison criterion, and skipped work remains recoverable on branches until deliberate pruning.</p>
 <h2>Publish for PR review</h2>
 <p>In Harvest, press <code>p</code>, then select a slot to publish its branch. The script equivalent is <code>scripts/harvest-step.sh publish &lt;slot&gt;</code> from the installed plugin root. Publication uses an ordinary push to <code>origin</code>, or the explicit <code>HERDR_SWARM_PUBLISH_REMOTE</code> override; it never force-pushes and does not create a GitHub PR itself.</p>
+<h3>Explicit GitHub draft handoff</h3>
+<p>For a GitHub PR, press <code>g</code>, then select a slot in Harvest, or invoke <code>publish-pr</code> below. This selection or command authorizes both the audited-commit push and draft PR creation, with no second confirmation. It creates a draft or reuses the exact matching open PR; an existing ready-for-review PR stays ready. The five plugin actions remain unchanged.</p>
+<p>From the trusted installed Swarm checkout in the same configured run context:</p>
+<pre><code class="language-bash"># Optional evidence must describe this slot's exact committed candidate.
+HERDR_SWARM_VALIDATION_FILE=/absolute/private/qa/result.json \
+  bash scripts/harvest-step.sh publish-pr 1
+
+# Read GitHub PR/CI state without pushing or editing GitHub.
+bash scripts/harvest-step.sh pr-status 1
+</code></pre>
+<p>Authenticate <code>gh</code> first. The named remote (default <code>origin</code>) must have exactly one fetch and push URL identifying the same GitHub.com repository. Fork destinations and GitHub Enterprise are outside this first release. The recorded run base branch and selected slot branch determine PR identity. Existing ownership, fork ancestry, non-empty-work, and ordinary-push guards remain active. Only committed work travels.</p>
+<p><code>HERDR_SWARM_VALIDATION_FILE</code> optionally accepts typed check statuses or a <a href="/docs/browser/">Browser QA</a> <code>result.json</code> for the exact published SHA. Browser evidence must explicitly record a clean tree, no changes during the run, and all three scenario policies enabled: <code>failOnConsoleError</code>, <code>failOnPageError</code>, and <code>failOnFailedRequest</code>. Without a file, validation is <code>not_run</code>, never passed. Supplied evidence is unauthenticated; Swarm does not execute its checks. Failed or pending checks can accompany a draft. The PR includes bounded check names/statuses and identifiers, not task text, raw logs, URLs, screenshots, or local paths.</p>
+<p>An existing exact repository/head/base open PR is reused without changing its title, body, or state. <code>validation_attached: false</code> on reuse means its body may describe an older SHA; review and update that evidence manually. Closed/merged matches and ambiguous discovery refuse handoff.</p>
+<p>Imported Browser QA summaries must agree with per-run outcomes and counts. Unresolved requests or incomplete telemetry cannot produce a passing handoff check.</p>
+<p>A failed push creates no PR. A GitHub failure after a successful push leaves the published branch and local receipt intact. Inspect the error and retry the same command; a lost creation response triggers exact-PR rediscovery. A mismatched GitHub head refuses success and requires inspection, never a force-push correction.</p>
+<p>Press <code>c</code>, then a slot, for the pane's CI view. <code>pr-status</code> emits a <code>ci_status</code> tab-separated JSON record with <code>passed</code>, <code>failed</code>, <code>pending</code>, <code>not_run</code>, <code>unknown</code>, or <code>no_pr</code> status. Compare <code>head_sha</code> and <code>local_head_sha</code>: a passing remote check is not current candidate evidence when <code>matches_local_head</code> is false. Passing checks do not establish branch-protection completeness or authorize a merge. The command uses GitHub reads and the local run lock; it does not fetch, push, merge, or edit a PR.</p>
+<p>See the pinned source's <code>docs/github-handoff.md</code> for the exact evidence and output schemas. <a href="/docs/console/">Console</a> can display an explicitly saved PR-status observation alongside project and QA evidence.</p>
 <p>After a remote PR is merged, preview again. Harvest recognizes merge ancestry and squash merges whose tree changes are contained in the base. Prune uses ancestry, so squash-merged branches may remain for deliberate review.</p>
 <h2>Safety and trust boundary</h2>
 <p>Swarm isolates working trees and provides reviewable branches; it does not sandbox agents. Write agents are trusted same-user principals and can access anything their operating-system user can access. Agents are instructed to commit locally and never push, while the operator remains the merge gate.</p>
@@ -179,12 +197,14 @@ HERDR_WORKSPACE_ID='replace-with-repo-workspace-id' \
 <li>Ignored files are not included in WIP commits or discard snapshots. Review the archive inventory and supply its exact one-use cleanup approval before removal.</li>
 </ul>
 <p>Use the plugin README's <a href="https://github.com/StructuPath/herdr-swarm#safety-model">Safety model</a> and <a href="https://github.com/StructuPath/herdr-swarm#uninstall--cleanup">Uninstall / cleanup</a> sections before destructive cleanup.</p>
-    <nav class="pager" aria-label="Docs pages"><a href="/docs/"><span class="lbl">Previous</span>Overview</a><a href="/docs/conductor/" style="text-align:right"><span class="lbl">Next</span>Deliver · Conductor</a></nav>
+    <nav class="pager" aria-label="Docs pages"><a href="/docs/console/"><span class="lbl">Previous</span>Local Console</a><a href="/docs/conductor/" style="text-align:right"><span class="lbl">Next</span>Deliver · Conductor</a></nav>
   </main>
 
   <aside class="sidebar" aria-label="Docs navigation">
     <h4>Docs</h4>
     <ul><li><a href="/docs/">Overview</a></li></ul>
+    <h4>Local app</h4>
+    <ul><li><a href="/docs/console/">Console</a></li></ul>
     <h4>Workflows</h4>
     <ul>
       <li><a href="/docs/swarm/" class="active">Explore · Swarm</a></li>

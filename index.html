@@ -596,6 +596,17 @@
         display: grid;
         grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
       }
+      #console .deliver-shell > * {
+        min-width: 0;
+      }
+      #console .runbook {
+        align-self: center;
+        padding: 24px;
+        margin: 24px 0;
+      }
+      #console .runbook p {
+        margin: 14px 0;
+      }
       .deliver-copy {
         padding: 82px 70px 82px 0;
       }
@@ -1030,6 +1041,7 @@
             >Deliver <span aria-hidden="true">·</span> advanced</a
           >
           <a href="#trust">Trust</a>
+          <a href="#console">Console</a>
           <a href="#reference">Reference</a>
         </div>
         <div class="nav-spacer"></div>
@@ -1129,7 +1141,8 @@
               <h3>Choose what lands</h3>
               <p>
                 Merge one reviewed slot, skip the rest, or Abort while keeping
-                branches for recovery.
+                branches for recovery. For GitHub review, explicitly request
+                the draft PR handoff with the candidate's validation evidence.
               </p>
             </div>
           </div>
@@ -1332,6 +1345,37 @@ Comparison criterion: among passing candidates, choose
         </div>
       </section>
 
+      <section id="console">
+        <div class="wrap deliver-shell">
+          <div class="deliver-copy">
+            <p class="rail-label">Local Console · read only</p>
+            <h2>See your projects. Review the next step.</h2>
+            <p>
+              Bring Git state, tool health, saved run observations, and browser
+              QA evidence into one local dashboard. Choose explicit project and
+              report paths; inspect freshness before copying the next command.
+            </p>
+            <p>
+              This public website is documentation. Console runs on your machine
+              at a loopback address and has no controls that launch agents,
+              approve work, push branches, or create pull requests.
+            </p>
+            <a class="text-link" href="/docs/console/">Set up your local Console</a>
+          </div>
+          <div class="runbook">
+            <h3>Start with a labeled demo</h3>
+            <p>From the suite site checkout, with Node.js 20 or newer:</p>
+            <pre>npm run console -- --demo</pre>
+            <p>For your own explicitly configured projects:</p>
+            <pre>npm run console -- --config /absolute/private/console.json</pre>
+            <p>
+              The default address is <code>http://127.0.0.1:4317</code>.
+              Saved reports remain observations; the operator decides what runs.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section id="deliver">
         <div class="wrap deliver-shell">
           <div class="deliver-copy">
@@ -1411,13 +1455,16 @@ Comparison criterion: among passing candidates, choose
               </div>
               <p class="trust-capability">
                 Launch local Chromium, attach to an automation browser, or
-                share the same browser session as your coding agent. Use
-                observe-only mode when you want to watch without pane input.
+                share the same browser session as your coding agent. Run
+                repeatable desktop and mobile QA with explicit assertions and
+                private evidence artifacts.
               </p>
               <p class="trust-limit">
                 <b>Boundary:</b> the session is local and same-user, not
                 isolated from another process that knows its name. Recordings
                 require an agent-browser session and may contain sensitive content.
+                QA proves only its configured checks; a recorded Git commit
+                does not prove which build the web server served.
                 <a href="/docs/browser/">Guide →</a>
               </p>
             </article>
@@ -1474,9 +1521,9 @@ Comparison criterion: among passing candidates, choose
               </div>
               <div class="matrix-row" role="row">
                 <span role="rowheader">Browser</span>
-                <p role="cell">Chromium launch, CDP attach, shared sessions and recording</p>
+                <p role="cell">Chromium launch, CDP attach, shared sessions, recording, and repeatable QA</p>
                 <p role="cell">
-                  Session privacy, action review, sensitive recording handling
+                  Session privacy, assertion coverage, build identity, and artifact review
                 </p>
               </div>
               <div class="matrix-row" role="row">

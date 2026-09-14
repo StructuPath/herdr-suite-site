@@ -35,6 +35,7 @@
       <a href="/#explore">Explore</a>
       <a href="/#deliver">Deliver · advanced</a>
       <a href="/#trust">Trust</a>
+      <a href="/docs/console/">Console</a>
     </div>
     <div class="nav-spacer"></div>
     <a class="nav-docs" href="/docs/" aria-current="page">Docs</a>
@@ -51,9 +52,12 @@
 workflow. <strong>Deliver</strong> is an attended Stage 3 lifecycle with strict task/report
 contracts and approved single-ref apply. Browser and Guard provide supporting visibility and text-policy capabilities.</p>
 <p>This repository is the canonical suite documentation source; each plugin README remains the detailed runtime reference.</p>
+<h2>See your projects locally</h2>
+<p><a href="/docs/console/">Console</a> is a read-only local app for project Git state, tool health, saved run observations, Browser QA summaries, and copyable next commands. From the suite site checkout, run <code>npm run console -- --demo</code> for labeled fixtures or <code>npm run console -- --config /absolute/private/console.json</code> for explicitly configured projects. It requires Node.js 20 or newer and binds to loopback only.</p>
+<p>The public website serves documentation, not a remote controller. Console is separate from the four plugins and does not launch agents, approve work, push, or create pull requests.</p>
 <h2>Start with Explore</h2>
 <p><a href="/docs/swarm/">Explore with Swarm</a> when you have one bounded coding task and want to compare several implementations. Swarm records a base SHA, gives each agent a separate worktree and branch, reports concrete change counts, and lets the operator preview and harvest a selected candidate.</p>
-<p>The operator defines the comparison criterion, reviews diffs and tests, and chooses what lands. Agents commit locally; the operator can explicitly publish a candidate branch for PR review.</p>
+<p>The operator defines the comparison criterion, reviews diffs and tests, and chooses what lands. Agents commit locally; the operator can explicitly publish a candidate branch or request the GitHub draft PR handoff with SHA-bound validation evidence. PR and CI observation does not approve a merge.</p>
 <h2>Deliver is attended</h2>
 <p><a href="/docs/conductor/">Deliver with Conductor</a> is an attended Stage 3 workflow: visible
 role panes, repository/workspace-bound strict state, immutable task contracts,
@@ -66,7 +70,7 @@ Conductor requires exactly Herdr 0.7.5; its manifest minimum is not a promise of
 compatibility with later versions.</p>
 <h2>Supporting trust capabilities</h2>
 <ul>
-<li><a href="/docs/browser/">Browser</a> launches local Chromium, attaches to an existing automation browser, or shares an agent-browser session. Recording is available for agent-browser sessions only. Sessions are a trusted same-user boundary, and recordings may contain sensitive content.</li>
+<li><a href="/docs/browser/">Browser</a> launches local Chromium, attaches to an existing automation browser, or shares an agent-browser session. Its standalone QA runner repeats saved assertions at desktop and mobile viewport sizes with private evidence. Recording is available for agent-browser sessions only. Sessions are a trusted same-user boundary, and artifacts may contain sensitive content.</li>
 <li><a href="/docs/guard/">Guard</a> observes rendered terminal text with best-effort interrupts and offers an optional pre-execution harness reporter. Its Claude Code hook can deny reported Bash calls but fails open when unavailable; Guard is not a sandbox or protection against same-user bypass.</li>
 </ul>
 <h2>Pinned compatibility evidence</h2>
@@ -85,10 +89,10 @@ compatibility with later versions.</p>
 <tr>
 <td><a href="/docs/browser/">Browser</a></td>
 <td><code>structupath.browser</code></td>
-<td><code>0.7.0</code></td>
+<td><code>0.8.0</code></td>
 <td><code>0.7.0</code></td>
 <td><code>0.7.4</code></td>
-<td>Chromium launch, CDP attach, shared sessions, and agent-browser recording</td>
+<td>Chromium launch, CDP attach, shared sessions, recording, and repeatable QA</td>
 </tr>
 <tr>
 <td><a href="/docs/guard/">Guard</a></td>
@@ -140,8 +144,8 @@ compatibility with later versions.</p>
 </tr>
 <tr>
 <td>Browser</td>
-<td>Chromium launch, external attach, and shared-session recording</td>
-<td>Session privacy, action review, sensitive recording handling</td>
+<td>Chromium launch, external attach, shared-session recording, and repeatable QA</td>
+<td>Session privacy, assertion coverage, served build identity, artifact review</td>
 </tr>
 <tr>
 <td>Guard</td>
@@ -172,14 +176,17 @@ herdr status server
 <p><code>plugin list</code> confirms that a manifest parsed and is enabled; <code>plugin action list</code> confirms action registration. See each plugin page for its exact actions, prerequisites, and limits.</p>
 <h2>Keep the suite current</h2>
 <p>In each source checkout, run <code>npm run build</code> and <code>npm run validate</code> for Browser, Swarm, and Guard; Conductor uses <code>npm run check</code>. Browser, Swarm, and Guard also provide a read-only <code>npm run doctor</code> to identify missing prerequisites and the selected Herdr binary. Check <code>command -v herdr</code> and <code>herdr --version</code> when multiple installations exist. Do not assume a newer Herdr satisfies Conductor's exact 0.7.5 contract.</p>
-<p>After an upgrade, verify action registration and run one bounded workflow in a separate test repository before larger work. Preserve reviewed Guard rules, explicitly wire any reporter hook, and review Swarm setup hooks and agent presets. Add Chromium through Browser's documented launch mode when visual QA is needed; it is already a supported capability.</p>
+<p>After an upgrade, verify action registration and run one bounded workflow in a separate test repository before larger work. Preserve reviewed Guard rules, explicitly wire any reporter hook, and review Swarm setup hooks and agent presets. Browser already supports Chromium; add a committed QA scenario for the app's critical flow and run it against the intended candidate build at desktop and mobile viewport sizes.</p>
+<p>Use the build → validate → fix loop per candidate. Commit the passing candidate, collect fresh Browser QA evidence outside the repository, and review it in Console or directly. Then explicitly request Swarm's GitHub draft PR handoff, supplying that exact-SHA evidence. Inspect remote CI and head identity before considering a merge. These are operator-driven steps, not an automatic cross-plugin pipeline.</p>
 <p>For each change, repeat build, relevant tests, and workflow validation until passing, then publish a reviewable PR. Update these guides and the pinned manifest evidence together whenever versions, actions, or supported behavior change.</p>
-    <nav class="pager" aria-label="Docs pages"><span></span><a href="/docs/swarm/" style="text-align:right"><span class="lbl">Next</span>Explore · Swarm</a></nav>
+    <nav class="pager" aria-label="Docs pages"><span></span><a href="/docs/console/" style="text-align:right"><span class="lbl">Next</span>Local Console</a></nav>
   </main>
 
   <aside class="sidebar" aria-label="Docs navigation">
     <h4>Docs</h4>
     <ul><li><a href="/docs/" class="active">Overview</a></li></ul>
+    <h4>Local app</h4>
+    <ul><li><a href="/docs/console/">Console</a></li></ul>
     <h4>Workflows</h4>
     <ul>
       <li><a href="/docs/swarm/">Explore · Swarm</a></li>

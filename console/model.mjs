@@ -164,7 +164,7 @@ export function parsePullRequest(content, current) {
       !Number.isSafeInteger(value.number) || value.number < 1 || count(value.check_count) === null ||
       !['OPEN','CLOSED','MERGED'].includes(value.state) || typeof value.draft !== 'boolean') throw new Error('Unsupported PR status');
   const url = `https://github.com/${value.repository}/pull/${value.number}`;
-  if (value.url !== url) throw new Error('Foreign PR URL');
+  if (typeof value.url !== 'string' || value.url.toLowerCase() !== url.toLowerCase()) throw new Error('Foreign PR URL');
   return { outcome:value.status, url, number:value.number, repository:value.repository, draft:value.draft, state:value.state,
     commit:value.head_sha, checks:value.check_count,
     freshness: current && current.commit === value.head_sha && value.local_head_sha === value.head_sha && !current.dirty ? 'matches_clean_head' : 'not_current_clean_head' };

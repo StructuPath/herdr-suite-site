@@ -238,13 +238,15 @@ export async function health(herdrBinary) {
 }
 
 export async function snapshot(config) {
-  const readinessPromise = health(config.herdrBinary);
-  const projects = [];
-  // Bound both Git process fan-out and observation buffers across large configurations.
-  for (let i = 0; i < config.projects.length; i += 4) {
-    projects.push(...await Promise.all(config.projects.slice(i, i + 4).map(inspectProject)));
-  }
-  const readiness = await readinessPromise;
+  const inspectProjects = async () => {
+    const projects = [];
+    // Bound both Git process fan-out and observation buffers across large configurations.
+    for (let i = 0; i < config.projects.length; i += 4) {
+      projects.push(...await Promise.all(config.projects.slice(i, i + 4).map(inspectProject)));
+    }
+    return projects;
+  };
+  const [readiness, projects] = await Promise.all([health(config.herdrBinary), inspectProjects()]);
   return { schemaVersion: 1, generatedAt: new Date().toISOString(), demo: false, readiness, projects };
 }
 

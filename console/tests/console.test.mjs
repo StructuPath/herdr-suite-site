@@ -49,6 +49,9 @@ test('read-only Git inspection counts changes, handles detached HEAD and leaves 
   let result=await inspectGit(repo); assert.equal(result.dirty,false); assert.equal(result.worktrees,1);
   await writeFile(join(repo,'a.txt'),'two'); await writeFile(join(repo,'new file.txt'),'three');
   result=await inspectGit(repo); assert.equal(result.changedFiles,2); assert.equal(result.dirty,true);
+  await mkdir(join(repo,'new-directory'));
+  for (const name of ['one','two','three']) await writeFile(join(repo,'new-directory',name),'new');
+  assert.equal((await inspectGit(repo)).changedFiles,5);
   assert.deepEqual(await readFile(join(repo,'.git/index')),index);
   git('checkout','--detach','-q'); assert.equal((await inspectGit(repo)).branch,'Detached HEAD');
   await mkdir(join(repo,'child')); await assert.rejects(inspectGit(join(repo,'child')));

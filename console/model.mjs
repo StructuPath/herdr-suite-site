@@ -85,7 +85,7 @@ export async function inspectGit(path) {
   const [head, branch, status, worktrees, common] = await Promise.all([
     git(physical, ['rev-parse', '--verify', 'HEAD']),
     git(physical, ['branch', '--show-current']),
-    git(physical, ['status', '--porcelain=v1', '-z', '--untracked-files=normal']),
+    git(physical, ['status', '--porcelain=v1', '-z', '--untracked-files=all']),
     git(physical, ['worktree', 'list', '--porcelain', '-z']),
     git(physical, ['rev-parse', '--path-format=absolute', '--git-common-dir'])
   ]);

@@ -11,10 +11,12 @@ Repo: [StructuPath/herdr-conductor](https://github.com/StructuPath/herdr-conduct
 | Plugin release | `0.4.0` |
 | Minimum Herdr | `0.7.5` |
 | Explicitly tested Herdr | `0.7.5` |
-| Evidence commit | `bf67d318067c60318dcd7089897f513bfefe3af7` |
+| Evidence commit | `ad170ee8e00be8979a7e1ae20bc6375e5e6f94d3` |
 | Manifest SHA-256 | `b8898d549216485c2bd599a101808030ce534b9c32625b6e6bdc51da04644672` |
 
-The retained [Stage 2 source manifest](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/stage2-runtime-source-manifest.json) and [installed-Herdr live contract report](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/2026-07-28-stage2-live-contracts.md) are historical compatibility evidence, not a live validation of Stage 3. These are sanitized, operator-observed local records—not cryptographic remote attestation or authentication against malicious same-UID processes. Older and newer Herdr binaries do not satisfy Conductor's exact 0.7.5 requirement; passing local tests is not evidence that another Herdr version is supported.
+The retained [Stage 2 source manifest](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/stage2-runtime-source-manifest.json) and [installed-Herdr live contract report](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/2026-07-28-stage2-live-contracts.md) remain historical compatibility evidence. Older and newer Herdr binaries do not satisfy Conductor's exact 0.7.5 requirement; passing local tests is not evidence that another Herdr version is supported.
+
+A separate [developer smoke on 2026-09-14](https://github.com/StructuPath/herdr-conductor/blob/ad170ee8e00be8979a7e1ae20bc6375e5e6f94d3/docs/evidence/2026-09-14-developer-installed-action-smoke.md) exercised all seven installed actions on a running Herdr 0.7.5 server, including Stage 3 preview, approval refusal, attended single-ref apply, replay, and completed stand-down. It found and fixed the omitted stand-down reason after apply. The smoke used synthetic local worker sessions and operator-produced deterministic reports, not a real model agent. This bounded observation is not independent-human review, formal release attestation, live crash-recovery proof, or broader production certification.
 
 ## All seven actions
 

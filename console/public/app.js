@@ -55,6 +55,7 @@ function projectCard(p) {
   const conductor = panel('Conductor', p.conductor);
   if (p.conductor.status === 'observed') {
     row(conductor, 'Saved lifecycle', p.conductor.lifecycle); row(conductor, 'Run', p.conductor.run);
+    if (p.conductor.nextOperations?.length) row(conductor, 'Recorded next operations', p.conductor.nextOperations.join(', '));
     for (const worker of p.conductor.workers) row(conductor, worker.role, worker.state);
     conductor.append(element('p', 'Operator-selected saved status; refresh Conductor status before acting.', 'footnote'));
   }

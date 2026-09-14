@@ -165,7 +165,7 @@
   ]
 }
 </code></pre>
-<p>Then explicitly drive the lifecycle from that Herdr workspace:</p>
+<p>Commit <code>.herdr-conductor.json</code> before assembly so the repository is clean, then explicitly drive the lifecycle from that Herdr workspace:</p>
 <pre><code class="language-bash">herdr plugin action invoke assemble --plugin structupath.conductor
 herdr plugin action invoke status --plugin structupath.conductor
 herdr plugin action invoke board --plugin structupath.conductor

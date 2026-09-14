@@ -79,7 +79,7 @@ Use Herdr exactly 0.7.5, Node.js 20 or current LTS, Python 3.11+, and Git with 4
 }
 ```
 
-Then explicitly drive the lifecycle from that Herdr workspace:
+Commit `.herdr-conductor.json` before assembly so the repository is clean, then explicitly drive the lifecycle from that Herdr workspace:
 
 ```bash
 herdr plugin action invoke assemble --plugin structupath.conductor

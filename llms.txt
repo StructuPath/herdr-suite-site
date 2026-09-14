@@ -27,7 +27,7 @@ Guide: https://herdr.structupath.ai/docs/conductor/
 
 ## Supporting trust capabilities
 
-- Browser (`structupath.browser`) release 0.5.0: Herdr >=0.7.0; evidence records testing with 0.7.4. Drivable workspace browser session and WebM recording. Sessions are a trusted same-user boundary; recordings may be sensitive. https://herdr.structupath.ai/docs/browser/
+- Browser (`structupath.browser`) release 0.7.0: Herdr >=0.7.0; evidence records testing with 0.7.4. Launch local Chromium, attach to an existing CDP browser, or share an agent-browser session. Node 22+ is required for launch, attach, and streaming; Node 20 supports shared-session polling. Recording observation bundles require agent-browser and are not test acceptance. Observe-only configuration blocks pane input and link navigation; the runtime toggle alone does not block launcher navigation in agent-browser mode. Sessions and persistent profiles are a trusted same-user boundary; recordings may be sensitive. https://herdr.structupath.ai/docs/browser/
 - Guard (`structupath.guard`) release 0.1.1: manifest minimum Herdr 0.7.5; evidence records testing with 0.7.5. Advisory rendered-text policy: audit, alert, and best-effort interrupt requests. Request acceptance may be observed; command prevention is unknown. It is not a sandbox or authorization boundary. https://herdr.structupath.ai/docs/guard/
 
 ## Trust and composition boundaries

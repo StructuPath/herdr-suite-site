@@ -544,7 +544,9 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     plugin = plugins[0]
     source = (DOCS_SRC / f"{plugin['name']}.md").read_text(encoding="utf-8")
     action = f"{plugin['id']}.{plugin['actions'][0]}"
-    if not check_plugin_doc(plugin, source.replace(action, "removed.action", 1)):
+    # An action can appear in both quickstart examples and the reference table.
+    # Remove every occurrence to simulate an action missing from the page.
+    if not check_plugin_doc(plugin, source.replace(action, "removed.action")):
         failures.append("self-test did not detect action drift")
     version = str(plugin["version"])
     if not check_plugin_doc(plugin, source.replace(f"`{version}`", "`999.0.0`", 1)):

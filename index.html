@@ -1409,14 +1409,14 @@ Comparison criterion: among passing candidates, choose
                 <h3>Browser</h3>
               </div>
               <p class="trust-capability">
-                Watch and drive the same workspace browser session used by an
-                agent, or open a separate interactive browser. Record a WebM
-                when evidence matters.
+                Launch local Chromium, attach to an automation browser, or
+                share the same browser session as your coding agent. Use
+                observe-only mode when you want to watch without pane input.
               </p>
               <p class="trust-limit">
                 <b>Boundary:</b> the session is local and same-user, not
                 isolated from another process that knows its name. Recordings
-                may contain sensitive content.
+                require an agent-browser session and may contain sensitive content.
                 <a href="/docs/browser/">Guide →</a>
               </p>
             </article>
@@ -1540,7 +1540,7 @@ herdr plugin install \
             <article class="reference-item">
               <span class="rail-label">Supporting visibility</span>
               <h3>Browser</h3>
-              <p>Drivable workspace browser session and recording.</p>
+              <p>Chromium launch, CDP attach, and shared agent sessions.</p>
               <pre>
 herdr plugin install \
   StructuPath/herdr-browser</pre

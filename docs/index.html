@@ -63,7 +63,7 @@ suite adapters, unattended automation, automatic recovery, cryptographic report
 attestation, or protection against malicious same-UID processes.</p>
 <h2>Supporting trust capabilities</h2>
 <ul>
-<li><a href="/docs/browser/">Browser</a> exposes a workspace browser session that an agent or operator can drive and record. The session is a trusted same-user boundary, and recordings may contain sensitive content.</li>
+<li><a href="/docs/browser/">Browser</a> launches local Chromium, attaches to an existing automation browser, or shares an agent-browser session. Recording is available for agent-browser sessions only. Sessions are a trusted same-user boundary, and recordings may contain sensitive content.</li>
 <li><a href="/docs/guard/">Guard</a> observes rendered terminal text and offers advisory/best-effort policy. It is not a sandbox or authorization boundary for agent TUIs.</li>
 </ul>
 <h2>Pinned compatibility evidence</h2>
@@ -82,10 +82,10 @@ attestation, or protection against malicious same-UID processes.</p>
 <tr>
 <td><a href="/docs/browser/">Browser</a></td>
 <td><code>structupath.browser</code></td>
-<td><code>0.5.0</code></td>
+<td><code>0.7.0</code></td>
 <td><code>0.7.0</code></td>
 <td><code>0.7.4</code></td>
-<td>Supporting browser visibility and recording</td>
+<td>Chromium launch, CDP attach, shared sessions, and agent-browser recording</td>
 </tr>
 <tr>
 <td><a href="/docs/guard/">Guard</a></td>
@@ -137,7 +137,7 @@ attestation, or protection against malicious same-UID processes.</p>
 </tr>
 <tr>
 <td>Browser</td>
-<td>Shared visual browser surface and recording</td>
+<td>Chromium launch, external attach, and shared-session recording</td>
 <td>Session privacy, action review, sensitive recording handling</td>
 </tr>
 <tr>

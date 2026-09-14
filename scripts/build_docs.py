@@ -44,7 +44,7 @@ PAGES = [
         "conductor",
         "Deliver · Conductor",
         "/docs/conductor/",
-        "Coordinate visible role workers, inspect report files, and reconcile reviewed branches with Conductor's advanced supervised assembly pattern.",
+        "Coordinate task-bound roles, review exact-SHA gates, and explicitly approve one local-ref apply with Conductor's attended Stage 3 workflow.",
     ),
     (
         "Browser",
@@ -58,7 +58,7 @@ PAGES = [
         "guard",
         "Guard",
         "/docs/guard/",
-        "Audit rendered terminal text with advisory policy, alerts, and best-effort interrupts while relying on native controls for enforcement.",
+        "Audit terminal text and optionally evaluate reported Bash commands with Guard's fail-open harness hook; native controls remain authoritative.",
     ),
 ]
 
@@ -68,6 +68,7 @@ LINK_MAP = {stem: url for stem, _, _, url, _ in PAGES}
 TEMPLATE = """<!doctype html>
 <html lang="en">
 <head>
+  <link rel="icon" href="/media/favicon.svg" type="image/svg+xml">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{tab_title} — Herdr Suite docs</title>

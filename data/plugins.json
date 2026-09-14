@@ -7,48 +7,83 @@
       "name": "Browser",
       "id": "structupath.browser",
       "repository": "https://github.com/StructuPath/herdr-browser",
-      "commit": "952e1601006cce2ca45edef56676d18a1f016151",
+      "commit": "5fc6a9a52b4f817f21a531c288f36c3820bf93ca",
       "version": "0.7.0",
       "min_herdr_version": "0.7.0",
-      "tested_herdr_versions": ["0.7.4"],
+      "tested_herdr_versions": [
+        "0.7.4"
+      ],
       "manifest_sha256": "975685f637d75b2f4b0151b7cecbb3eaa1fb3b8849c13a356e3ebfb5a90fea8a",
-      "actions": ["open", "close", "browse", "record-start", "record-stop"]
+      "actions": [
+        "open",
+        "close",
+        "browse",
+        "record-start",
+        "record-stop"
+      ]
     },
     {
       "slug": "guard",
       "name": "Guard",
       "id": "structupath.guard",
       "repository": "https://github.com/StructuPath/herdr-guard",
-      "commit": "7327dc4f310987e05059a20cec7d8fc50bbf0cc5",
-      "version": "0.1.1",
+      "commit": "12e3fd6f7d65bd4c846f5da23cb2f24ee617cd48",
+      "version": "0.2.0",
       "min_herdr_version": "0.7.5",
-      "tested_herdr_versions": ["0.7.5"],
-      "manifest_sha256": "36cd8ab09f82f07f56e08d15013221d4f5a46a8c2d3aca1255581b24c70dc50b",
-      "actions": ["open", "pause", "resume", "test", "reset-rules"]
+      "tested_herdr_versions": [
+        "0.7.5"
+      ],
+      "manifest_sha256": "a56fb32ccb97d91dba6462c483120156208075bd52c36c1366590b0215326769",
+      "actions": [
+        "open",
+        "pause",
+        "resume",
+        "test",
+        "reset-rules"
+      ]
     },
     {
       "slug": "swarm",
       "name": "Swarm",
       "id": "structupath.swarm",
       "repository": "https://github.com/StructuPath/herdr-swarm",
-      "commit": "0dc0a2b0a77e590d854fafd5eae0e76dbcc00017",
-      "version": "0.1.0",
+      "commit": "4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb",
+      "version": "0.3.0",
       "min_herdr_version": "0.7.4",
-      "tested_herdr_versions": ["0.7.4", "0.7.5"],
-      "manifest_sha256": "54b3806f30816115743dd7d6e908c09c352d90b006a6f7885d46e292373d47b4",
-      "actions": ["fanout", "status", "harvest", "abort", "prune"]
+      "tested_herdr_versions": [
+        "0.7.4",
+        "0.7.5"
+      ],
+      "manifest_sha256": "c4d7a6d653bb94ea6e0a3efef4fe3722d5b826ee24e7895fc8ba2439b119b0f5",
+      "actions": [
+        "fanout",
+        "status",
+        "harvest",
+        "abort",
+        "prune"
+      ]
     },
     {
       "slug": "conductor",
       "name": "Conductor",
       "id": "structupath.conductor",
       "repository": "https://github.com/StructuPath/herdr-conductor",
-      "commit": "712863c34d6126c9d95fa3b9bd6caf5220cbfc43",
-      "version": "0.3.0",
+      "commit": "bf67d318067c60318dcd7089897f513bfefe3af7",
+      "version": "0.4.0",
       "min_herdr_version": "0.7.5",
-      "tested_herdr_versions": ["0.7.5"],
-      "manifest_sha256": "95958ade511f422b65a07f3d4a305581cdb236e1cd616da7d6c57aa0660aa35e",
-      "actions": ["assemble", "board", "status", "harvest", "stand-down"]
+      "tested_herdr_versions": [
+        "0.7.5"
+      ],
+      "manifest_sha256": "b8898d549216485c2bd599a101808030ce534b9c32625b6e6bdc51da04644672",
+      "actions": [
+        "assemble",
+        "board",
+        "status",
+        "harvest",
+        "preview",
+        "apply",
+        "stand-down"
+      ]
     }
   ]
 }

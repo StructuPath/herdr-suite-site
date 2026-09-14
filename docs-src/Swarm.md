@@ -8,10 +8,12 @@ Repo: [StructuPath/herdr-swarm](https://github.com/StructuPath/herdr-swarm) · D
 
 | Field | Value |
 | --- | --- |
-| Plugin release | `0.1.0` |
+| Plugin release | `0.3.0` |
 | Minimum Herdr | `0.7.4` |
 | Explicitly tested Herdr | `0.7.4`, `0.7.5` |
-| Evidence commit | `0dc0a2b0a77e590d854fafd5eae0e76dbcc00017` |
+| Evidence commit | `4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb` |
+
+The pinned source also records a [bounded Herdr 0.8.2 live smoke](https://github.com/StructuPath/herdr-swarm/blob/4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb/docs/readiness.md): fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's `done` agent state. These are unreleased fixes on version 0.3.0; broad compatibility evidence remains 0.7.4/0.7.5.
 
 ## Actions
 
@@ -19,7 +21,7 @@ Repo: [StructuPath/herdr-swarm](https://github.com/StructuPath/herdr-swarm) · D
 | --- | --- |
 | `structupath.swarm.fanout` | Prompt for task/slots and create one worktree, branch, and agent per slot |
 | `structupath.swarm.status` | Show each slot's state, branch, and committed/uncommitted counts |
-| `structupath.swarm.harvest` | Review and merge selected slot branches back to the recorded base |
+| `structupath.swarm.harvest` | Review and merge selected slot branches, or explicitly publish a branch for PR review |
 | `structupath.swarm.abort` | Stop agents and remove clean plugin-owned worktrees while keeping branches |
 | `structupath.swarm.prune` | Dry-run, then explicitly prune eligible merged branches or backup refs |
 
@@ -78,6 +80,8 @@ with the clearest failure-path test.
 
 Fresh worktrees omit ignored dependencies, `.env` files, and caches. If every agent fails immediately, add a reviewed plugin-config `setup.sh` or tell agents to install required dependencies, then start a new run.
 
+Setup logs preserve command output verbatim. Keep credentials out of setup output and review logs before sharing them.
+
 ### 4. Inspect every credible candidate
 
 Open Status and use `1`–`9` to visit each slot. Compare committed and uncommitted counts against the recorded fork SHA. A 0.7.5+ slot can remain labeled `working` after it finishes until Harvest previews it; state is informative, not a completion gate.
@@ -94,11 +98,19 @@ Use `q` to leave Status or Harvest without selecting a candidate. Invoke Abort t
 
 A first Explore run is successful when one chosen branch is merged without conflict, its tests pass on the base, the resulting diff meets the stated comparison criterion, and skipped work remains recoverable on branches until deliberate pruning.
 
+## Publish for PR review
+
+In Harvest, press `p`, then select a slot to publish its branch. The script equivalent is `scripts/harvest-step.sh publish <slot>` from the installed plugin root. Publication uses an ordinary push to `origin`, or the explicit `HERDR_SWARM_PUBLISH_REMOTE` override; it never force-pushes and does not create a GitHub PR itself.
+
+After a remote PR is merged, preview again. Harvest recognizes merge ancestry and squash merges whose tree changes are contained in the base. Prune uses ancestry, so squash-merged branches may remain for deliberate review.
+
 ## Safety and trust boundary
 
 Swarm isolates working trees and provides reviewable branches; it does not sandbox agents. Write agents are trusted same-user principals and can access anything their operating-system user can access. Agents are instructed to commit locally and never push, while the operator remains the merge gate.
 
-Harvest uses review-first, `--no-ff` merges and checks base drift. Dirty discards first create backup refs. Abort keeps branches, and prune is dry-run/env-gated. Ignored files remain outside Git's safety net; inspect the archive inventory before removing a worktree.
+Harvest uses review-first, `--no-ff` merges and checks base drift. Dirty discards first create backup refs. Abort keeps branches, and prune is dry-run/env-gated. Active runs resolve by physical repository identity; conflicting generations are refused rather than guessed.
+
+Ignored files remain outside Git's safety net. Removal requires the exact one-use `cleanup_approval` JSON returned by the inventory preview, bound to the resource, path, run, generation, and inventory digest. A generic yes is insufficient, and changed inventory invalidates approval. This also applies to ignored files in detached merge worktrees.
 
 ## Scripted fan-out
 
@@ -109,7 +121,7 @@ HERDR_SWARM_SLOTS=3 \
 HERDR_SWARM_PRESETS=claude,claude,codex \
 HERDR_SWARM_TASK_FILE=/path/brief.md \
 HERDR_SWARM_DETRITUS=rename \
-HERDR_WORKSPACE_ID=<repo-workspace-id> \
+HERDR_WORKSPACE_ID='replace-with-repo-workspace-id' \
   bash "$(herdr plugin list --json | jq -r '.plugins[] | select(.id=="structupath.swarm").root')/scripts/fanout-pane.sh"
 ```
 
@@ -121,6 +133,6 @@ Per-slot overrides remain interactive-only. If a zero-TTY input is missing, the 
 - Abort stops the active run and preserves branches; it never deletes branches.
 - Prune is a dry run by default and is separately gated for merged branches and backup refs.
 - Closing the parent workspace stops Swarm agents silently. Committed work remains harvestable; uncommitted editor state may not.
-- Ignored files are not included in WIP commits or discard snapshots. Inspect the archive-time inventory before acknowledging worktree removal.
+- Ignored files are not included in WIP commits or discard snapshots. Review the archive inventory and supply its exact one-use cleanup approval before removal.
 
 Use the plugin README's [Safety model](https://github.com/StructuPath/herdr-swarm#safety-model) and [Uninstall / cleanup](https://github.com/StructuPath/herdr-swarm#uninstall--cleanup) sections before destructive cleanup.

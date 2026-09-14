@@ -5,8 +5,8 @@ Canonical, reviewable documentation for the StructuPath Herdr Suite, published a
 The product surface is organized by workflow readiness:
 
 - **Explore / Swarm** is the ready first workflow: bounded parallel candidates, reviewable worktrees, and operator-selected harvest.
-- **Deliver / Conductor** is an attended Stage 2 lifecycle: task-bound role panes, strict run state, private report outboxes, deterministic integration, exact-SHA gates, and archival stand-down.
-- **Browser** and **Guard** are supporting visibility and advisory text-policy capabilities.
+- **Deliver / Conductor** is an attended Stage 3 lifecycle: task-bound roles, exact-SHA gates, operator approval receipts, single-local-ref apply, and archival stand-down on exactly Herdr 0.7.5.
+- **Browser** provides Chromium launch, external attach, shared sessions, and agent-browser recording. **Guard** provides text policy and an optional fail-open harness reporter.
 
 The four plugins can be installed together, but they do not form one automatic runtime pipeline.
 
@@ -21,11 +21,11 @@ The four plugins can be installed together, but they do not form one automatic r
 ## Truthful suite boundaries
 
 - Swarm agents commit locally; the operator reviews and selects what merges. A clean-slot selection can perform the merge after preview, so selection is the approval action.
-- Guard is advisory/best-effort rendered-text policy for agent TUIs; it is not a sandbox or authorization boundary.
-- Conductor creates and harvests its own worktrees and does not delegate either operation to Swarm. The pinned runtime provides strict task/report contracts and exact-SHA gates, but no approval receipts or approval-aware apply, suite adapter, unattended automation, or automatic recovery.
+- Guard's pane watcher is advisory/best-effort. Its optional Claude Code hook can deny reported Bash calls before execution but fails open on unavailable or malformed responses; it is not a sandbox or same-user security boundary.
+- Conductor creates and harvests its own worktrees. It supports attended preview, unauthenticated operator receipts, and one-local-ref apply. It does not delegate to Swarm or provide a suite adapter, unattended automation, or general automatic recovery.
 - Write-capable agents and plugins are trusted same-user principals. Worktrees isolate changes for review, not security.
 - Compatibility/testing claims are plugin-specific and pinned in `data/plugins.json`; there is no blanket suite-wide tested-version or marketplace claim.
-- Conductor exposes five actions: `assemble`, `board`, `status`, `harvest`, and `stand-down`.
+- Conductor exposes seven actions: `assemble`, `board`, `status`, `harvest`, `preview`, `apply`, and `stand-down`.
 
 ## Build and check
 

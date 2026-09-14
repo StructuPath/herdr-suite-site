@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="icon" href="/media/favicon.svg" type="image/svg+xml">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Overview — Herdr Suite docs</title>
@@ -47,24 +48,26 @@
 <h1>Herdr Suite: supervised AgentOps</h1>
 <p>Herdr-native tools for human-supervised agent work, built and maintained by
 <a href="https://github.com/StructuPath">StructuPath</a>. <strong>Explore</strong> is the ready first
-workflow. <strong>Deliver</strong> is an attended Stage 2 lifecycle with strict task/report
-contracts. Browser and Guard provide supporting visibility and text-policy capabilities.</p>
+workflow. <strong>Deliver</strong> is an attended Stage 3 lifecycle with strict task/report
+contracts and approved single-ref apply. Browser and Guard provide supporting visibility and text-policy capabilities.</p>
 <p>This repository is the canonical suite documentation source; each plugin README remains the detailed runtime reference.</p>
 <h2>Start with Explore</h2>
 <p><a href="/docs/swarm/">Explore with Swarm</a> when you have one bounded coding task and want to compare several implementations. Swarm records a base SHA, gives each agent a separate worktree and branch, reports concrete change counts, and lets the operator preview and harvest a selected candidate.</p>
-<p>The operator defines the comparison criterion, reviews diffs and tests, and chooses what lands. Agents commit locally and never push.</p>
+<p>The operator defines the comparison criterion, reviews diffs and tests, and chooses what lands. Agents commit locally; the operator can explicitly publish a candidate branch for PR review.</p>
 <h2>Deliver is attended</h2>
-<p><a href="/docs/conductor/">Deliver with Conductor</a> is an attended Stage 2 workflow: visible
+<p><a href="/docs/conductor/">Deliver with Conductor</a> is an attended Stage 3 workflow: visible
 role panes, repository/workspace-bound strict state, immutable task contracts,
 private report outboxes, deterministic one-CAS integration, exact-SHA reviewer
-and validator gates, and archival stand-down.</p>
-<p>The pinned runtime does not provide approval receipts or approval-aware apply,
-suite adapters, unattended automation, automatic recovery, cryptographic report
-attestation, or protection against malicious same-UID processes.</p>
+and validator gates, operator approval receipts, single-ref apply, and archival stand-down.</p>
+<p>Apply receipts are unauthenticated same-user operator records. The pinned runtime
+does not provide suite adapters, unattended automation, general automatic recovery,
+cryptographic report attestation, or protection against malicious same-UID processes.
+Conductor requires exactly Herdr 0.7.5; its manifest minimum is not a promise of
+compatibility with later versions.</p>
 <h2>Supporting trust capabilities</h2>
 <ul>
 <li><a href="/docs/browser/">Browser</a> launches local Chromium, attaches to an existing automation browser, or shares an agent-browser session. Recording is available for agent-browser sessions only. Sessions are a trusted same-user boundary, and recordings may contain sensitive content.</li>
-<li><a href="/docs/guard/">Guard</a> observes rendered terminal text and offers advisory/best-effort policy. It is not a sandbox or authorization boundary for agent TUIs.</li>
+<li><a href="/docs/guard/">Guard</a> observes rendered terminal text with best-effort interrupts and offers an optional pre-execution harness reporter. Its Claude Code hook can deny reported Bash calls but fails open when unavailable; Guard is not a sandbox or protection against same-user bypass.</li>
 </ul>
 <h2>Pinned compatibility evidence</h2>
 <div class="table-scroll"><table>
@@ -90,30 +93,30 @@ attestation, or protection against malicious same-UID processes.</p>
 <tr>
 <td><a href="/docs/guard/">Guard</a></td>
 <td><code>structupath.guard</code></td>
-<td><code>0.1.1</code></td>
+<td><code>0.2.0</code></td>
 <td><code>0.7.5</code></td>
 <td><code>0.7.5</code></td>
-<td>Supporting advisory text policy, audit, alert, and best-effort interrupt request</td>
+<td>Text policy plus optional fail-open harness reporter</td>
 </tr>
 <tr>
 <td><a href="/docs/swarm/">Swarm</a></td>
 <td><code>structupath.swarm</code></td>
-<td><code>0.1.0</code></td>
+<td><code>0.3.0</code></td>
 <td><code>0.7.4</code></td>
 <td><code>0.7.4</code>, <code>0.7.5</code></td>
-<td>Ready Explore workflow: parallel candidates and review-first harvest</td>
+<td>Parallel candidates, review-first harvest, and PR publication</td>
 </tr>
 <tr>
 <td><a href="/docs/conductor/">Conductor</a></td>
 <td><code>structupath.conductor</code></td>
-<td><code>0.3.0</code></td>
+<td><code>0.4.0</code></td>
 <td><code>0.7.5</code></td>
 <td><code>0.7.5</code></td>
-<td>Attended Deliver Stage 2: strict tasks/reports, one-CAS integration, exact-SHA gates, and archival stand-down</td>
+<td>Attended Stage 3: exact-SHA gates, preview, approval receipts, and single-ref apply</td>
 </tr>
 </tbody>
 </table></div>
-<p>Versions are plugin-specific evidence pinned in <a href="https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json"><code>data/plugins.json</code></a>, not a claim that every plugin was tested on one suite-wide Herdr version. Guard 0.1.1 passed its non-destructive Herdr 0.7.5 live smoke. Guard remains best-effort rendered-text policy: an accepted interrupt request is observable, but command prevention is unknown.</p>
+<p>Versions are plugin-specific source evidence pinned in <a href="https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json"><code>data/plugins.json</code></a>, not a claim that every plugin was tested on one suite-wide Herdr version. Recorded Herdr versions include retained historical compatibility evidence; they do not certify every new feature. Guard's accepted interrupt requests and harness verdicts do not prove command prevention.</p>
 <h2>Composition and supervision boundaries</h2>
 <p>These plugins can be installed together, but the current runtime is not a single automatic pipeline.</p>
 <div class="table-scroll"><table>
@@ -132,8 +135,8 @@ attestation, or protection against malicious same-UID processes.</p>
 </tr>
 <tr>
 <td>Deliver / Conductor</td>
-<td>Task-bound role panes, private report outboxes, deterministic integration, exact-SHA gates, and stand-down</td>
-<td>Work direction, assertion review, approval decisions, conflicts, and ambiguous recovery</td>
+<td>Task-bound roles, exact-SHA gates, preview, receipt-bound local-ref apply, and stand-down</td>
+<td>Work direction, assertion review, operator receipts, conflicts, and ambiguous recovery</td>
 </tr>
 <tr>
 <td>Browser</td>
@@ -142,8 +145,8 @@ attestation, or protection against malicious same-UID processes.</p>
 </tr>
 <tr>
 <td>Guard</td>
-<td>Best-effort text matching, audit, alerts, interrupt attempts</td>
-<td>Authoritative hooks, sandboxing, access control, log protection</td>
+<td>Text matching, audit, interrupt attempts, and optional harness verdicts</td>
+<td>Hook wiring, fail-open behavior, sandboxing, access control, log protection</td>
 </tr>
 </tbody>
 </table></div>
@@ -152,7 +155,7 @@ attestation, or protection against malicious same-UID processes.</p>
 <pre><code class="language-bash"># Ready first workflow
 herdr plugin install StructuPath/herdr-swarm
 
-# Attended Stage 2 delivery
+# Attended Stage 3 delivery (exactly Herdr 0.7.5)
 herdr plugin install StructuPath/herdr-conductor
 
 # Supporting visibility and policy
@@ -167,6 +170,10 @@ herdr plugin log list
 herdr status server
 </code></pre>
 <p><code>plugin list</code> confirms that a manifest parsed and is enabled; <code>plugin action list</code> confirms action registration. See each plugin page for its exact actions, prerequisites, and limits.</p>
+<h2>Keep the suite current</h2>
+<p>In each source checkout, run <code>npm run build</code> and <code>npm run validate</code> for Browser, Swarm, and Guard; Conductor uses <code>npm run check</code>. Browser, Swarm, and Guard also provide a read-only <code>npm run doctor</code> to identify missing prerequisites and the selected Herdr binary. Check <code>command -v herdr</code> and <code>herdr --version</code> when multiple installations exist. Do not assume a newer Herdr satisfies Conductor's exact 0.7.5 contract.</p>
+<p>After an upgrade, verify action registration and run one bounded workflow in a separate test repository before larger work. Preserve reviewed Guard rules, explicitly wire any reporter hook, and review Swarm setup hooks and agent presets. Add Chromium through Browser's documented launch mode when visual QA is needed; it is already a supported capability.</p>
+<p>For each change, repeat build, relevant tests, and workflow validation until passing, then publish a reviewable PR. Update these guides and the pinned manifest evidence together whenever versions, actions, or supported behavior change.</p>
     <nav class="pager" aria-label="Docs pages"><span></span><a href="/docs/swarm/" style="text-align:right"><span class="lbl">Next</span>Explore · Swarm</a></nav>
   </main>
 

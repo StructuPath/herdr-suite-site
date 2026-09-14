@@ -12,7 +12,9 @@ import re
 import struct
 import subprocess
 import sys
+import tempfile
 import tomllib
+from html.parser import HTMLParser
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
@@ -120,9 +122,9 @@ def check_llms_summaries(plugins: list[dict[str, Any]], text: str) -> list[str]:
     tested = ", ".join(guard["tested_herdr_versions"])
     guard_evidence = re.compile(
         rf"^-\s+Guard\s+\(`{re.escape(str(guard['id']))}`\)\s+release\s+"
-        rf"{re.escape(str(guard['version']))}:\s+manifest minimum Herdr\s+"
+        rf"{re.escape(str(guard['version']))}:\s+minimum Herdr\s+"
         rf"{re.escape(str(guard['min_herdr_version']))};\s+"
-        rf"evidence records testing with\s+{re.escape(tested)}\.",
+        rf"historical pane integration evidence records\s+{re.escape(tested)}\.",
         re.MULTILINE,
     )
     if not guard_evidence.search(text):
@@ -214,11 +216,12 @@ def check_explore_contract() -> list[str]:
             "Clean-slot merge warning",
             "Success means",
             "Abort keeps branches",
-            "product-enforced approval gates",
+            "Not provided by the current runtime",
+            "Authenticated approval enforcement",
         ],
         DOCS_SRC / "Home.md": [
             "**Explore** is the ready first",
-            "**Deliver** is an attended Stage 2 lifecycle",
+            "**Deliver** is an attended Stage 3 lifecycle",
             "current runtime is not a single automatic pipeline",
         ],
         DOCS_SRC / "Swarm.md": [
@@ -397,7 +400,7 @@ def check_generated_docs() -> list[str]:
 
 
 def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
-    """Keep the Conductor 0.3 quickstart attended and visibly bounded."""
+    """Keep the Conductor Stage 3 quickstart attended and visibly bounded."""
     if rendered_html is None:
         page = SITE / "docs" / "conductor" / "index.html"
         try:
@@ -425,12 +428,30 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
     errors = []
     if not any(all(snippet in block for snippet in expected) for block in bash_blocks):
         errors.append("Conductor attended actions are not one rendered bash code block")
+    configs = []
+    for block in re.findall(
+        r'<pre><code class="language-json">(.*?)</code></pre>', quickstart, re.DOTALL
+    ):
+        try:
+            configs.append(json.loads(html.unescape(block)))
+        except json.JSONDecodeError:
+            errors.append("Conductor quickstart contains invalid JSON configuration")
+    if not any(
+        isinstance(config, dict)
+        and config.get("version") == 3
+        and "apply" in config
+        and config["apply"] is None
+        for config in configs
+    ):
+        errors.append("Conductor first-run configuration must explicitly disable Stage 3 apply")
     for command in ("conductor_pin_active_run", "conductor_dispatch"):
         if command in quickstart:
             errors.append(f"Conductor quickstart contains retired command: {command}")
     required_boundaries = (
         "harvest and stand-down are mutating attended actions",
         "needs_attention",
+        "Do not manufacture a receipt",
+        "Apply never pushes, tags, publishes, deploys, or updates multiple refs",
     )
     for marker in required_boundaries:
         if marker.casefold() not in quickstart.casefold():
@@ -440,12 +461,14 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
         r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", rendered_html))
     )
     required_contract = (
-        "Attended Stage 2 delivery",
-        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, cryptographic attestation system, or same-user security boundary",
+        "Attended Stage 3 delivery",
+        "not an authenticated approval system, suite adapter, unattended pipeline, general automatic recovery service, cryptographic attestation system, or same-user security boundary",
         "Missing, malformed, duplicate, foreign, stale, replayed, ambiguous, dirty, or durability-uncertain authority fails closed",
         "same-user TOCTOU window remains",
         "does not remove worktrees, branches, tasks, outboxes, reports, gate sources, artifacts, recordings, logs, or Guard files",
         "does not invoke Swarm or provide an automatic Conductor→Swarm pipeline",
+        "Stage 3 receipts are unauthenticated same-user operator records, not signatures or authorization proof",
+        "The receipt is consumed durably before any Git effect and cannot be reused",
     )
     for marker in required_contract:
         if marker.casefold() not in public_text.casefold():
@@ -453,26 +476,76 @@ def check_conductor_quickstart(rendered_html: str | None = None) -> list[str]:
     return errors
 
 
-def local_target(url: str) -> pathlib.Path | None:
+class LinkParser(HTMLParser):
+    """Read rendered references and fragment targets, excluding comments/text."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.links: list[str] = []
+        self.anchors: set[str] = set()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        for key, value in attrs:
+            if value is None:
+                continue
+            if key in {"href", "src", "poster"}:
+                self.links.append(value)
+            if key == "id" or (tag == "a" and key == "name"):
+                self.anchors.add(value)
+
+
+def local_target(
+    url: str, page: pathlib.Path | None = None, root: pathlib.Path = SITE
+) -> pathlib.Path | None:
     parsed = urlsplit(url)
-    if parsed.scheme or parsed.netloc or not parsed.path.startswith("/"):
+    if parsed.scheme or parsed.netloc:
         return None
-    route = unquote(parsed.path).lstrip("/")
-    target = SITE / route
-    if not route or parsed.path.endswith("/"):
+    page = page or root / "index.html"
+    route = unquote(parsed.path)
+    if not route:
+        return page.resolve()
+    target = root / route.lstrip("/") if route.startswith("/") else page.parent / route
+    if route.endswith("/") or target.is_dir():
         target /= "index.html"
-    return target
+    return target.resolve()
+
+
+def check_html_links(pages: list[pathlib.Path], root: pathlib.Path = SITE) -> list[str]:
+    errors = []
+    parsed_pages: dict[pathlib.Path, LinkParser] = {}
+
+    def parse(page: pathlib.Path) -> LinkParser:
+        page = page.resolve()
+        if page not in parsed_pages:
+            parser = LinkParser()
+            parser.feed(page.read_text(encoding="utf-8"))
+            parsed_pages[page] = parser
+        return parsed_pages[page]
+
+    for page in pages:
+        for url in parse(page).links:
+            label = f"{page.relative_to(root)}:"
+            try:
+                target = local_target(url, page, root)
+            except ValueError:
+                errors.append(f"{label} malformed link {url!r}")
+                continue
+            if target is None:
+                continue
+            if not target.is_relative_to(root.resolve()):
+                errors.append(f"{label} local link escapes site {url!r}")
+            elif not target.is_file():
+                errors.append(f"{label} broken local link {url!r}")
+            elif target.suffix.lower() in {".html", ".htm"}:
+                fragment = unquote(urlsplit(url).fragment)
+                if fragment and fragment not in parse(target).anchors:
+                    errors.append(f"{label} broken local fragment {url!r}")
+    return errors
 
 
 def check_local_links() -> list[str]:
-    errors = []
     html_files = [SITE / "index.html", *sorted((SITE / "docs").glob("**/*.html"))]
-    for page in html_files:
-        text = page.read_text(encoding="utf-8")
-        for url in re.findall(r"(?:href|src)=[\"']([^\"']+)[\"']", text):
-            target = local_target(url)
-            if target is not None and not target.is_file():
-                errors.append(f"{page.relative_to(SITE)}: broken local link {url!r}")
+    errors = check_html_links(html_files)
 
     source_names = {path.stem for path in DOCS_SRC.glob("*.md")}
     for page in DOCS_SRC.glob("*.md"):
@@ -539,8 +612,48 @@ def check_sibling_manifests(
     return errors
 
 
+def local_link_self_tests() -> list[str]:
+    failures = []
+    with tempfile.TemporaryDirectory(prefix="herdr-doc-links-") as directory:
+        root = pathlib.Path(directory)
+        page = root / "docs" / "index.html"
+        page.parent.mkdir()
+        (root / "index.html").write_text('<main id="home"></main>', encoding="utf-8")
+        (root / "poster.jpg").write_bytes(b"fixture")
+        (root / "docs" / "other.html").write_text(
+            '<h2 id="details & notes"></h2><a name="legacy"></a>', encoding="utf-8"
+        )
+        valid = '''<main id="current"></main>
+<a href="#current">current</a><a href="?view=compact#current">query</a>
+<a href="../#home">parent</a><a href="/#home">root</a>
+<a href="other.html?x=1&amp;y=2#details%20%26%20notes">encoded</a>
+<a href=other.html#legacy>unquoted</a><img src="../poster.jpg">
+<video poster="/poster.jpg"></video><a href="https://example.test/missing">external</a>
+<a href="//example.test/missing">protocol relative</a><a href="mailto:a@example.test">mail</a>
+<!-- <a href="missing-comment.html"> -->
+<script>const example = '<a href="missing-script.html">';</script>'''
+        page.write_text(valid, encoding="utf-8")
+        findings = check_html_links([page], root)
+        if findings:
+            failures.append(f"self-test rejected valid local links: {findings}")
+        for url, attribute in (
+            ("missing.html", "href"),
+            ("other.html#absent", "href"),
+            ("#absent", "href"),
+            ("/absent.jpg", "src"),
+            ("../absent.jpg", "poster"),
+            ("../../outside.html", "href"),
+        ):
+            page.write_text(valid + f'<a {attribute}="{url}">bad</a>', encoding="utf-8")
+            findings = check_html_links([page], root)
+            if len(findings) != 1 or repr(url) not in findings[0]:
+                failures.append(f"self-test did not isolate broken {attribute} {url!r}: {findings}")
+    return failures
+
+
 def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     failures = []
+    failures.extend(local_link_self_tests())
     plugin = plugins[0]
     source = (DOCS_SRC / f"{plugin['name']}.md").read_text(encoding="utf-8")
     action = f"{plugin['id']}.{plugin['actions'][0]}"
@@ -563,12 +676,17 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
         failures.append("self-test did not detect llms release boundary drift")
     tested = ", ".join(guard["tested_herdr_versions"])
     inflated_tested = llms.replace(
-        f"evidence records testing with {tested}.",
-        f"evidence records testing with {tested}0.",
+        f"historical pane integration evidence records {tested}.",
+        f"historical pane integration evidence records {tested}0.",
         1,
     )
     if not check_llms_summaries(plugins, inflated_tested):
         failures.append("self-test did not detect llms tested-version boundary drift")
+    current_guard_claim = llms.replace(
+        "historical pane integration evidence records", "current runtime testing records", 1
+    )
+    if not check_llms_summaries(plugins, current_guard_claim):
+        failures.append("self-test did not detect lost Guard historical evidence qualifier")
     forbidden_samples = {
         "Guard enforcement claim": ("Guard enforces every agent command.",),
     }
@@ -580,6 +698,17 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     conductor_html = (SITE / "docs" / "conductor" / "index.html").read_text(
         encoding="utf-8"
     )
+    baseline_errors = check_conductor_quickstart(conductor_html)
+    if baseline_errors:
+        failures.append(f"self-test requires a valid Conductor baseline: {baseline_errors}")
+    enabled_apply = conductor_html.replace(
+        '&quot;apply&quot;: null', '&quot;apply&quot;: {&quot;target_ref&quot;: &quot;refs/heads/main&quot;}', 1
+    )
+    if enabled_apply == conductor_html or not any(
+        "explicitly disable" in finding
+        for finding in check_conductor_quickstart(enabled_apply)
+    ):
+        failures.append("self-test did not detect enabled first-run apply")
     broken_fences = conductor_html.replace(
         '<pre><code class="language-bash">', '<p><code class="language-bash">'
     )
@@ -602,12 +731,16 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     safety_markers = (
         "Harvest and stand-down are mutating attended actions",
         "needs_attention",
-        "Attended Stage 2 delivery",
-        "not an approval system, suite adapter, unattended pipeline, automatic recovery service, cryptographic attestation system, or same-user security boundary",
+        "Attended Stage 3 delivery",
+        "not an authenticated approval system, suite adapter, unattended pipeline, general automatic recovery service, cryptographic attestation system, or same-user security boundary",
         "Missing, malformed, duplicate, foreign, stale, replayed, ambiguous, dirty, or durability-uncertain authority fails closed",
         "same-user TOCTOU window remains",
         "does not remove worktrees, branches, tasks, outboxes, reports, gate sources, artifacts, recordings, logs, or Guard files",
         "does <strong>not</strong> invoke Swarm or provide an automatic Conductor→Swarm pipeline",
+        "Do not manufacture a receipt",
+        "Apply never pushes, tags, publishes, deploys, or updates multiple refs",
+        "Stage 3 receipts are unauthenticated same-user operator records, not signatures or authorization proof",
+        "The receipt is consumed durably before any Git effect and cannot be reused",
     )
     for marker in safety_markers:
         mutated = conductor_html.replace(marker, "REMOVED SAFETY CONTRACT", 1)
@@ -624,7 +757,7 @@ def run_self_test(plugins: list[dict[str, Any]]) -> list[str]:
     if not failures:
         print(
             "OK: self-test detected action, version, llms-version, forbidden-claim, "
-            "Conductor quickstart/safety-contract, and Explore-boundary mutations"
+            "Conductor quickstart/safety-contract, local-link, and Explore-boundary mutations"
         )
     return failures
 

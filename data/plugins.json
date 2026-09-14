@@ -7,7 +7,7 @@
       "name": "Browser",
       "id": "structupath.browser",
       "repository": "https://github.com/StructuPath/herdr-browser",
-      "commit": "867392df51abd3b4846f90dcb8e580c791b42155",
+      "commit": "31e31ebfc661d96216ef899a3ab80f27e375169f",
       "version": "0.8.0",
       "min_herdr_version": "0.7.0",
       "tested_herdr_versions": [

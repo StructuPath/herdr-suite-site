@@ -11,9 +11,9 @@ Repo: [StructuPath/herdr-browser](https://github.com/StructuPath/herdr-browser) 
 | Plugin release | `0.8.0` |
 | Minimum Herdr | `0.7.0` |
 | Explicitly tested Herdr | `0.7.4` |
-| Evidence commit | `867392df51abd3b4846f90dcb8e580c791b42155` |
+| Evidence commit | `31e31ebfc661d96216ef899a3ab80f27e375169f` |
 
-The [pinned source](https://github.com/StructuPath/herdr-browser/tree/867392df51abd3b4846f90dcb8e580c791b42155) adds standalone repeatable QA while retaining the session-preservation and stream-recovery fixes. The manifest version is 0.8.0; the commit identifies the exact implementation behind this guide.
+The [pinned source](https://github.com/StructuPath/herdr-browser/tree/31e31ebfc661d96216ef899a3ab80f27e375169f) adds standalone repeatable QA while retaining the session-preservation and stream-recovery fixes. The manifest version is 0.8.0; the commit identifies the exact implementation behind this guide.
 
 ## Choose a browser connection
 
@@ -117,7 +117,7 @@ The default shared session is `herdr-ws-<workspace-id>`. Sessions and persistent
 
 ## Repeatable desktop and mobile QA
 
-The standalone QA runner executes a saved scenario in a fresh, private agent-browser session. It needs Node.js 20 or newer, Git with a committed SHA-1 HEAD, and agent-browser 0.33.0 or newer with Chromium installed; it does not require a running Herdr server. Install the browser dependency with `npm install -g agent-browser` and `agent-browser install`. See the [pinned QA contract](https://github.com/StructuPath/herdr-browser/blob/867392df51abd3b4846f90dcb8e580c791b42155/docs/qa.md) for complete step fields, bounds, and failure handling.
+The standalone QA runner executes a saved scenario in a fresh, private agent-browser session. It needs Node.js 20 or newer, Git with a committed SHA-1 HEAD, and agent-browser 0.33.0 or newer with Chromium installed; it does not require a running Herdr server. Install the browser dependency with `npm install -g agent-browser` and `agent-browser install`. See the [pinned QA contract](https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/qa.md) for complete step fields, bounds, and failure handling.
 
 Save and commit a scenario such as `.herdr-browser-qa.json` in the project you are testing:
 
@@ -175,4 +175,4 @@ npm run validate
 npm run test:integration
 ```
 
-Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned [readiness assessment](https://github.com/StructuPath/herdr-browser/blob/867392df51abd3b4846f90dcb8e580c791b42155/docs/readiness.md) for remaining recommendations.
+Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned [readiness assessment](https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/readiness.md) for remaining recommendations.

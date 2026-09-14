@@ -11,24 +11,24 @@ Pinned evidence: https://github.com/StructuPath/herdr-suite-site/blob/main/data/
 
 ### Explore — ready first workflow
 
-Swarm (`structupath.swarm`) release 0.1.0: Herdr >=0.7.4; evidence records 0.7.4 and 0.7.5 paths. It gives one bounded task to parallel worktree agents, reports candidate changes, and provides review-first harvest. Agents commit locally and never push. The operator defines comparison criteria, reviews diffs/tests, and selects what lands.
+Swarm (`structupath.swarm`) release 0.3.0: Herdr >=0.7.4; historical evidence records 0.7.4 and 0.7.5 paths. It gives one bounded task to parallel worktree agents, reports candidate changes, and provides review-first harvest. Agents commit locally; the operator can explicitly publish a slot branch with an ordinary push for PR review. Publication does not create a PR. The operator defines comparison criteria, reviews diffs/tests, and selects what lands.
 
-A clean-slot selection in Harvest performs a `--no-ff` merge. When the base is not checked out, a plugin-owned merge worktree can advance the base ref after preview without another confirmation screen. Treat selection as approval. Abort preserves branches.
+A clean-slot selection in Harvest performs a `--no-ff` merge. When the base is not checked out, a plugin-owned merge worktree can advance the base ref after preview without another confirmation screen. Treat selection as approval. Abort preserves branches. Removing ignored files requires exact one-use inventory-bound cleanup approval, not a generic yes.
 
 Guide: https://herdr.structupath.ai/docs/swarm/
 
-### Deliver — attended Stage 2
+### Deliver — attended Stage 3
 
-Conductor (`structupath.conductor`) release 0.3.0: Herdr >=0.7.5; evidence records 0.7.5. It runs task-bound roles as visible panes with repository/workspace-bound strict state, immutable tasks, private report outboxes, deterministic zero-or-one-CAS integration, exact-SHA reviewer and validator gates, and archival stand-down.
+Conductor (`structupath.conductor`) release 0.4.0: requires exactly Herdr 0.7.5, protocol 17, API schema 1. Retained live evidence is historical Stage 2 evidence, not live Stage 3 certification. Its seven actions are assemble, board, status, harvest, preview, apply, and stand-down. It runs task-bound roles with strict state, deterministic integration, exact-SHA gates, and attended preview/apply to one local ref. Config version 3 requires apply:null to disable publication or an explicit target_ref to enable it; version 2 remains supported with apply disabled.
 
-A human or trusted orchestrating agent directs work, reviews unauthenticated worker assertions, explicitly invokes every transition, and handles approval decisions, conflicts, or ambiguous recovery. The pinned runtime does not provide approval receipts or approval-aware apply, suite adapters, unattended automation, automatic recovery, cryptographic report attestation, or protection against malicious same-UID processes.
+An operator drives each transition, reviews preview, and supplies a canonical approval receipt using the exact returned command. Worker approval reports are not operator receipts. Apply durably consumes the receipt once before zero or one local-ref compare-and-swap. Only apply can resolve its uncertain publication using exact target observations; general ambiguous recovery remains refused. There is no remote push, deployment, authenticated approval, suite adapter, unattended automation, cryptographic report attestation, or same-user security boundary.
 
 Guide: https://herdr.structupath.ai/docs/conductor/
 
 ## Supporting trust capabilities
 
 - Browser (`structupath.browser`) release 0.7.0: Herdr >=0.7.0; evidence records testing with 0.7.4. Launch local Chromium, attach to an existing CDP browser, or share an agent-browser session. Node 22+ is required for launch, attach, and streaming; Node 20 supports shared-session polling. Recording observation bundles require agent-browser and are not test acceptance. Observe-only configuration blocks pane input and link navigation; the runtime toggle alone does not block launcher navigation in agent-browser mode. Sessions and persistent profiles are a trusted same-user boundary; recordings may be sensitive. https://herdr.structupath.ai/docs/browser/
-- Guard (`structupath.guard`) release 0.1.1: manifest minimum Herdr 0.7.5; evidence records testing with 0.7.5. Advisory rendered-text policy: audit, alert, and best-effort interrupt requests. Request acceptance may be observed; command prevention is unknown. It is not a sandbox or authorization boundary. https://herdr.structupath.ai/docs/guard/
+- Guard (`structupath.guard`) release 0.2.0: minimum Herdr 0.7.5; historical pane integration evidence records 0.7.5. Advisory rendered-text audit, alerts, and interrupt attempts cannot prove prevention. Optional explicitly wired Claude PreToolUse Bash reporter evaluates commands before execution, but fails open on missing, timed-out, or invalid socket responses. Existing rules survive upgrades; Reset rules explicitly backs up and reseeds defaults. Neither path is a sandbox. https://herdr.structupath.ai/docs/guard/
 
 ## Trust and composition boundaries
 
@@ -36,7 +36,7 @@ Guide: https://herdr.structupath.ai/docs/conductor/
 - Swarm independently creates and harvests Swarm-owned worktrees for interchangeable fan-out agents.
 - Conductor creates and reconciles Conductor-owned worktrees itself; it does not delegate worktree creation or harvest to Swarm.
 - Write-capable agents and plugins are trusted same-user principals. Worktrees isolate changes for review, not filesystem or process access.
-- Guard sees rendered terminal text, not authoritative tool intent. Native harness, sandbox, and operating-system controls remain authoritative.
+- Guard's pane watcher sees rendered terminal text; its optional reporter receives harness Bash commands. Native harness, sandbox, and operating-system controls remain authoritative.
 
 ## Install by capability
 

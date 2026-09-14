@@ -45,7 +45,7 @@
   <main class="prose" id="main-content" tabindex="-1">
 <div class="crumb">Docs / Plugins</div>
 <h1>🛡️ Guard (<code>structupath.guard</code>)</h1>
-<p><strong>Supporting text-policy capability.</strong> Guard is an <strong>advisory, best-effort</strong> cross-agent command policy layer for Herdr. It audits and alerts on matching terminal text and may interrupt visible shell input, but it is not a sandbox or authorization boundary for agent TUIs.</p>
+<p><strong>Supporting text-policy capability.</strong> Guard has two paths: an advisory pane watcher that audits, alerts, and attempts interrupts, and an optional harness reporter that evaluates reported Bash commands before execution. Neither path is a sandbox or a same-user security boundary.</p>
 <p>Repo: <a href="https://github.com/StructuPath/herdr-guard">StructuPath/herdr-guard</a> · Detailed reference: the repo <a href="https://github.com/StructuPath/herdr-guard#readme">README</a></p>
 <h2>Pinned evidence</h2>
 <div class="table-scroll"><table>
@@ -58,7 +58,7 @@
 <tbody>
 <tr>
 <td>Plugin release</td>
-<td><code>0.1.1</code></td>
+<td><code>0.2.0</code></td>
 </tr>
 <tr>
 <td>Minimum Herdr</td>
@@ -70,11 +70,11 @@
 </tr>
 <tr>
 <td>Evidence commit</td>
-<td><code>7327dc4f310987e05059a20cec7d8fc50bbf0cc5</code></td>
+<td><code>12e3fd6f7d65bd4c846f5da23cb2f24ee617cd48</code></td>
 </tr>
 </tbody>
 </table></div>
-<p>The <code>v0.1.1</code> tag target passed sequential one-shot RPC, dedicated subscription, reconnect, terminal rendering, replay suppression, and default/named-session recovery checks on Herdr 0.7.5/protocol 17. Guard records an interrupt request as accepted or failed; neither result proves command prevention.</p>
+<p>Historical <code>v0.1.1</code> evidence covers sequential one-shot RPC, dedicated subscription, reconnect, terminal rendering, replay suppression, and default/named-session recovery on Herdr 0.7.5/protocol 17. It does not certify the new reporter in a live Herdr session. Guard records an interrupt request as accepted or failed; neither result proves command prevention.</p>
 <h2>Actions</h2>
 <div class="table-scroll"><table>
 <thead>
@@ -106,7 +106,16 @@
 </tr>
 </tbody>
 </table></div>
-<h2>Honest coverage contract</h2>
+<h2>First run</h2>
+<p>Use Herdr <code>&gt;=0.7.5</code>, Node.js <code>&gt;=20.10</code>, Python <code>&gt;=3.11</code>, and Bash. Locking uses <code>lockf</code> on macOS or <code>flock</code> on Linux. Check which executable your shell selects before installing:</p>
+<pre><code class="language-bash">command -v herdr
+herdr --version
+herdr plugin install StructuPath/herdr-guard
+herdr plugin list
+herdr plugin action list
+</code></pre>
+<p>Open Guard and use its Test action to evaluate sample text without executing it. Installation does not automatically configure a harness hook. The source checkout also provides <code>npm run build</code>, <code>npm run validate</code>, and the read-only <code>npm run doctor</code> setup check.</p>
+<h2>Honest pane coverage contract</h2>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -144,9 +153,15 @@
 </tbody>
 </table></div>
 <p>Guard performs text matching, not intent analysis. An agent running as the same user can disable the plugin, use unseen channels, or act outside observed terminal text. Use native agent hooks, sandboxing, and operating-system controls for authoritative enforcement.</p>
+<h2>Optional harness reporter</h2>
+<p>Version 0.2.0 includes a Claude <code>PreToolUse</code> Bash hook adapter. Wire it explicitly using the repository README instructions. The hook reports raw command text and its working directory to Guard's local Unix socket; policy uses the reported directory. Interrupt-tier matches return a deny decision, alert-tier matches request permission, and other commands are allowed.</p>
+<p>The adapter fails open if the socket is missing, times out, or returns an invalid response. Audit records cannot prove the harness honored a decision. This is a command-text policy check, not prompt analysis or a substitute for native enforcement.</p>
+<p>The socket defaults to <code>$XDG_STATE_HOME/herdr-guard/reporter.sock</code>, falling back to <code>~/.local/state/herdr-guard/reporter.sock</code>, separate from plugin state, in a private directory. Run only one owner per socket; a <code>HERDR_GUARD_REPORTER_SOCKET</code> override must agree between Guard and the hook.</p>
 <h2>Policy and trust</h2>
 <p>Rules live at <code>$HERDR_PLUGIN_CONFIG_DIR/rules.json</code> and support <code>audit</code>, <code>alert</code>, and <code>interrupt</code> severities with regex or substring matching. Workspace <code>.herdr-guard.json</code> rules are capped at <code>alert</code>; repository-controlled regex and interrupt rules are rejected.</p>
 <p>The plugin itself is ordinary local code with the user's privileges. Review the source and policy before use, and protect audit logs because they can contain sensitive metadata even after redaction.</p>
+<h2>Upgrading</h2>
+<p>Upgrades preserve existing <code>rules.json</code>. New default patterns therefore do not silently replace a reviewed policy. To adopt the defaults, review them first, then explicitly use Reset rules, which backs up the existing file before reseeding. Version 0.2.0 includes broader destructive-command, exfiltration, tampering, and evasion patterns. A force-with-lease push is audit-tier in the defaults, not silently ignored.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/browser/"><span class="lbl">Previous</span>Browser</a><span></span></nav>
   </main>
 

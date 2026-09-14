@@ -11,7 +11,7 @@ Repo: [StructuPath/herdr-browser](https://github.com/StructuPath/herdr-browser) 
 | Plugin release | `0.7.0` |
 | Minimum Herdr | `0.7.0` |
 | Explicitly tested Herdr | `0.7.4` |
-| Evidence commit | `952e1601006cce2ca45edef56676d18a1f016151` |
+| Evidence commit | `5fc6a9a52b4f817f21a531c288f36c3820bf93ca` |
 
 The [pinned source](https://github.com/StructuPath/herdr-browser/tree/952e1601006cce2ca45edef56676d18a1f016151) includes the merged session-preservation and stream-recovery fixes. The manifest version remains 0.7.0; the commit identifies the exact implementation behind this guide.
 

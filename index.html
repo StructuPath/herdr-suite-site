@@ -1058,8 +1058,8 @@
           </div>
           <p class="claim-boundary">
             <b>Truth boundary:</b> Explore is the ready first workflow. Deliver
-            is an attended Stage 2 task/report lifecycle operated by a human or
-            trusted orchestrating agent—not an autonomous approval system.
+            is an attended Stage 3 lifecycle with reviewed local-ref apply,
+            requiring exactly Herdr 0.7.5 and explicit operator receipts.
           </p>
         </div>
         <aside class="hero-rail" aria-label="Workflow readiness">
@@ -1340,7 +1340,7 @@ Comparison criterion: among passing candidates, choose
               Conductor is for attended, agent-driven coordination: a human or
               trusted orchestrator directs task-bound role panes, reviews worker
               assertions and exact-SHA gates, and explicitly invokes deterministic
-              integration and archival stand-down.
+              integration, preview, approved local-ref apply, and archival stand-down.
             </p>
             <dl class="contract">
               <div>
@@ -1376,8 +1376,8 @@ Comparison criterion: among passing candidates, choose
           <aside class="deliver-limit">
             <h3>Not provided by the current runtime</h3>
             <ul>
-              <li>Product-enforced approval gates</li>
-              <li>Durable autonomous recovery</li>
+              <li>Authenticated approval enforcement</li>
+              <li>General autonomous recovery</li>
               <li>Cryptographic report attestation</li>
               <li>Swarm-backed worktree creation or harvest</li>
             </ul>
@@ -1427,11 +1427,12 @@ Comparison criterion: among passing candidates, choose
               </div>
               <p class="trust-capability">
                 Audit, alert, and attempt to interrupt command-like text visible
-                in Herdr panes. Test proposed text against reviewed local rules.
+                in Herdr panes. An optional harness hook evaluates reported Bash
+                commands before tool execution.
               </p>
               <p class="trust-limit">
-                <b>Boundary:</b> best-effort rendered-text policy—not a sandbox,
-                authorization boundary, or source of authoritative tool intent.
+                <b>Boundary:</b> pane interruption cannot prove prevention. The
+                optional hook fails open when unavailable. Neither path is a sandbox.
                 <a href="/docs/guard/">Guide →</a>
               </p>
             </article>
@@ -1463,7 +1464,7 @@ Comparison criterion: among passing candidates, choose
                 <span role="rowheader">Deliver</span>
                 <p role="cell">
                   Role panes, strict run state, live status, identity-checked
-                  harvest
+                  harvest, preview receipts, single-local-ref apply
                 </p>
                 <p role="cell">
                   Work direction, branch review, approval, conflict handling,
@@ -1472,7 +1473,7 @@ Comparison criterion: among passing candidates, choose
               </div>
               <div class="matrix-row" role="row">
                 <span role="rowheader">Browser</span>
-                <p role="cell">A shared visual browser surface and recording</p>
+                <p role="cell">Chromium launch, CDP attach, shared sessions and recording</p>
                 <p role="cell">
                   Session privacy, action review, sensitive recording handling
                 </p>
@@ -1480,10 +1481,10 @@ Comparison criterion: among passing candidates, choose
               <div class="matrix-row" role="row">
                 <span role="rowheader">Guard</span>
                 <p role="cell">
-                  Best-effort text matching, audit, alerts, interrupt attempts
+                  Text matching, audit, interrupt attempts, optional Bash hook
                 </p>
                 <p role="cell">
-                  Authoritative hooks, sandboxing, access control, log
+                  Hook wiring and fail-open limits, sandboxing, access control, log
                   protection
                 </p>
               </div>
@@ -1520,11 +1521,11 @@ herdr plugin install \
               </div>
             </article>
             <article class="reference-item">
-              <span class="rail-label">Attended Stage 2</span>
+              <span class="rail-label">Attended Stage 3</span>
               <h3>Deliver · Conductor</h3>
               <p>
-                Strict task/report contracts, deterministic integration, and
-                exact-SHA gates in visible role panes.
+                Strict task/report contracts, exact-SHA gates, and attended
+                preview/apply. Requires exactly Herdr 0.7.5.
               </p>
               <pre>
 herdr plugin install \
@@ -1555,7 +1556,7 @@ herdr plugin install \
             <article class="reference-item">
               <span class="rail-label">Supporting policy</span>
               <h3>Guard</h3>
-              <p>Advisory rendered-text policy, audit, and alerts.</p>
+              <p>Rendered-text policy and an optional, fail-open Bash hook.</p>
               <pre>
 herdr plugin install \
   StructuPath/herdr-guard</pre

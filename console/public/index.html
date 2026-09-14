@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Herdr Console</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to projects</a>
+  <header><a class="brand" href="/"><span class="mark">H</span> herdr <strong>console</strong></a><span class="local">LOCAL · READ ONLY</span></header>
+  <main id="main">
+    <div class="page-heading"><div><p class="eyebrow">YOUR WORKSPACE</p><h1>Projects, in view.</h1><p class="muted">Review progress and evidence. Keep each plugin in control of its own work.</p></div><button id="refresh" type="button">Refresh status</button></div>
+    <p id="notice" role="status" aria-live="polite">Reading your configured projects…</p>
+    <section aria-labelledby="health-heading"><div class="section-heading"><h2 id="health-heading">Environment</h2><span id="updated" class="muted"></span></div><div id="health" class="health-grid"></div><p id="compatibility-note" class="footnote"></p></section>
+    <section aria-labelledby="projects-heading"><div class="section-heading"><h2 id="projects-heading">Projects</h2><label class="search">Find a project <input id="filter" type="search" placeholder="Name or branch" autocomplete="off"></label></div><div id="projects"></div></section>
+    <footer>Local observations are review aids, not approval or authenticated evidence. Refresh reads files; it never starts agents, pushes branches, or changes plugin state.</footer>
+  </main>
+</body>
+</html>

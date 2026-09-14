@@ -1,0 +1,13 @@
+{
+  "name": "herdr-suite-console",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "console": "node console/server.mjs",
+    "test": "node --test console/tests/*.test.mjs",
+    "build": "node --check console/server.mjs && node --check console/model.mjs && node --check console/public/app.js",
+    "validate": "npm run build && npm test && python3 scripts/build_docs.py --check && python3 scripts/check_docs.py"
+  }
+}

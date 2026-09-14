@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "projects": [
+    { "id": "suite", "name": "Herdr Suite", "path": ".." }
+  ]
+}

@@ -60,7 +60,7 @@
 <tbody>
 <tr>
 <td>Plugin release</td>
-<td><code>0.3.0</code></td>
+<td><code>0.4.0</code></td>
 </tr>
 <tr>
 <td>Minimum Herdr</td>
@@ -72,11 +72,11 @@
 </tr>
 <tr>
 <td>Evidence commit</td>
-<td><code>4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb</code></td>
+<td><code>09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb</code></td>
 </tr>
 </tbody>
 </table></div>
-<p>The pinned source also records a <a href="https://github.com/StructuPath/herdr-swarm/blob/4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb/docs/readiness.md">bounded Herdr 0.8.2 live smoke</a>: fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's <code>done</code> agent state. These are unreleased fixes on version 0.3.0; broad compatibility evidence remains 0.7.4/0.7.5.</p>
+<p>The pinned source also records a <a href="https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/readiness.md">bounded Herdr 0.8.2 live smoke</a>: fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's <code>done</code> agent state. Version 0.4.0 retains these fixes and adds the explicit GitHub draft-PR handoff below; broad Herdr compatibility evidence remains 0.7.4/0.7.5.</p>
 <h2>Actions</h2>
 <div class="table-scroll"><table>
 <thead>
@@ -172,7 +172,7 @@ bash scripts/harvest-step.sh pr-status 1
 <p>Imported Browser QA summaries must agree with per-run outcomes and counts. Unresolved requests or incomplete telemetry cannot produce a passing handoff check.</p>
 <p>A failed push creates no PR. A GitHub failure after a successful push leaves the published branch and local receipt intact. Inspect the error and retry the same command; a lost creation response triggers exact-PR rediscovery. A mismatched GitHub head refuses success and requires inspection, never a force-push correction.</p>
 <p>Press <code>c</code>, then a slot, for the pane's CI view. <code>pr-status</code> emits a <code>ci_status</code> tab-separated JSON record with <code>passed</code>, <code>failed</code>, <code>pending</code>, <code>not_run</code>, <code>unknown</code>, or <code>no_pr</code> status. Compare <code>head_sha</code> and <code>local_head_sha</code>: a passing remote check is not current candidate evidence when <code>matches_local_head</code> is false. Passing checks do not establish branch-protection completeness or authorize a merge. The command uses GitHub reads and the local run lock; it does not fetch, push, merge, or edit a PR.</p>
-<p>See the pinned source's <code>docs/github-handoff.md</code> for the exact evidence and output schemas. <a href="/docs/console/">Console</a> can display an explicitly saved PR-status observation alongside project and QA evidence.</p>
+<p>See the <a href="https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/github-handoff.md">pinned GitHub handoff contract</a> for the exact evidence and output schemas. <a href="/docs/console/">Console</a> can display an explicitly saved PR-status observation alongside project and QA evidence.</p>
 <p>After a remote PR is merged, preview again. Harvest recognizes merge ancestry and squash merges whose tree changes are contained in the base. Prune uses ancestry, so squash-merged branches may remain for deliberate review.</p>
 <h2>Safety and trust boundary</h2>
 <p>Swarm isolates working trees and provides reviewable branches; it does not sandbox agents. Write agents are trusted same-user principals and can access anything their operating-system user can access. Agents are instructed to commit locally and never push, while the operator remains the merge gate.</p>

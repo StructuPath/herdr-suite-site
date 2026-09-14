@@ -8,12 +8,12 @@ Repo: [StructuPath/herdr-swarm](https://github.com/StructuPath/herdr-swarm) · D
 
 | Field | Value |
 | --- | --- |
-| Plugin release | `0.3.0` |
+| Plugin release | `0.4.0` |
 | Minimum Herdr | `0.7.4` |
 | Explicitly tested Herdr | `0.7.4`, `0.7.5` |
-| Evidence commit | `4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb` |
+| Evidence commit | `09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb` |
 
-The pinned source also records a [bounded Herdr 0.8.2 live smoke](https://github.com/StructuPath/herdr-swarm/blob/4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb/docs/readiness.md): fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's `done` agent state. These are unreleased fixes on version 0.3.0; broad compatibility evidence remains 0.7.4/0.7.5.
+The pinned source also records a [bounded Herdr 0.8.2 live smoke](https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/readiness.md): fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's `done` agent state. Version 0.4.0 retains these fixes and adds the explicit GitHub draft-PR handoff below; broad Herdr compatibility evidence remains 0.7.4/0.7.5.
 
 ## Actions
 
@@ -129,7 +129,7 @@ A failed push creates no PR. A GitHub failure after a successful push leaves the
 
 Press `c`, then a slot, for the pane's CI view. `pr-status` emits a `ci_status` tab-separated JSON record with `passed`, `failed`, `pending`, `not_run`, `unknown`, or `no_pr` status. Compare `head_sha` and `local_head_sha`: a passing remote check is not current candidate evidence when `matches_local_head` is false. Passing checks do not establish branch-protection completeness or authorize a merge. The command uses GitHub reads and the local run lock; it does not fetch, push, merge, or edit a PR.
 
-See the pinned source's `docs/github-handoff.md` for the exact evidence and output schemas. [Console](Console) can display an explicitly saved PR-status observation alongside project and QA evidence.
+See the [pinned GitHub handoff contract](https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/github-handoff.md) for the exact evidence and output schemas. [Console](Console) can display an explicitly saved PR-status observation alongside project and QA evidence.
 
 After a remote PR is merged, preview again. Harvest recognizes merge ancestry and squash merges whose tree changes are contained in the base. Prune uses ancestry, so squash-merged branches may remain for deliberate review.
 

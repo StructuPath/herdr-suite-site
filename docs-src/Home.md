@@ -43,7 +43,7 @@ compatibility with later versions.
 | --- | --- | --- | --- | --- | --- |
 | [Browser](Browser) | `structupath.browser` | `0.8.0` | `0.7.0` | `0.7.4` | Chromium launch, CDP attach, shared sessions, recording, and repeatable QA |
 | [Guard](Guard) | `structupath.guard` | `0.2.0` | `0.7.5` | `0.7.5` | Text policy plus optional fail-open harness reporter |
-| [Swarm](Swarm) | `structupath.swarm` | `0.3.0` | `0.7.4` | `0.7.4`, `0.7.5` | Parallel candidates, review-first harvest, and PR publication |
+| [Swarm](Swarm) | `structupath.swarm` | `0.4.0` | `0.7.4` | `0.7.4`, `0.7.5` | Parallel candidates, review-first harvest, and PR publication |
 | [Conductor](Conductor) | `structupath.conductor` | `0.4.0` | `0.7.5` | `0.7.5` | Attended Stage 3: exact-SHA gates, preview, approval receipts, and single-ref apply |
 
 Versions are plugin-specific source evidence pinned in [`data/plugins.json`](https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json), not a claim that every plugin was tested on one suite-wide Herdr version. Recorded Herdr versions include retained historical compatibility evidence; they do not certify every new feature. Guard's accepted interrupt requests and harness verdicts do not prove command prevention.

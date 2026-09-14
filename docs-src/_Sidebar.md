@@ -1,6 +1,8 @@
 # Herdr Suite
 
 - [Overview](Home)
+- **Local app**
+  - [Console](Console)
 - **Workflows**
   - [Explore · Swarm](Swarm)
   - [Deliver · Conductor (advanced)](Conductor)

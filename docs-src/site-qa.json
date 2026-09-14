@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "name": "Suite documentation navigation",
+  "baseUrl": "http://127.0.0.1:4381",
+  "viewports": [
+    {"name": "desktop", "width": 1440, "height": 900},
+    {"name": "mobile", "width": 390, "height": 844}
+  ],
+  "steps": [
+    {"type": "navigate", "path": "/"},
+    {"type": "assertText", "selector": "h1", "contains": "Explore a change three ways."},
+    {"type": "screenshot", "name": "landing"},
+    {"type": "click", "selector": "#console a[href='/docs/console/']"},
+    {"type": "assertUrl", "contains": "/docs/console/"},
+    {"type": "assertText", "selector": "h1", "contains": "Local Console"},
+    {"type": "assertText", "selector": "main", "contains": "conductorStatus"},
+    {"type": "screenshot", "name": "console-guide"},
+    {"type": "navigate", "path": "/docs/browser/"},
+    {"type": "assertText", "selector": "main", "contains": "Repeatable desktop and mobile QA"},
+    {"type": "navigate", "path": "/docs/swarm/"},
+    {"type": "assertText", "selector": "h1", "contains": "Swarm"},
+    {"type": "navigate", "path": "/docs/conductor/"},
+    {"type": "assertText", "selector": "main", "contains": "exactly Herdr 0.7.5"},
+    {"type": "navigate", "path": "/docs/guard/"},
+    {"type": "assertText", "selector": "h1", "contains": "Guard"}
+  ]
+}

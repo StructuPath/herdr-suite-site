@@ -1,17 +1,25 @@
 # StructuPath Herdr Suite
 
-> Herdr-native tools for human-supervised agent work. Explore is the ready first workflow; Deliver is an advanced assembly pattern; Browser and Guard are supporting capabilities.
+> Herdr-native tools for human-supervised agent work. Explore is the ready first workflow; Deliver is an attended Stage 3 lifecycle; Browser and Guard are supporting capabilities. Console is a separate read-only local app.
 
 Landing and first Explore run: https://herdr.structupath.ai/
 Canonical docs: https://herdr.structupath.ai/docs/
 Source Markdown: https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src
 Pinned evidence: https://github.com/StructuPath/herdr-suite-site/blob/main/data/plugins.json
 
+## Local Console
+
+The public website is documentation, not a remote controller. In the site checkout, Node >=20 can run `npm run console -- --demo` (labeled fixtures) or `npm run console -- --config /absolute/private/console.json`; `--check` prints a snapshot and exits. Console binds only to 127.0.0.1, default port 4317. It is not a fifth plugin.
+
+Configuration schemaVersion 1 explicitly lists project id, name, path, and optional swarmManifest, conductorStatus, guardAudit, qaReport, pullRequestStatus paths. pullRequestStatus consumes saved Swarm ci_status TSV, not raw JSON. Optional herdrBinary selects an executable. Console shows Git state, tool health, pinned compatibility advice, saved run observations, QA summary/freshness, and copyable next commands. Saved observations are not authoritative live activity. No mutating controls, agent launch, approval, push, or PR creation. A matching QA commit cannot prove what build a server served. Keep config and artifacts private.
+
+Guide: https://herdr.structupath.ai/docs/console/
+
 ## Workflow taxonomy
 
 ### Explore — ready first workflow
 
-Swarm (`structupath.swarm`) release 0.3.0: Herdr >=0.7.4; historical evidence records 0.7.4 and 0.7.5 paths. It gives one bounded task to parallel worktree agents, reports candidate changes, and provides review-first harvest. Agents commit locally; the operator can explicitly publish a slot branch with an ordinary push for PR review. Publication does not create a PR. The operator defines comparison criteria, reviews diffs/tests, and selects what lands.
+Swarm (`structupath.swarm`) release 0.4.0: Herdr >=0.7.4; historical evidence records 0.7.4 and 0.7.5 paths. It gives one bounded task to parallel worktree agents, reports candidate changes, and provides review-first harvest. Agents commit locally; the operator can explicitly publish a slot branch with an ordinary push for PR review. The ordinary publish verb remains push-only. Explicit publish-pr (pane g then slot) authorizes push and draft PR creation, or reuses the exact matching open PR without rewriting its body/state. pr-status (pane c then slot) reads GitHub PR/CI status; remote/local SHA mismatch must be shown. Authenticated gh and a same-repository GitHub.com remote are required; fork/Enterprise handoffs are unsupported. Optional typed validation or clean exact-SHA Browser QA evidence is summarized; omission is not_run and no checks are executed by Swarm. Reused PR bodies may contain old evidence. No automatic merge or approval. The operator defines comparison criteria, reviews diffs/tests, and selects what lands.
 
 A clean-slot selection in Harvest performs a `--no-ff` merge. When the base is not checked out, a plugin-owned merge worktree can advance the base ref after preview without another confirmation screen. Treat selection as approval. Abort preserves branches. Removing ignored files requires exact one-use inventory-bound cleanup approval, not a generic yes.
 
@@ -27,7 +35,7 @@ Guide: https://herdr.structupath.ai/docs/conductor/
 
 ## Supporting trust capabilities
 
-- Browser (`structupath.browser`) release 0.7.0: Herdr >=0.7.0; evidence records testing with 0.7.4. Launch local Chromium, attach to an existing CDP browser, or share an agent-browser session. Node 22+ is required for launch, attach, and streaming; Node 20 supports shared-session polling. Recording observation bundles require agent-browser and are not test acceptance. Observe-only configuration blocks pane input and link navigation; the runtime toggle alone does not block launcher navigation in agent-browser mode. Sessions and persistent profiles are a trusted same-user boundary; recordings may be sensitive. https://herdr.structupath.ai/docs/browser/
+- Browser (`structupath.browser`) release 0.8.0: Herdr >=0.7.0; evidence records testing with 0.7.4. Launch local Chromium, attach to an existing CDP browser, or share an agent-browser session. Node 22+ is required for launch, attach, and streaming; Node 20 supports shared-session polling. Recording observation bundles require agent-browser and are not test acceptance. Standalone saved-scenario QA requires Node >=20 and agent-browser >=0.33.0 with Chromium; no running Herdr is required. It runs explicit assertions in fresh desktop/mobile viewport sessions, saves private result.json/screenshots/diagnostics, and closes its own session. Mobile is viewport geometry, not device emulation. The recorded Git commit/dirty state does not prove which build the server served; review assertions and artifacts. Console can read QA freshness and Swarm can attach its bounded summary to an explicit draft PR handoff. Observe-only configuration blocks pane input and link navigation; the runtime toggle alone does not block launcher navigation in agent-browser mode. Sessions and persistent profiles are a trusted same-user boundary; recordings may be sensitive. https://herdr.structupath.ai/docs/browser/
 - Guard (`structupath.guard`) release 0.2.0: minimum Herdr 0.7.5; historical pane integration evidence records 0.7.5. Advisory rendered-text audit, alerts, and interrupt attempts cannot prove prevention. Optional explicitly wired Claude PreToolUse Bash reporter evaluates commands before execution, but fails open on missing, timed-out, or invalid socket responses. Existing rules survive upgrades; Reset rules explicitly backs up and reseeds defaults. Neither path is a sandbox. https://herdr.structupath.ai/docs/guard/
 
 ## Trust and composition boundaries

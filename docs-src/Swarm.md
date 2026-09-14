@@ -8,12 +8,12 @@ Repo: [StructuPath/herdr-swarm](https://github.com/StructuPath/herdr-swarm) · D
 
 | Field | Value |
 | --- | --- |
-| Plugin release | `0.3.0` |
+| Plugin release | `0.4.0` |
 | Minimum Herdr | `0.7.4` |
 | Explicitly tested Herdr | `0.7.4`, `0.7.5` |
-| Evidence commit | `4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb` |
+| Evidence commit | `09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb` |
 
-The pinned source also records a [bounded Herdr 0.8.2 live smoke](https://github.com/StructuPath/herdr-swarm/blob/4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb/docs/readiness.md): fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's `done` agent state. These are unreleased fixes on version 0.3.0; broad compatibility evidence remains 0.7.4/0.7.5.
+The pinned source also records a [bounded Herdr 0.8.2 live smoke](https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/readiness.md): fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's `done` agent state. Version 0.4.0 retains these fixes and adds the explicit GitHub draft-PR handoff below; broad Herdr compatibility evidence remains 0.7.4/0.7.5.
 
 ## Actions
 
@@ -101,6 +101,35 @@ A first Explore run is successful when one chosen branch is merged without confl
 ## Publish for PR review
 
 In Harvest, press `p`, then select a slot to publish its branch. The script equivalent is `scripts/harvest-step.sh publish <slot>` from the installed plugin root. Publication uses an ordinary push to `origin`, or the explicit `HERDR_SWARM_PUBLISH_REMOTE` override; it never force-pushes and does not create a GitHub PR itself.
+
+### Explicit GitHub draft handoff
+
+For a GitHub PR, press `g`, then select a slot in Harvest, or invoke `publish-pr` below. This selection or command authorizes both the audited-commit push and draft PR creation, with no second confirmation. It creates a draft or reuses the exact matching open PR; an existing ready-for-review PR stays ready. The five plugin actions remain unchanged.
+
+From the trusted installed Swarm checkout in the same configured run context:
+
+```bash
+# Optional evidence must describe this slot's exact committed candidate.
+HERDR_SWARM_VALIDATION_FILE=/absolute/private/qa/result.json \
+  bash scripts/harvest-step.sh publish-pr 1
+
+# Read GitHub PR/CI state without pushing or editing GitHub.
+bash scripts/harvest-step.sh pr-status 1
+```
+
+Authenticate `gh` first. The named remote (default `origin`) must have exactly one fetch and push URL identifying the same GitHub.com repository. Fork destinations and GitHub Enterprise are outside this first release. The recorded run base branch and selected slot branch determine PR identity. Existing ownership, fork ancestry, non-empty-work, and ordinary-push guards remain active. Only committed work travels.
+
+`HERDR_SWARM_VALIDATION_FILE` optionally accepts typed check statuses or a [Browser QA](Browser) `result.json` for the exact published SHA. Browser evidence must explicitly record a clean tree, no changes during the run, and all three scenario policies enabled: `failOnConsoleError`, `failOnPageError`, and `failOnFailedRequest`. Without a file, validation is `not_run`, never passed. Supplied evidence is unauthenticated; Swarm does not execute its checks. Failed or pending checks can accompany a draft. The PR includes bounded check names/statuses and identifiers, not task text, raw logs, URLs, screenshots, or local paths.
+
+An existing exact repository/head/base open PR is reused without changing its title, body, or state. `validation_attached: false` on reuse means its body may describe an older SHA; review and update that evidence manually. Closed/merged matches and ambiguous discovery refuse handoff.
+
+Imported Browser QA summaries must agree with per-run outcomes and counts. Unresolved requests or incomplete telemetry cannot produce a passing handoff check.
+
+A failed push creates no PR. A GitHub failure after a successful push leaves the published branch and local receipt intact. Inspect the error and retry the same command; a lost creation response triggers exact-PR rediscovery. A mismatched GitHub head refuses success and requires inspection, never a force-push correction.
+
+Press `c`, then a slot, for the pane's CI view. `pr-status` emits a `ci_status` tab-separated JSON record with `passed`, `failed`, `pending`, `not_run`, `unknown`, or `no_pr` status. Compare `head_sha` and `local_head_sha`: a passing remote check is not current candidate evidence when `matches_local_head` is false. Passing checks do not establish branch-protection completeness or authorize a merge. The command uses GitHub reads and the local run lock; it does not fetch, push, merge, or edit a PR.
+
+See the [pinned GitHub handoff contract](https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/github-handoff.md) for the exact evidence and output schemas. [Console](Console) can display an explicitly saved PR-status observation alongside project and QA evidence.
 
 After a remote PR is merged, preview again. Harvest recognizes merge ancestry and squash merges whose tree changes are contained in the base. Prune uses ancestry, so squash-merged branches may remain for deliberate review.
 

@@ -7,13 +7,13 @@
       "name": "Browser",
       "id": "structupath.browser",
       "repository": "https://github.com/StructuPath/herdr-browser",
-      "commit": "5fc6a9a52b4f817f21a531c288f36c3820bf93ca",
-      "version": "0.7.0",
+      "commit": "31e31ebfc661d96216ef899a3ab80f27e375169f",
+      "version": "0.8.0",
       "min_herdr_version": "0.7.0",
       "tested_herdr_versions": [
         "0.7.4"
       ],
-      "manifest_sha256": "975685f637d75b2f4b0151b7cecbb3eaa1fb3b8849c13a356e3ebfb5a90fea8a",
+      "manifest_sha256": "6b8a05b2b7f513803ec68bfa1f6413350e038b5355e1287a4ca2d3d9fdc4c432",
       "actions": [
         "open",
         "close",
@@ -47,14 +47,14 @@
       "name": "Swarm",
       "id": "structupath.swarm",
       "repository": "https://github.com/StructuPath/herdr-swarm",
-      "commit": "4f0e2a7fcf25c94437e323bf1fa56a53fb4f34fb",
-      "version": "0.3.0",
+      "commit": "09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb",
+      "version": "0.4.0",
       "min_herdr_version": "0.7.4",
       "tested_herdr_versions": [
         "0.7.4",
         "0.7.5"
       ],
-      "manifest_sha256": "c4d7a6d653bb94ea6e0a3efef4fe3722d5b826ee24e7895fc8ba2439b119b0f5",
+      "manifest_sha256": "eac43912706faf3458b2aeadc27c001e7c5c13b9b92279e9758d4412799fb848",
       "actions": [
         "fanout",
         "status",

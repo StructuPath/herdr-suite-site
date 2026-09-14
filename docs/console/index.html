@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/media/favicon.svg" type="image/svg+xml">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local Console guide — Herdr Suite docs</title>
+<meta name="description" content="Run a read-only local dashboard for explicitly configured projects, tool health, saved run observations, and browser QA evidence.">
+<link rel="canonical" href="https://herdr.structupath.ai/docs/console/">
+<meta property="og:title" content="Local Console guide — Herdr Suite docs">
+<meta property="og:description" content="Run a read-only local dashboard for explicitly configured projects, tool health, saved run observations, and browser QA evidence.">
+<meta property="og:url" content="https://herdr.structupath.ai/docs/console/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://herdr.structupath.ai/media/herdr-suite-social.jpg">
+<meta property="og:image:alt" content="Herdr Swarm terminal footage showing worktree candidates ready for review">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Local Console guide — Herdr Suite docs">
+<meta name="twitter:description" content="Run a read-only local dashboard for explicitly configured projects, tool health, saved run observations, and browser QA evidence.">
+<meta name="twitter:image" content="https://herdr.structupath.ai/media/herdr-suite-social.jpg">
+<meta name="twitter:image:alt" content="Herdr Swarm terminal footage showing worktree candidates ready for review">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/docs/docs.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <div class="nav-inner">
+    <a class="wordmark" href="/"><span class="mark">H</span>herdr&nbsp;suite</a>
+    <div class="nav-links">
+      <a href="/#explore">Explore</a>
+      <a href="/#deliver">Deliver · advanced</a>
+      <a href="/#trust">Trust</a>
+      <a href="/docs/console/">Console</a>
+    </div>
+    <div class="nav-spacer"></div>
+    <a class="nav-docs" href="/docs/" aria-current="page">Docs</a>
+    <a class="btn" href="/#first-run">Start Explore</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <main class="prose" id="main-content" tabindex="-1">
+<div class="crumb">Docs / Local app</div>
+<h1>Local Console</h1>
+<p>Console 0.1.0 brings explicitly configured projects, tool health, saved run observations, and browser QA evidence into one read-only local dashboard. It is a local app in the suite website repository, not a fifth Herdr plugin. The public website at <code>herdr.structupath.ai</code> serves documentation; it cannot inspect or control your projects.</p>
+<h2>Start locally</h2>
+<p>Install Node.js 20 or newer and Git, then clone the suite site repository. Console has no package dependencies.</p>
+<pre><code class="language-bash">git clone https://github.com/StructuPath/herdr-suite-site.git
+cd herdr-suite-site
+npm run console -- --demo
+</code></pre>
+<p>Open the loopback address printed by the command, normally <code>http://127.0.0.1:4317</code>. Demo mode uses clearly labeled fixtures, not observations of your machine. Stop the server with Ctrl+C.</p>
+<p>For your projects, save a private configuration file outside the published site:</p>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;projects&quot;: [
+    {
+      &quot;id&quot;: &quot;app&quot;,
+      &quot;name&quot;: &quot;My app&quot;,
+      &quot;path&quot;: &quot;/absolute/path/to/app&quot;
+    }
+  ]
+}
+</code></pre>
+<pre><code class="language-bash">npm run console -- --config /absolute/private/console.json
+npm run console -- --config /absolute/private/console.json --port 4318
+npm run console -- --config /absolute/private/console.json --check
+</code></pre>
+<p><code>--check</code> prints the snapshot as JSON and exits. The server binds only to <code>127.0.0.1</code>. Configure 1–20 Git worktree roots; relative paths resolve from the configuration file's directory. Console reads explicit paths; it does not recursively discover repositories or look for credentials. The optional top-level <code>herdrBinary</code> selects an explicit Herdr executable.</p>
+<h2>Add saved observations</h2>
+<p>Each project can optionally name these files. Omit any source you do not use; example paths are placeholders, not files Console creates.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Project field</th>
+<th>Expected source</th>
+<th>What the dashboard can show</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>swarmManifest</code></td>
+<td>Explicit Swarm run manifest JSON</td>
+<td>Saved run and slot metadata, not authoritative lifecycle or live agent activity</td>
+</tr>
+<tr>
+<td><code>conductorStatus</code></td>
+<td>Saved JSON from Conductor's existing status command</td>
+<td>Observed lifecycle, workers, legal next operations, and file modification time</td>
+</tr>
+<tr>
+<td><code>guardAudit</code></td>
+<td>Explicit Guard audit JSONL</td>
+<td>Event counts from the supplied audit file</td>
+</tr>
+<tr>
+<td><code>qaReport</code></td>
+<td>Browser QA <code>result.json</code></td>
+<td>Test summary, recorded Git identity, freshness, and artifact counts</td>
+</tr>
+<tr>
+<td><code>pullRequestStatus</code></td>
+<td>Saved Swarm <code>pr-status</code> TSV output</td>
+<td>Validated GitHub PR link, CI summary, and head freshness</td>
+</tr>
+</tbody>
+</table></div>
+<p>For Conductor, run its status command yourself in the correct Herdr workspace and repository, using the trusted plugin checkout and a private output path:</p>
+<pre><code class="language-bash">node /trusted/herdr-conductor/scripts/stage1-runtime.mjs status &gt; /absolute/private/conductor-status.json
+</code></pre>
+<p>Point <code>conductorStatus</code> at that saved file. Console checks its repository key against the project's current Git common directory and rejects a status observation for another repository. It does not reconstruct lifecycle from journals.</p>
+<p>For GitHub PR observations, save Swarm's existing tab-separated output in the correct configured run context:</p>
+<pre><code class="language-bash">bash /trusted/herdr-swarm/scripts/harvest-step.sh pr-status 1 &gt; /absolute/private/pr-status.tsv
+</code></pre>
+<p>Set <code>pullRequestStatus</code> to that file. It expects the <code>ci_status</code> tab-separated JSON record, not raw JSON. The recorded head must match the configured clean repository to be labeled current; a base worktree can legitimately differ from a slot's PR head. Refresh through Swarm to observe new CI results. A saved passing status cannot authorize a merge.</p>
+<p>Refreshing the dashboard rereads configured files with a five-second cache; an old file remains a saved observation even after refresh. File modification times are shown. Observation files must be regular, non-symlink files of at most 2 MiB, with at most 10,000 entries in a Guard audit file. Missing, foreign, malformed, or oversized observations show as unavailable, not as successful checks.</p>
+<h2>Read the evidence before acting</h2>
+<p>The project overview reports Git branch, commit, dirty state, and worktree count. Tool health covers the selected Herdr binary, Node, Git, and agent-browser. Compatibility advice comes from the site's pinned plugin records: it is not proof that every plugin works on the selected runtime. In particular, Conductor's supported runtime remains exactly Herdr 0.7.5.</p>
+<p>QA freshness compares the report's Git commit with the current repository and checks dirty state and changes observed during the test. A matching commit does not prove that a web server served a build from that commit. Review the <a href="/docs/browser/">Browser QA workflow</a>, assertions, and private artifacts before accepting a candidate.</p>
+<p>Next commands are suggestions you can copy and review. Console does not start agents, run QA, merge, push, create pull requests, approve Conductor operations, or edit state. Use <a href="/docs/swarm/">Swarm</a> for the explicit PR handoff and <a href="/docs/conductor/">Conductor</a> for attended lifecycle operations. Approval stays with the operator.</p>
+<p>Keep the configuration, saved observations, and QA artifacts private. Project paths and reports can contain sensitive information; the local dashboard is not a sharing or remote administration service. It displays artifact counts but does not serve arbitrary screenshots or diagnostics. Do not reverse-proxy or expose it publicly.</p>
+    <nav class="pager" aria-label="Docs pages"><a href="/docs/"><span class="lbl">Previous</span>Overview</a><a href="/docs/swarm/" style="text-align:right"><span class="lbl">Next</span>Explore · Swarm</a></nav>
+  </main>
+
+  <aside class="sidebar" aria-label="Docs navigation">
+    <h4>Docs</h4>
+    <ul><li><a href="/docs/">Overview</a></li></ul>
+    <h4>Local app</h4>
+    <ul><li><a href="/docs/console/" class="active">Console</a></li></ul>
+    <h4>Workflows</h4>
+    <ul>
+      <li><a href="/docs/swarm/">Explore · Swarm</a></li>
+      <li><a href="/docs/conductor/">Deliver · Conductor <small>advanced</small></a></li>
+    </ul>
+    <h4>Trust capabilities</h4>
+    <ul>
+      <li><a href="/docs/browser/">Browser</a></li>
+      <li><a href="/docs/guard/">Guard</a></li>
+    </ul>
+    <h4>Links</h4>
+    <ul>
+      <li><a class="ext" href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">Docs source</a></li>
+      <li><a class="ext" href="https://github.com/StructuPath">GitHub</a></li>
+      <li><a href="/llms.txt">llms.txt</a></li>
+    </ul>
+  </aside>
+</div>
+
+<footer class="foot-slim">
+  <div class="inner">
+    <span>MIT © StructuPath · Not affiliated with the Herdr project. Canonical source:
+    <a href="https://github.com/StructuPath/herdr-suite-site/tree/main/docs-src">docs-src</a>.</span>
+    <span><a href="/">herdr.structupath.ai</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -35,6 +35,7 @@
       <a href="/#explore">Explore</a>
       <a href="/#deliver">Deliver · advanced</a>
       <a href="/#trust">Trust</a>
+      <a href="/docs/console/">Console</a>
     </div>
     <div class="nav-spacer"></div>
     <a class="nav-docs" href="/docs/" aria-current="page">Docs</a>
@@ -46,7 +47,7 @@
   <main class="prose" id="main-content" tabindex="-1">
 <div class="crumb">Docs / Plugins</div>
 <h1>🌐 Browser (<code>structupath.browser</code>)</h1>
-<p><strong>Supporting visibility capability.</strong> Browser lets you launch Chrome or Chromium inside a Herdr pane, attach to an existing automation browser, or share a coding agent's <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a> session. Choose the connection that matches your workflow; agent-browser is only required for shared sessions and recording.</p>
+<p><strong>Supporting visibility capability.</strong> Browser lets you launch Chrome or Chromium inside a Herdr pane, attach to an existing automation browser, or share a coding agent's <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a> session. Choose the connection that matches your workflow; agent-browser is required for shared sessions, recording, and standalone repeatable QA.</p>
 <p>Repo: <a href="https://github.com/StructuPath/herdr-browser">StructuPath/herdr-browser</a> · Detailed reference: the repo <a href="https://github.com/StructuPath/herdr-browser#readme">README</a></p>
 <h2>Pinned evidence</h2>
 <div class="table-scroll"><table>
@@ -59,7 +60,7 @@
 <tbody>
 <tr>
 <td>Plugin release</td>
-<td><code>0.7.0</code></td>
+<td><code>0.8.0</code></td>
 </tr>
 <tr>
 <td>Minimum Herdr</td>
@@ -71,11 +72,11 @@
 </tr>
 <tr>
 <td>Evidence commit</td>
-<td><code>5fc6a9a52b4f817f21a531c288f36c3820bf93ca</code></td>
+<td><code>31e31ebfc661d96216ef899a3ab80f27e375169f</code></td>
 </tr>
 </tbody>
 </table></div>
-<p>The <a href="https://github.com/StructuPath/herdr-browser/tree/952e1601006cce2ca45edef56676d18a1f016151">pinned source</a> includes the merged session-preservation and stream-recovery fixes. The manifest version remains 0.7.0; the commit identifies the exact implementation behind this guide.</p>
+<p>The <a href="https://github.com/StructuPath/herdr-browser/tree/31e31ebfc661d96216ef899a3ab80f27e375169f">pinned source</a> adds standalone repeatable QA while retaining the session-preservation and stream-recovery fixes. The manifest version is 0.8.0; the commit identifies the exact implementation behind this guide.</p>
 <h2>Choose a browser connection</h2>
 <div class="table-scroll"><table>
 <thead>
@@ -230,6 +231,36 @@ brew install chafa
 </tr>
 </tbody>
 </table></div>
+<h2>Repeatable desktop and mobile QA</h2>
+<p>The standalone QA runner executes a saved scenario in a fresh, private agent-browser session. It needs Node.js 20 or newer, Git with a committed SHA-1 HEAD, and agent-browser 0.33.0 or newer with Chromium installed; it does not require a running Herdr server. Install the browser dependency with <code>npm install -g agent-browser</code> and <code>agent-browser install</code>. See the <a href="https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/qa.md">pinned QA contract</a> for complete step fields, bounds, and failure handling.</p>
+<p>Save and commit a scenario such as <code>.herdr-browser-qa.json</code> in the project you are testing:</p>
+<pre><code class="language-json">{
+  &quot;schemaVersion&quot;: 1,
+  &quot;name&quot;: &quot;Home page smoke&quot;,
+  &quot;baseUrl&quot;: &quot;http://127.0.0.1:3000&quot;,
+  &quot;viewports&quot;: [
+    {&quot;name&quot;: &quot;desktop&quot;, &quot;width&quot;: 1440, &quot;height&quot;: 900},
+    {&quot;name&quot;: &quot;mobile&quot;, &quot;width&quot;: 390, &quot;height&quot;: 844}
+  ],
+  &quot;steps&quot;: [
+    {&quot;type&quot;: &quot;navigate&quot;, &quot;path&quot;: &quot;/&quot;},
+    {&quot;type&quot;: &quot;assertVisible&quot;, &quot;selector&quot;: &quot;h1&quot;},
+    {&quot;type&quot;: &quot;assertText&quot;, &quot;selector&quot;: &quot;h1&quot;, &quot;contains&quot;: &quot;Welcome&quot;},
+    {&quot;type&quot;: &quot;screenshot&quot;, &quot;name&quot;: &quot;home&quot;}
+  ]
+}
+</code></pre>
+<p>Replace the heading assertion with text your app must show. Build and serve the intended candidate yourself, then run from a trusted Browser checkout:</p>
+<pre><code class="language-bash">node bin/qa.mjs check --config /project/.herdr-browser-qa.json
+node bin/qa.mjs run --config /project/.herdr-browser-qa.json \
+  --repo /project --output /private/new-qa-run \
+  --base-url http://127.0.0.1:3000 --json
+</code></pre>
+<p>The output directory must be new, outside the tested repository, with an existing parent. Omitting <code>--output</code> creates a private temporary directory. <code>check</code> validates the scenario without running a browser. <code>run</code> emits <code>result.json</code>, screenshots, and bounded diagnostics. It closes its own session and does not reuse your shared session or profile.</p>
+<p>Scenarios support <code>navigate</code>, <code>click</code>, <code>fill</code>, <code>waitFor</code>, <code>assertText</code>, <code>assertVisible</code>, <code>assertUrl</code>, <code>assertTitle</code>, and <code>screenshot</code>; they do not accept arbitrary JavaScript or shell commands. Configure 1–4 named viewports and 1–40 steps. Mobile means viewport geometry, not touch, user-agent, or physical-device emulation.</p>
+<p>The top-level <code>failOnConsoleError</code>, <code>failOnPageError</code>, and <code>failOnFailedRequest</code> options default to <code>true</code>. Results record these choices in <code>scenario.policy</code>. Disabling one relaxes the test: Console labels the policy as relaxed, and Swarm's direct QA evidence import requires all three enabled.</p>
+<p>The result has <code>schemaVersion: 1</code>, <code>kind: "herdr-browser-qa"</code>, overall <code>status</code>, Git commit/branch/dirty state and <code>changedDuringRun</code>, summary counts, and per-viewport <code>runs</code>. Assertions, console errors, page errors, and failed requests provide evidence for the configured scenario. They do not certify untested behavior, accessibility, security, or production readiness. A recorded Git commit does not prove the served app was built from that commit. A dirty tree or changes during the run weaken the association with the candidate.</p>
+<p>Review private screenshots and diagnostics before sharing them. <a href="/docs/console/">Console</a> can read the explicit <code>result.json</code> path and compare its recorded Git identity with the project. <a href="/docs/swarm/">Swarm</a> can include a bounded validation summary in an operator-requested draft PR handoff; evidence never approves or merges a candidate automatically.</p>
 <h2>Troubleshooting and development checks</h2>
 <ul>
 <li><strong>No Chromium found:</strong> install Chrome/Chromium or configure its executable path.</li>
@@ -244,13 +275,15 @@ npm run build
 npm run validate
 npm run test:integration
 </code></pre>
-<p>Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned <a href="https://github.com/StructuPath/herdr-browser/blob/952e1601006cce2ca45edef56676d18a1f016151/docs/readiness.md">readiness assessment</a> for remaining recommendations.</p>
+<p>Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned <a href="https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/readiness.md">readiness assessment</a> for remaining recommendations.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/conductor/"><span class="lbl">Previous</span>Deliver · Conductor</a><a href="/docs/guard/" style="text-align:right"><span class="lbl">Next</span>Guard</a></nav>
   </main>
 
   <aside class="sidebar" aria-label="Docs navigation">
     <h4>Docs</h4>
     <ul><li><a href="/docs/">Overview</a></li></ul>
+    <h4>Local app</h4>
+    <ul><li><a href="/docs/console/">Console</a></li></ul>
     <h4>Workflows</h4>
     <ul>
       <li><a href="/docs/swarm/">Explore · Swarm</a></li>

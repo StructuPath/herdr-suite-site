@@ -1,6 +1,6 @@
 # 🌐 Browser (`structupath.browser`)
 
-**Supporting visibility capability.** Browser lets you launch Chrome or Chromium inside a Herdr pane, attach to an existing automation browser, or share a coding agent's [agent-browser](https://github.com/vercel-labs/agent-browser) session. Choose the connection that matches your workflow; agent-browser is only required for shared sessions and recording.
+**Supporting visibility capability.** Browser lets you launch Chrome or Chromium inside a Herdr pane, attach to an existing automation browser, or share a coding agent's [agent-browser](https://github.com/vercel-labs/agent-browser) session. Choose the connection that matches your workflow; agent-browser is required for shared sessions, recording, and standalone repeatable QA.
 
 Repo: [StructuPath/herdr-browser](https://github.com/StructuPath/herdr-browser) · Detailed reference: the repo [README](https://github.com/StructuPath/herdr-browser#readme)
 
@@ -8,12 +8,12 @@ Repo: [StructuPath/herdr-browser](https://github.com/StructuPath/herdr-browser) 
 
 | Field | Value |
 | --- | --- |
-| Plugin release | `0.7.0` |
+| Plugin release | `0.8.0` |
 | Minimum Herdr | `0.7.0` |
 | Explicitly tested Herdr | `0.7.4` |
-| Evidence commit | `5fc6a9a52b4f817f21a531c288f36c3820bf93ca` |
+| Evidence commit | `31e31ebfc661d96216ef899a3ab80f27e375169f` |
 
-The [pinned source](https://github.com/StructuPath/herdr-browser/tree/952e1601006cce2ca45edef56676d18a1f016151) includes the merged session-preservation and stream-recovery fixes. The manifest version remains 0.7.0; the commit identifies the exact implementation behind this guide.
+The [pinned source](https://github.com/StructuPath/herdr-browser/tree/31e31ebfc661d96216ef899a3ab80f27e375169f) adds standalone repeatable QA while retaining the session-preservation and stream-recovery fixes. The manifest version is 0.8.0; the commit identifies the exact implementation behind this guide.
 
 ## Choose a browser connection
 
@@ -115,6 +115,49 @@ The default shared session is `herdr-ws-<workspace-id>`. Sessions and persistent
 | `j` / `k`, Space, wheel | Scroll |
 | Esc / `q` | Cancel the prompt / quit the viewer |
 
+## Repeatable desktop and mobile QA
+
+The standalone QA runner executes a saved scenario in a fresh, private agent-browser session. It needs Node.js 20 or newer, Git with a committed SHA-1 HEAD, and agent-browser 0.33.0 or newer with Chromium installed; it does not require a running Herdr server. Install the browser dependency with `npm install -g agent-browser` and `agent-browser install`. See the [pinned QA contract](https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/qa.md) for complete step fields, bounds, and failure handling.
+
+Save and commit a scenario such as `.herdr-browser-qa.json` in the project you are testing:
+
+```json
+{
+  "schemaVersion": 1,
+  "name": "Home page smoke",
+  "baseUrl": "http://127.0.0.1:3000",
+  "viewports": [
+    {"name": "desktop", "width": 1440, "height": 900},
+    {"name": "mobile", "width": 390, "height": 844}
+  ],
+  "steps": [
+    {"type": "navigate", "path": "/"},
+    {"type": "assertVisible", "selector": "h1"},
+    {"type": "assertText", "selector": "h1", "contains": "Welcome"},
+    {"type": "screenshot", "name": "home"}
+  ]
+}
+```
+
+Replace the heading assertion with text your app must show. Build and serve the intended candidate yourself, then run from a trusted Browser checkout:
+
+```bash
+node bin/qa.mjs check --config /project/.herdr-browser-qa.json
+node bin/qa.mjs run --config /project/.herdr-browser-qa.json \
+  --repo /project --output /private/new-qa-run \
+  --base-url http://127.0.0.1:3000 --json
+```
+
+The output directory must be new, outside the tested repository, with an existing parent. Omitting `--output` creates a private temporary directory. `check` validates the scenario without running a browser. `run` emits `result.json`, screenshots, and bounded diagnostics. It closes its own session and does not reuse your shared session or profile.
+
+Scenarios support `navigate`, `click`, `fill`, `waitFor`, `assertText`, `assertVisible`, `assertUrl`, `assertTitle`, and `screenshot`; they do not accept arbitrary JavaScript or shell commands. Configure 1–4 named viewports and 1–40 steps. Mobile means viewport geometry, not touch, user-agent, or physical-device emulation.
+
+The top-level `failOnConsoleError`, `failOnPageError`, and `failOnFailedRequest` options default to `true`. Results record these choices in `scenario.policy`. Disabling one relaxes the test: Console labels the policy as relaxed, and Swarm's direct QA evidence import requires all three enabled.
+
+The result has `schemaVersion: 1`, `kind: "herdr-browser-qa"`, overall `status`, Git commit/branch/dirty state and `changedDuringRun`, summary counts, and per-viewport `runs`. Assertions, console errors, page errors, and failed requests provide evidence for the configured scenario. They do not certify untested behavior, accessibility, security, or production readiness. A recorded Git commit does not prove the served app was built from that commit. A dirty tree or changes during the run weaken the association with the candidate.
+
+Review private screenshots and diagnostics before sharing them. [Console](Console) can read the explicit `result.json` path and compare its recorded Git identity with the project. [Swarm](Swarm) can include a bounded validation summary in an operator-requested draft PR handoff; evidence never approves or merges a candidate automatically.
+
 ## Troubleshooting and development checks
 
 - **No Chromium found:** install Chrome/Chromium or configure its executable path.
@@ -132,4 +175,4 @@ npm run validate
 npm run test:integration
 ```
 
-Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned [readiness assessment](https://github.com/StructuPath/herdr-browser/blob/952e1601006cce2ca45edef56676d18a1f016151/docs/readiness.md) for remaining recommendations.
+Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned [readiness assessment](https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/readiness.md) for remaining recommendations.

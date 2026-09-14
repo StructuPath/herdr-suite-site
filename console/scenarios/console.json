@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "name": "Console project review",
+  "baseUrl": "http://127.0.0.1:4317",
+  "viewports": [
+    { "name": "desktop", "width": 1440, "height": 1000 },
+    { "name": "mobile", "width": 390, "height": 844 }
+  ],
+  "steps": [
+    { "type": "navigate", "path": "/" },
+    { "type": "waitFor", "selector": ".project-card" },
+    { "type": "assertTitle", "contains": "Herdr Console" },
+    { "type": "assertText", "selector": "#notice", "contains": "DEMO" },
+    { "type": "assertText", "selector": "#projects", "contains": "Checkout improvements" },
+    { "type": "fill", "selector": "#filter", "value": "not-a-project" },
+    { "type": "assertText", "selector": "#projects", "contains": "No projects match" },
+    { "type": "fill", "selector": "#filter", "value": "checkout" },
+    { "type": "click", "selector": ".next-actions summary" },
+    { "type": "assertVisible", "selector": "button[aria-label='Copy Inspect Swarm status command']" },
+    { "type": "screenshot", "name": "project-review" }
+  ]
+}

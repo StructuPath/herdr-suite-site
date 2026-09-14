@@ -107,6 +107,8 @@ test('PR observations validate links, current SHA and never turn absent checks i
   const p={schema_version:1,repository:'StructuPath/example',number:12,url:'https://github.com/StructuPath/example/pull/12',state:'OPEN',draft:true,head_sha:commit,local_head_sha:commit,status:'pending',check_count:1};
   const parse=v=>parsePullRequest(`ci_status\t${JSON.stringify(v)}\n`,current);
   assert.equal(parse(p).freshness,'matches_clean_head'); assert.equal(parse(p).outcome,'pending');
+  assert.throws(()=>parse({...p,status:'passed',check_count:0}));
+  assert.equal(parse({...p,status:'not_run',check_count:0}).outcome,'not_run');
   assert.equal(parse({...p,repository:'structupath/example'}).number,12);
   assert.equal(parse({...p,head_sha:'b'.repeat(40)}).freshness,'not_current_clean_head');
   assert.throws(()=>parse({...p,url:'javascript:alert(1)'}));

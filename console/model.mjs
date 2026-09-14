@@ -162,6 +162,7 @@ export function parsePullRequest(content, current) {
   if (!['passed','failed','pending','not_run','unknown'].includes(value.status) ||
       !SHA.test(value.head_sha) || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value.repository) ||
       !Number.isSafeInteger(value.number) || value.number < 1 || count(value.check_count) === null ||
+      (value.status === 'passed' && value.check_count === 0) ||
       !['OPEN','CLOSED','MERGED'].includes(value.state) || typeof value.draft !== 'boolean') throw new Error('Unsupported PR status');
   const url = `https://github.com/${value.repository}/pull/${value.number}`;
   if (typeof value.url !== 'string' || value.url.toLowerCase() !== url.toLowerCase()) throw new Error('Foreign PR URL');

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "evidence_date": "2026-09-13",
+  "evidence_date": "2026-09-14",
   "plugins": [
     {
       "slug": "browser",
@@ -68,7 +68,7 @@
       "name": "Conductor",
       "id": "structupath.conductor",
       "repository": "https://github.com/StructuPath/herdr-conductor",
-      "commit": "bf67d318067c60318dcd7089897f513bfefe3af7",
+      "commit": "ad170ee8e00be8979a7e1ae20bc6375e5e6f94d3",
       "version": "0.4.0",
       "min_herdr_version": "0.7.5",
       "tested_herdr_versions": [

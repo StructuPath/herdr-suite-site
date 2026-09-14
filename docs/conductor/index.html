@@ -71,7 +71,7 @@
 </tr>
 <tr>
 <td>Evidence commit</td>
-<td><code>bf67d318067c60318dcd7089897f513bfefe3af7</code></td>
+<td><code>ad170ee8e00be8979a7e1ae20bc6375e5e6f94d3</code></td>
 </tr>
 <tr>
 <td>Manifest SHA-256</td>
@@ -79,7 +79,8 @@
 </tr>
 </tbody>
 </table></div>
-<p>The retained <a href="https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/stage2-runtime-source-manifest.json">Stage 2 source manifest</a> and <a href="https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/2026-07-28-stage2-live-contracts.md">installed-Herdr live contract report</a> are historical compatibility evidence, not a live validation of Stage 3. These are sanitized, operator-observed local records—not cryptographic remote attestation or authentication against malicious same-UID processes. Older and newer Herdr binaries do not satisfy Conductor's exact 0.7.5 requirement; passing local tests is not evidence that another Herdr version is supported.</p>
+<p>The retained <a href="https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/stage2-runtime-source-manifest.json">Stage 2 source manifest</a> and <a href="https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/2026-07-28-stage2-live-contracts.md">installed-Herdr live contract report</a> remain historical compatibility evidence. Older and newer Herdr binaries do not satisfy Conductor's exact 0.7.5 requirement; passing local tests is not evidence that another Herdr version is supported.</p>
+<p>A separate <a href="https://github.com/StructuPath/herdr-conductor/blob/ad170ee8e00be8979a7e1ae20bc6375e5e6f94d3/docs/evidence/2026-09-14-developer-installed-action-smoke.md">developer smoke on 2026-09-14</a> exercised all seven installed actions on a running Herdr 0.7.5 server, including Stage 3 preview, approval refusal, attended single-ref apply, replay, and completed stand-down. It found and fixed the omitted stand-down reason after apply. The smoke used synthetic local worker sessions and operator-produced deterministic reports, not a real model agent. This bounded observation is not independent-human review, formal release attestation, live crash-recovery proof, or broader production certification.</p>
 <h2>All seven actions</h2>
 <div class="table-scroll"><table>
 <thead>

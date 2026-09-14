@@ -26,14 +26,14 @@ attestation, or protection against malicious same-UID processes.
 
 ## Supporting trust capabilities
 
-- [Browser](Browser) exposes a workspace browser session that an agent or operator can drive and record. The session is a trusted same-user boundary, and recordings may contain sensitive content.
+- [Browser](Browser) launches local Chromium, attaches to an existing automation browser, or shares an agent-browser session. Recording is available for agent-browser sessions only. Sessions are a trusted same-user boundary, and recordings may contain sensitive content.
 - [Guard](Guard) observes rendered terminal text and offers advisory/best-effort policy. It is not a sandbox or authorization boundary for agent TUIs.
 
 ## Pinned compatibility evidence
 
 | Plugin | ID | Pinned release | Minimum Herdr | Explicitly tested | Purpose |
 | --- | --- | --- | --- | --- | --- |
-| [Browser](Browser) | `structupath.browser` | `0.5.0` | `0.7.0` | `0.7.4` | Supporting browser visibility and recording |
+| [Browser](Browser) | `structupath.browser` | `0.7.0` | `0.7.0` | `0.7.4` | Chromium launch, CDP attach, shared sessions, and agent-browser recording |
 | [Guard](Guard) | `structupath.guard` | `0.1.1` | `0.7.5` | `0.7.5` | Supporting advisory text policy, audit, alert, and best-effort interrupt request |
 | [Swarm](Swarm) | `structupath.swarm` | `0.1.0` | `0.7.4` | `0.7.4`, `0.7.5` | Ready Explore workflow: parallel candidates and review-first harvest |
 | [Conductor](Conductor) | `structupath.conductor` | `0.3.0` | `0.7.5` | `0.7.5` | Attended Deliver Stage 2: strict tasks/reports, one-CAS integration, exact-SHA gates, and archival stand-down |
@@ -48,7 +48,7 @@ These plugins can be installed together, but the current runtime is not a single
 | --- | --- | --- |
 | Explore / Swarm | Worktree fan-out, change counts, previews, guarded harvest | Task bounds, candidate review, tests, slot selection, cleanup |
 | Deliver / Conductor | Task-bound role panes, private report outboxes, deterministic integration, exact-SHA gates, and stand-down | Work direction, assertion review, approval decisions, conflicts, and ambiguous recovery |
-| Browser | Shared visual browser surface and recording | Session privacy, action review, sensitive recording handling |
+| Browser | Chromium launch, external attach, and shared-session recording | Session privacy, action review, sensitive recording handling |
 | Guard | Best-effort text matching, audit, alerts, interrupt attempts | Authoritative hooks, sandboxing, access control, log protection |
 
 Herdr plugins and write-capable agents run as the same operating-system user. Treat them as **trusted same-user principals**. Worktrees reduce accidental file collisions and make changes reviewable; they are not sandboxes and do not prevent a worker from accessing other same-user files or processes.

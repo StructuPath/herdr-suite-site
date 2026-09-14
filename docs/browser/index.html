@@ -45,7 +45,7 @@
   <main class="prose" id="main-content" tabindex="-1">
 <div class="crumb">Docs / Plugins</div>
 <h1>🌐 Browser (<code>structupath.browser</code>)</h1>
-<p><strong>Supporting visibility capability.</strong> Browser supplies a drivable Herdr pane around <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a>. It can show and control the same workspace browser session used by a coding agent, or open a separate interactive Carbonyl browser.</p>
+<p><strong>Supporting visibility capability.</strong> Browser lets you launch Chrome or Chromium inside a Herdr pane, attach to an existing automation browser, or share a coding agent's <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a> session. Choose the connection that matches your workflow; agent-browser is only required for shared sessions and recording.</p>
 <p>Repo: <a href="https://github.com/StructuPath/herdr-browser">StructuPath/herdr-browser</a> · Detailed reference: the repo <a href="https://github.com/StructuPath/herdr-browser#readme">README</a></p>
 <h2>Pinned evidence</h2>
 <div class="table-scroll"><table>
@@ -58,7 +58,7 @@
 <tbody>
 <tr>
 <td>Plugin release</td>
-<td><code>0.5.0</code></td>
+<td><code>0.7.0</code></td>
 </tr>
 <tr>
 <td>Minimum Herdr</td>
@@ -70,10 +70,62 @@
 </tr>
 <tr>
 <td>Evidence commit</td>
-<td><code>72b986e3a0233b938b0046806bc2aaeefb56e12e</code></td>
+<td><code>952e1601006cce2ca45edef56676d18a1f016151</code></td>
 </tr>
 </tbody>
 </table></div>
+<p>The <a href="https://github.com/StructuPath/herdr-browser/tree/952e1601006cce2ca45edef56676d18a1f016151">pinned source</a> includes the merged session-preservation and stream-recovery fixes. The manifest version remains 0.7.0; the commit identifies the exact implementation behind this guide.</p>
+<h2>Choose a browser connection</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Your goal</th>
+<th>Use</th>
+<th>Requirements</th>
+<th>What happens when you quit the pane</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Browse without an agent session</td>
+<td>Press <code>l</code> to launch local Chromium</td>
+<td>Node 22+ and an installed Chrome or Chromium</td>
+<td>The pane closes the browser it launched; its workspace profile remains</td>
+</tr>
+<tr>
+<td>Watch an existing automation run</td>
+<td>Press <code>a</code> to attach to its CDP endpoint</td>
+<td>Node 22+ and a browser with an accessible debugging endpoint</td>
+<td>The pane disconnects; the externally owned browser stays open</td>
+</tr>
+<tr>
+<td>Share a coding agent's browser</td>
+<td>Use the exact agent-browser session shown in the header</td>
+<td>Node 20+ and agent-browser with its engine installed; Node 22+ for streaming</td>
+<td>An existing agent-owned session stays open; a session created by the pane closes</td>
+</tr>
+<tr>
+<td>Use a separate interactive terminal browser</td>
+<td>Invoke Browse</td>
+<td>Carbonyl</td>
+<td>This is a separate session, not the coding agent's browser</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>q</code> closes the viewer. The plugin's <strong>Close</strong> action also ends the workspace agent-browser session, so it has a broader effect than quitting an externally attached viewer.</p>
+<h2>First run: local Chromium</h2>
+<p>With Herdr, Node 22+, and Chrome or Chromium installed:</p>
+<pre><code class="language-bash">herdr plugin install StructuPath/herdr-browser
+herdr plugin action invoke structupath.browser.open
+</code></pre>
+<ol>
+<li>Press <code>l</code> in the pane to launch a browser.</li>
+<li>Press <code>u</code>, enter your development URL (for example <code>http://localhost:3000</code>), and press Enter.</li>
+<li>Click the page, use <code>i</code> to type, or press <code>o</code> to stop forwarding pane input while you watch.</li>
+<li>Press <code>q</code> when finished. The browser launched by this pane closes.</li>
+</ol>
+<p>The launcher probes common Chrome/Chromium executables and macOS app bundles. If it cannot find yours, set <code>HERDR_BROWSER_CHROMIUM</code> to its executable path in the pane's environment or write the path to the plugin's <code>chromium</code> config file. Set <code>HERDR_BROWSER_LAUNCH=1</code> (or the <code>launch</code> config file to <code>1</code>) to launch automatically on open. A configured CDP endpoint takes precedence over launch mode.</p>
+<p>No extra bundled Chromium build is needed when a supported browser is already installed. The launched browser uses a persistent per-workspace profile under plugin state.</p>
 <h2>Actions</h2>
 <div class="table-scroll"><table>
 <thead>
@@ -85,7 +137,7 @@
 <tbody>
 <tr>
 <td><code>structupath.browser.open</code></td>
-<td>Open the shared workspace viewer; with no URL it attaches view-only</td>
+<td>Open the viewer; an unconfigured, URL-less open stays idle until a session exists or you choose launch/attach</td>
 </tr>
 <tr>
 <td><code>structupath.browser.close</code></td>
@@ -97,34 +149,101 @@
 </tr>
 <tr>
 <td><code>structupath.browser.record-start</code></td>
-<td>Start WebM recording for the workspace session</td>
+<td>Start an observation bundle for the workspace agent-browser session</td>
 </tr>
 <tr>
 <td><code>structupath.browser.record-stop</code></td>
-<td>Stop and save the active recording</td>
+<td>Stop the pinned recording and validate its WebM artifact</td>
 </tr>
 </tbody>
 </table></div>
-<h2>Quick start</h2>
-<pre><code class="language-bash">herdr plugin action invoke open --plugin structupath.browser
-</code></pre>
-<p>With no URL, use <code>u</code> in the pane or start agent-browser with the exact session shown in the pane header:</p>
-<pre><code class="language-bash">agent-browser --session herdr-ws-&lt;workspace-id&gt; open http://localhost:3000
-</code></pre>
-<p>A modified click on a localhost URL in Herdr can route it to the workspace browser. The link handler accepts only HTTP(S) localhost, <code>127.0.0.1</code>, or <code>[::1]</code> URLs.</p>
-<h2>Requirements and session model</h2>
-<ul>
-<li>Herdr <code>&gt;= 0.7.0</code>; the pinned README records testing with <code>0.7.4</code>.</li>
-<li>Node.js <code>&gt;= 20</code>; Node 22+ enables live WebSocket streaming.</li>
-<li><code>agent-browser</code> plus its browser engine is required.</li>
-<li><code>chafa</code> and <code>carbonyl@next</code> are optional rendering/browse dependencies.</li>
-</ul>
+<h2>Share a coding agent's session</h2>
 <pre><code class="language-bash">npm install -g agent-browser
 agent-browser install
+herdr plugin action invoke structupath.browser.open
 </code></pre>
-<p>The default session is <code>herdr-ws-&lt;workspace-id&gt;</code>, isolating browser state by Herdr workspace. Browser sessions remain a trusted local boundary: another same-user process that knows the session name can drive it. Recordings are retained in plugin state and may contain sensitive content.</p>
+<p>Start agent-browser with the exact session shown in the pane header. Replace the example session below with that name:</p>
+<pre><code class="language-bash">agent-browser --session herdr-ws-w123456 open http://localhost:3000
+</code></pre>
+<p>A modified click on a localhost URL in Herdr can route it to the workspace browser. The link handler accepts only HTTP(S) localhost, <code>127.0.0.1</code>, or <code>[::1]</code> URLs.</p>
+<p>The viewer inherits daemon settings unchanged. If you explicitly configure <code>AGENT_BROWSER_IDLE_TIMEOUT_MS</code>, use the same value for the agent and pane: changing daemon configuration can restart the session.</p>
+<h2>Attach and observe</h2>
+<p>Press <code>a</code> and enter an existing browser's CDP endpoint, such as <code>http://127.0.0.1:9222</code>. Your automation client must expose that endpoint first; a browser using only a pipe transport cannot be reached by port. To attach on pane startup, set <code>HERDR_BROWSER_CDP_URL</code> or the plugin's <code>cdp-url</code> config file.</p>
+<p>The pane does not create or close external targets or override their viewport. <code>t</code> cycles between page targets. Its console feed is observable by the page, so attachment is not a stealth or zero-footprint operation. Use a local HTTP endpoint or a verified browser WebSocket URL; HTTPS discovery is a known follow-up in the pinned implementation.</p>
+<p>For a workspace dedicated to watching an agent, set <code>HERDR_BROWSER_OBSERVE=1</code> or write <code>1</code> to the <code>observe</code> config file before opening the pane. This blocks pane input and link-triggered navigation. The runtime <code>o</code> toggle blocks pane input, but in agent-browser mode a modified link click can navigate through the launcher outside the pane. Observe-only is an interaction setting, not an access-control boundary.</p>
+<h2>Requirements and rendering</h2>
+<ul>
+<li>Herdr <code>&gt;= 0.7.0</code>; the pinned README records testing with <code>0.7.4</code>.</li>
+<li>Node.js <code>&gt;= 20</code> for shared-session polling; Node 22+ enables streaming, CDP attach, and local Chromium launch.</li>
+<li>Chrome/Chromium is required for local launch; agent-browser plus its engine is required for shared sessions and recording.</li>
+<li><code>chafa</code> and <code>carbonyl@next</code> are optional rendering/browse dependencies.</li>
+</ul>
+<pre><code class="language-bash"># Optional ANSI image rendering on macOS
+brew install chafa
+</code></pre>
+<p>The viewer selects Kitty graphics, ANSI symbols through chafa, or text-only mode. Chafa is needed for streamed JPEGs in Kitty mode. Shared sessions fall back to screenshot polling if streaming is unavailable, disconnects, or sends no usable image within five seconds. That startup fallback does not guarantee recovery from every later stream stall.</p>
+<h2>Recording and session privacy</h2>
+<p>Recording actions support <strong>agent-browser sessions only</strong>. They refuse in direct attach/launch mode rather than recording an unrelated browser. Starting a recording creates a fresh browser context and reloads the page while preserving cookies and localStorage; start before the flow you want to capture.</p>
+<p>Each recording produces a run-scoped bundle under <code>&lt;plugin state&gt;/runs/run-&lt;run-id&gt;/browser/</code>, containing <code>recording.webm</code> and <code>evidence.json</code>. A successful Stop records the WebM's size and SHA-256. This is an unreviewed observation, not proof that a test passed or a reviewer accepted the result. Interrupted or ambiguous stops require inspection; they are not marked complete automatically.</p>
+<p>The default shared session is <code>herdr-ws-&lt;workspace-id&gt;</code>. Sessions and persistent launch profiles are trusted local state: same-user processes can access them. Recordings remain in plugin state and may contain sensitive content. Quitting the pane does not delete recordings or the local Chromium profile.</p>
 <h2>Viewer controls</h2>
-<p><code>u</code> opens the address prompt; click sends real Chrome mouse events; <code>i</code> types into the focused element; <code>b</code>/<code>f</code> navigate history; <code>r</code> reloads; <code>j</code>/<code>k</code>, Space, and the wheel scroll; <code>q</code> closes the viewer pane.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>l</code> / <code>a</code></td>
+<td>Launch local Chromium / attach to an existing CDP browser</td>
+</tr>
+<tr>
+<td><code>u</code></td>
+<td>Open the address prompt</td>
+</tr>
+<tr>
+<td><code>o</code></td>
+<td>Toggle observe-only pane input</td>
+</tr>
+<tr>
+<td><code>t</code></td>
+<td>Cycle page targets in attach mode</td>
+</tr>
+<tr>
+<td>Click / <code>i</code></td>
+<td>Click page coordinates / type into the focused element</td>
+</tr>
+<tr>
+<td><code>b</code> / <code>f</code> / <code>r</code></td>
+<td>Back / forward / reload</td>
+</tr>
+<tr>
+<td><code>j</code> / <code>k</code>, Space, wheel</td>
+<td>Scroll</td>
+</tr>
+<tr>
+<td>Esc / <code>q</code></td>
+<td>Cancel the prompt / quit the viewer</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Troubleshooting and development checks</h2>
+<ul>
+<li><strong>No Chromium found:</strong> install Chrome/Chromium or configure its executable path.</li>
+<li><strong>Waiting for a session:</strong> press <code>l</code>, attach with <code>a</code>, or start the exact agent-browser session in the header.</li>
+<li><strong>Text-only pane:</strong> install chafa or configure a compatible terminal for Kitty graphics.</li>
+<li><strong>Attach cannot connect:</strong> confirm the automation browser exposes a CDP endpoint and that Node 22+ is available to the pane.</li>
+<li><strong>A linked plugin still shows old behavior:</strong> close and reopen its pane after updating the checkout.</li>
+</ul>
+<p>From a <strong>herdr-browser checkout</strong>, run:</p>
+<pre><code class="language-bash">npm run doctor
+npm run build
+npm run validate
+npm run test:integration
+</code></pre>
+<p>Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned <a href="https://github.com/StructuPath/herdr-browser/blob/952e1601006cce2ca45edef56676d18a1f016151/docs/readiness.md">readiness assessment</a> for remaining recommendations.</p>
     <nav class="pager" aria-label="Docs pages"><a href="/docs/conductor/"><span class="lbl">Previous</span>Deliver · Conductor</a><a href="/docs/guard/" style="text-align:right"><span class="lbl">Next</span>Guard</a></nav>
   </main>
 

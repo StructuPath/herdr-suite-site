@@ -11,6 +11,7 @@
     {"type": "assertText", "selector": "h1", "contains": "Explore a change three ways."},
     {"type": "screenshot", "name": "landing"},
     {"type": "click", "selector": "#console a[href='/docs/console/']"},
+    {"type": "waitFor", "selector": "main.prose h1"},
     {"type": "assertUrl", "contains": "/docs/console/"},
     {"type": "assertText", "selector": "h1", "contains": "Local Console"},
     {"type": "assertText", "selector": "main", "contains": "conductorStatus"},

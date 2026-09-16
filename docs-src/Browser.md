@@ -11,9 +11,9 @@ Repo: [StructuPath/herdr-browser](https://github.com/StructuPath/herdr-browser) 
 | Plugin release | `0.8.0` |
 | Minimum Herdr | `0.7.0` |
 | Explicitly tested Herdr | `0.7.4` |
-| Evidence commit | `31e31ebfc661d96216ef899a3ab80f27e375169f` |
+| Evidence commit | `859d05e5a85972f0822d652eb86d64e78ef7e431` |
 
-The [pinned source](https://github.com/StructuPath/herdr-browser/tree/31e31ebfc661d96216ef899a3ab80f27e375169f) adds standalone repeatable QA while retaining the session-preservation and stream-recovery fixes. The manifest version is 0.8.0; the commit identifies the exact implementation behind this guide.
+The [pinned source](https://github.com/StructuPath/herdr-browser/tree/859d05e5a85972f0822d652eb86d64e78ef7e431) includes explicit tab selection, target-loss handling, verbatim text insertion, and standalone repeatable QA. The manifest version remains 0.8.0; the commit identifies the exact implementation behind this guide.
 
 ## Choose a browser connection
 
@@ -37,7 +37,7 @@ herdr plugin action invoke structupath.browser.open
 
 1. Press `l` in the pane to launch a browser.
 2. Press `u`, enter your development URL (for example `http://localhost:3000`), and press Enter.
-3. Click the page, use `i` to type, or press `o` to stop forwarding pane input while you watch.
+3. Click the page, use `i` to enter or paste text, or press `o` to stop forwarding pane input while you watch.
 4. Press `q` when finished. The browser launched by this pane closes.
 
 The launcher probes common Chrome/Chromium executables and macOS app bundles. If it cannot find yours, set `HERDR_BROWSER_CHROMIUM` to its executable path in the pane's environment or write the path to the plugin's `chromium` config file. Set `HERDR_BROWSER_LAUNCH=1` (or the `launch` config file to `1`) to launch automatically on open. A configured CDP endpoint takes precedence over launch mode.
@@ -76,9 +76,27 @@ The viewer inherits daemon settings unchanged. If you explicitly configure `AGEN
 
 Press `a` and enter an existing browser's CDP endpoint, such as `http://127.0.0.1:9222`. Your automation client must expose that endpoint first; a browser using only a pipe transport cannot be reached by port. To attach on pane startup, set `HERDR_BROWSER_CDP_URL` or the plugin's `cdp-url` config file.
 
-The pane does not create or close external targets or override their viewport. `t` cycles between page targets. Its console feed is observable by the page, so attachment is not a stealth or zero-footprint operation. Use a local HTTP endpoint or a verified browser WebSocket URL; HTTPS discovery is a known follow-up in the pinned implementation.
+The pane does not create or close external targets or override their viewport. `t` opens a tab picker. Its console feed is observable by the page, so attachment is not a stealth or zero-footprint operation. Use a local HTTP endpoint or a verified browser WebSocket URL; HTTPS discovery is a known follow-up in the pinned implementation.
 
 For a workspace dedicated to watching an agent, set `HERDR_BROWSER_OBSERVE=1` or write `1` to the `observe` config file before opening the pane. This blocks pane input and link-triggered navigation. The runtime `o` toggle blocks pane input, but in agent-browser mode a modified link click can navigate through the launcher outside the pane. Observe-only is an interaction setting, not an access-control boundary.
+
+## Choose a tab
+
+In **attach and local launch modes**, press `t` to list tabs by title and URL. Use the arrow keys or `j`/`k` to highlight a tab, then Enter to select it. Press `t` again to refresh the list or Esc to cancel. Selection uses a stable tab identity, so duplicate titles and changes to the list order do not redirect your choice.
+
+On the first connection, a single available tab is selected automatically. With multiple tabs, page input waits for an explicit selection. The picker changes this pane's view without activating the tab in another client's UI, and it remains available in observe-only mode. Shared agent-browser mode continues following that session's active tab.
+
+If the selected tab closes or detaches, Browser clears the cached image and pending text, drops queued input, and keeps the browser connection open. It does not switch to a surviving tab automatically. Press `t` to select another tab, even if only one remains. Reconnection restores a selection only when both the browser identity and tab identity still match.
+
+## Paste text verbatim
+
+1. Click the page field you want to edit.
+2. Press `i` and type or paste text into the pane's text prompt.
+3. Review the preview, then press Enter to insert the text or Esc to cancel.
+
+The prompt preserves leading and trailing spaces, Unicode, tabs, and newlines. Multiline paste requires a terminal that supports bracketed paste; pasted newlines appear as `\n` in the preview and remain text until you confirm insertion. Enter confirms insertion into the focused page field; it does not send an Enter key to the page or submit a form. The page field's own editing rules still apply.
+
+Each paste is limited to 1 MiB. Paste outside a prompt is ignored, and pasted text is never interpreted as pane shortcuts. URL and endpoint prompts still trim whitespace. Verbatim insertion is available in shared agent-browser sessions as well as attach/launch mode.
 
 ## Requirements and rendering
 
@@ -109,15 +127,15 @@ The default shared session is `herdr-ws-<workspace-id>`. Sessions and persistent
 | `l` / `a` | Launch local Chromium / attach to an existing CDP browser |
 | `u` | Open the address prompt |
 | `o` | Toggle observe-only pane input |
-| `t` | Cycle page targets in attach mode |
-| Click / `i` | Click page coordinates / type into the focused element |
+| `t` | Open or refresh the tab picker in attach/launch mode; arrows or `j`/`k` highlight, Enter selects |
+| Click / `i` | Click page coordinates / enter or paste text for the focused element |
 | `b` / `f` / `r` | Back / forward / reload |
 | `j` / `k`, Space, wheel | Scroll |
-| Esc / `q` | Cancel the prompt / quit the viewer |
+| Esc / `q` | Cancel the prompt or picker / quit the viewer |
 
 ## Repeatable desktop and mobile QA
 
-The standalone QA runner executes a saved scenario in a fresh, private agent-browser session. It needs Node.js 20 or newer, Git with a committed SHA-1 HEAD, and agent-browser 0.33.0 or newer with Chromium installed; it does not require a running Herdr server. Install the browser dependency with `npm install -g agent-browser` and `agent-browser install`. See the [pinned QA contract](https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/qa.md) for complete step fields, bounds, and failure handling.
+The standalone QA runner executes a saved scenario in a fresh, private agent-browser session. It needs Node.js 20 or newer, Git with a committed SHA-1 HEAD, and agent-browser 0.33.0 or newer with Chromium installed; it does not require a running Herdr server. Install the browser dependency with `npm install -g agent-browser` and `agent-browser install`. See the [pinned QA contract](https://github.com/StructuPath/herdr-browser/blob/859d05e5a85972f0822d652eb86d64e78ef7e431/docs/qa.md) for complete step fields, bounds, and failure handling.
 
 Save and commit a scenario such as `.herdr-browser-qa.json` in the project you are testing:
 
@@ -164,6 +182,8 @@ Review private screenshots and diagnostics before sharing them. [Console](Consol
 - **Waiting for a session:** press `l`, attach with `a`, or start the exact agent-browser session in the header.
 - **Text-only pane:** install chafa or configure a compatible terminal for Kitty graphics.
 - **Attach cannot connect:** confirm the automation browser exposes a CDP endpoint and that Node 22+ is available to the pane.
+- **Selected tab closed or detached:** press `t`, refresh if needed, and explicitly select another tab before sending input.
+- **Pasted newlines do not stay in the prompt:** check that the terminal forwards bracketed paste; always open the `i` prompt first.
 - **A linked plugin still shows old behavior:** close and reopen its pane after updating the checkout.
 
 From a **herdr-browser checkout**, run:
@@ -175,4 +195,4 @@ npm run validate
 npm run test:integration
 ```
 
-Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned [readiness assessment](https://github.com/StructuPath/herdr-browser/blob/31e31ebfc661d96216ef899a3ab80f27e375169f/docs/readiness.md) for remaining recommendations.
+Doctor checks prerequisites without launching browsers or contacting endpoints; it does not verify engine downloads, Herdr's version, or endpoint reachability. The integration command requires Node 22+, local Chromium, and agent-browser with its engine installed, and fails rather than skipping missing browser prerequisites. See the pinned [readiness assessment](https://github.com/StructuPath/herdr-browser/blob/859d05e5a85972f0822d652eb86d64e78ef7e431/docs/readiness.md) for remaining recommendations.

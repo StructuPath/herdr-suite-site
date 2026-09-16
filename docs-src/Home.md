@@ -34,7 +34,7 @@ compatibility with later versions.
 
 ## Supporting trust capabilities
 
-- [Browser](Browser) launches local Chromium, attaches to an existing automation browser, or shares an agent-browser session. Its standalone QA runner repeats saved assertions at desktop and mobile viewport sizes with private evidence. Recording is available for agent-browser sessions only. Sessions are a trusted same-user boundary, and artifacts may contain sensitive content.
+- [Browser](Browser) launches local Chromium, attaches to an existing automation browser, or shares an agent-browser session. Attach and launch modes offer explicit tab selection and stop forwarding input when the selected tab disappears. The text prompt supports verbatim multiline paste. Its standalone QA runner repeats saved assertions at desktop and mobile viewport sizes with private evidence. Recording is available for agent-browser sessions only. Sessions are a trusted same-user boundary, and artifacts may contain sensitive content.
 - [Guard](Guard) observes rendered terminal text with best-effort interrupts and offers an optional pre-execution harness reporter. Its Claude Code hook can deny reported Bash calls but fails open when unavailable; Guard is not a sandbox or protection against same-user bypass.
 
 ## Pinned compatibility evidence

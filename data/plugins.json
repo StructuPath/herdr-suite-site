@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "evidence_date": "2026-09-14",
+  "evidence_date": "2026-09-15",
   "plugins": [
     {
       "slug": "browser",
       "name": "Browser",
       "id": "structupath.browser",
       "repository": "https://github.com/StructuPath/herdr-browser",
-      "commit": "31e31ebfc661d96216ef899a3ab80f27e375169f",
+      "commit": "859d05e5a85972f0822d652eb86d64e78ef7e431",
       "version": "0.8.0",
       "min_herdr_version": "0.7.0",
       "tested_herdr_versions": [

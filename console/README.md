@@ -28,7 +28,8 @@ Paths resolve relative to the configuration file. Select 1–20 Git worktree roo
     "conductorStatus": "/private/conductor-status.json",
     "guardAudit": "/private/audit.jsonl",
     "qaReport": "/private/qa-run/result.json",
-    "pullRequestStatus": "/private/pr-status.tsv"
+    "pullRequestStatus": "/private/pr-status.tsv",
+    "candidateStatus": "/private/candidate-status.tsv"
   }]
 }
 ```
@@ -36,9 +37,80 @@ Paths resolve relative to the configuration file. Select 1–20 Git worktree roo
 All fields except `id`, `name`, `path`, and the top-level version/projects are
 optional. Do not commit private configuration, reports, or screenshots. The
 Console reads only explicit paths, does not discover runs recursively, and
-does not invoke plugin actions. Readiness probes are version commands, not an
-installation or authenticated live-workflow check. Source versions come from
-the suite's pinned `data/plugins.json`; Conductor requires exactly Herdr 0.7.5.
+does not invoke plugin actions. Readiness probes the selected Herdr binary
+and its running server separately; compatibility is calculated from the
+server version, never inferred from a binary that may connect to another
+version. No probe proves plugin installation or a live workflow. Source
+versions come from the suite's pinned `data/plugins.json`; Conductor currently
+requires exactly Herdr 0.7.5.
+
+## Suite checkout readiness
+
+Add `suiteComponent` only to projects that are local checkouts of this suite.
+The value is one of `site`, `browser`, `guard`, `swarm`, or `conductor`, and
+each value may appear at most once. For example:
+
+```json
+{
+  "schemaVersion": 1,
+  "projects": [
+    {
+      "id": "suite-site",
+      "name": "Suite site",
+      "path": "/absolute/path/to/herdr-suite-site",
+      "suiteComponent": "site"
+    },
+    {
+      "id": "browser",
+      "name": "Browser",
+      "path": "/absolute/path/to/herdr-browser",
+      "suiteComponent": "browser"
+    },
+    {
+      "id": "guard",
+      "name": "Guard",
+      "path": "/absolute/path/to/herdr-guard",
+      "suiteComponent": "guard"
+    },
+    {
+      "id": "swarm",
+      "name": "Swarm",
+      "path": "/absolute/path/to/herdr-swarm",
+      "suiteComponent": "swarm"
+    },
+    {
+      "id": "conductor",
+      "name": "Conductor",
+      "path": "/absolute/path/to/herdr-conductor",
+      "suiteComponent": "conductor"
+    }
+  ]
+}
+```
+
+Once any component opts in, **Suite checkouts** shows all five slots so missing
+configuration remains visible. For plugins, the reviewed pin comes from this
+site checkout's `data/plugins.json`; the site itself intentionally has no pin.
+Console compares HEAD with a locally available pin by Git ancestry and reports
+`at_pin`, `ahead_of_pin`, `behind_pin`, `diverged`, or an explicit unavailable
+state. It also compares HEAD with the checkout's configured upstream and shows
+local ahead/behind counts, no upstream, or an unknown relation.
+
+These are local-ref comparisons, not live remote status. Console never fetches,
+pulls, installs, updates, or changes a checkout. A remote branch may have moved
+since the last fetch, and a reviewed pinned commit may not exist in a shallow or
+unfetched checkout. An unavailable repository is labeled unavailable rather
+than current. To review deliberately, open a shell in the explicitly named
+checkout shown on its card and copy the static commands:
+
+```sh
+git status -sb
+git fetch --prune
+```
+
+The buttons copy text only; Console does not run either command. Review the
+resulting local refs and worktree state before deciding whether to update
+anything. Conductor supports exactly Herdr 0.7.5; Herdr 0.8.2 is incompatible.
 
 ## Observation contracts
 
@@ -63,6 +135,13 @@ the suite's pinned `data/plugins.json`; Conductor requires exactly Herdr 0.7.5.
   PR URL and CI summary. Reported commit must match the configured clean HEAD
   for current status. This can intentionally be stale when reviewing a slot
   from the base worktree. Refresh through Swarm for new GitHub information.
+- **Candidate handoff:** save Swarm `scripts/harvest-step.sh candidate-status
+  <slot>` output from the selected slot context. The `candidate_status` TSV
+  reports missing/stale validation, Browser QA, or operator review evidence.
+  Console labels its saved preview and compares its SHA with the configured
+  clean checkout; point this project at the candidate slot worktree to use that
+  freshness check. The preview is not an approval. `publish-candidate-pr`
+  rechecks all evidence and the slot before any publication.
 
 Each observed file shows its modification time. Refresh re-reads observations
 with a five-second cache, never polls or mutates the plugins. Missing,

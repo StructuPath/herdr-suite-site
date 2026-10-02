@@ -90,10 +90,61 @@ herdr status server
 
 ## Keep the suite current
 
-In each source checkout, run `npm run build` and `npm run validate` for Browser, Swarm, and Guard; Conductor uses `npm run check`. Browser, Swarm, and Guard also provide a read-only `npm run doctor` to identify missing prerequisites and the selected Herdr binary. Check `command -v herdr` and `herdr --version` when multiple installations exist. Do not assume a newer Herdr satisfies Conductor's exact 0.7.5 contract.
+In each source checkout, run `npm run build` and `npm run validate` for Browser, Swarm, and Guard; Conductor uses `npm run check`. Browser, Swarm, and Guard also provide a read-only `npm run doctor` to identify missing prerequisites and the selected Herdr binary. Check `command -v herdr`, `herdr --version`, and `herdr status server` when multiple installations exist. The pinned Conductor release still requires exactly 0.7.5; a bounded, isolated 0.9.3 development smoke does not promote that release pin or the default server.
 
 After an upgrade, verify action registration and run one bounded workflow in a separate test repository before larger work. Preserve reviewed Guard rules, explicitly wire any reporter hook, and review Swarm setup hooks and agent presets. Browser already supports Chromium; add a committed QA scenario for the app's critical flow and run it against the intended candidate build at desktop and mobile viewport sizes.
 
-Use the build → validate → fix loop per candidate. Commit the passing candidate, collect fresh Browser QA evidence outside the repository, and review it in Console or directly. Then explicitly request Swarm's GitHub draft PR handoff, supplying that exact-SHA evidence. Inspect remote CI and head identity before considering a merge. These are operator-driven steps, not an automatic cross-plugin pipeline.
+Use the build → validate → fix loop per candidate. Select one Swarm slot at
+a clean committed HEAD. Run the checks and Browser QA against that SHA, save
+their separate result files outside the worktree, then record the operator's
+approved or rejected review for the exact run, slot, and SHA. Supply
+`HERDR_SWARM_CANDIDATE_VALIDATION_FILE`,
+`HERDR_SWARM_CANDIDATE_BROWSER_QA_FILE`, and
+`HERDR_SWARM_CANDIDATE_REVIEW_FILE`; run `harvest-step.sh candidate-status
+<slot>` to inspect missing/stale/failed evidence, then explicitly run
+`harvest-step.sh publish-candidate-pr <slot>` only if approved. This strict verb
+refuses nonpassing or mismatched inputs and dirty slot work before a push;
+legacy `publish-pr` intentionally remains permissive and is not this gate.
+Inspect `pr-status <slot>`, the actual GitHub head, and remote CI before any
+merge decision. The result files are caller-supplied, not authenticated
+attestations; Browser QA's commit field does not prove the served app was built
+from it. The local smoke used a bare Git remote and stub GitHub transport, not
+a real PR. These are operator-driven steps, not an automatic cross-plugin
+pipeline or merge/apply authorization.
 
 For each change, repeat build, relevant tests, and workflow validation until passing, then publish a reviewable PR. Update these guides and the pinned manifest evidence together whenever versions, actions, or supported behavior change.
+
+The suite does not remotely control repositories or automatically update
+third-party plugins. Herdr plugins execute as the local user with access to
+their environment and Herdr API; a marketplace listing is not a security
+review. Any future remote control needs an independently reviewed
+authentication/authorization and network exposure design, explicit per-action
+approval, scoped credentials, audit and revocation, and a rollback plan.
+Automated plugin updates need reviewed, pinned source and artifact provenance,
+isolated compatibility checks, and an operator-selected rollout. Console's
+copy-only commands and saved observations grant neither capability.
+
+## Optional standalone review companion
+
+[`persiyanov/herdr-reviewr` v0.41.0](https://github.com/persiyanov/herdr-reviewr/tree/f05568594926352196a77c0d15cc07cc259cdf2e)
+is **not** a suite dependency or an installed production plugin. The pinned
+commit is `f05568594926352196a77c0d15cc07cc259cdf2e`; the macOS
+Apple-silicon release archive SHA-256 is
+`89f203857a2c6c2be7ad9dc8813f77eafe1ce5051c5156ae414040352c2268d4`.
+Its tag and commit are unsigned. An isolated, network-denied disposable-repo
+pilot ran the extracted standalone binary, displayed an untracked file's diff,
+switched between Changes and Files, and exited cleanly. It did not exercise
+review comments, agent send, PR operations, or its plugin install hook. Do not
+infer those paths work or that this binary has approval authority. For a
+manual review, inspect the pinned source/artifact first and run the standalone
+binary against a selected repository without installing the plugin; record an
+operator decision separately for Swarm's strict handoff.
+
+The existing `~Agent Harness` workspace demonstrates a useful **role pattern**:
+one builder, independent reviewer, QA, research, and adversarial reviewer
+report to an orchestrator. A supervised suite run can use a Swarm slot for the
+builder, distinct reviewer/validator work, Browser QA for the exact candidate,
+and an optional adversarial pass. The orchestrator inspects the reports and
+records the operator's decision; agent messages and review UI alone cannot
+approve a draft handoff, merge a PR, or authorize Conductor apply. This is a
+manual role pattern, not an automatic five-agent launcher.

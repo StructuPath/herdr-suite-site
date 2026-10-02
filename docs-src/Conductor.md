@@ -14,9 +14,41 @@ Repo: [StructuPath/herdr-conductor](https://github.com/StructuPath/herdr-conduct
 | Evidence commit | `ad170ee8e00be8979a7e1ae20bc6375e5e6f94d3` |
 | Manifest SHA-256 | `b8898d549216485c2bd599a101808030ce534b9c32625b6e6bdc51da04644672` |
 
-The retained [Stage 2 source manifest](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/stage2-runtime-source-manifest.json) and [installed-Herdr live contract report](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/2026-07-28-stage2-live-contracts.md) remain historical compatibility evidence. Older and newer Herdr binaries do not satisfy Conductor's exact 0.7.5 requirement; passing local tests is not evidence that another Herdr version is supported.
+The retained [Stage 2 source manifest](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/stage2-runtime-source-manifest.json) and [installed-Herdr live contract report](https://github.com/StructuPath/herdr-conductor/blob/712863c34d6126c9d95fa3b9bd6caf5220cbfc43/docs/evidence/2026-07-28-stage2-live-contracts.md) remain historical compatibility evidence. The **pinned commit** requires exactly 0.7.5; local development changes do not revise its release claim or evidence.
 
 A separate [developer smoke on 2026-09-14](https://github.com/StructuPath/herdr-conductor/blob/ad170ee8e00be8979a7e1ae20bc6375e5e6f94d3/docs/evidence/2026-09-14-developer-installed-action-smoke.md) exercised all seven installed actions on a running Herdr 0.7.5 server, including Stage 3 preview, approval refusal, attended single-ref apply, replay, and completed stand-down. It found and fixed the omitted stand-down reason after apply. The smoke used synthetic local worker sessions and operator-produced deterministic reports, not a real model agent. This bounded observation is not independent-human review, formal release attestation, live crash-recovery proof, or broader production certification.
+
+### Unreleased dual-runtime development candidate
+
+The local Conductor checkout now retains the exact 0.7.5/protocol 17/schema 1
+path and adds an exact 0.9.3/protocol 22/schema 1 path gated by a healthy,
+matching running server and the required API request/response shape. An
+isolated 0.7.5 server passed the retained runtime gate; the existing 0.7.5
+installed-action smoke above remains the completed-lifecycle evidence for
+that version. This is **not** a release-pin change or a claim about 0.8.2.
+
+On an isolated named 0.9.3 server with its own temporary HOME, XDG state,
+socket, and plugin registry, all seven Conductor actions registered. A fresh
+disposable-repository run completed installed assemble, status, board,
+producer report/harvest, exact-SHA validator report/harvest, preview, refusal
+to apply without a receipt, recorded attended approval, one local-ref apply
+CAS, apply replay, stand-down of two worker panes, and stand-down replay. The
+0.9.3 macOS Apple-silicon runtime asset SHA-256 was
+`5173a3e0ae42d5d1ab7ebfa5d5e6329f7c3d23f8e1a3677c7ce3231da2884157`.
+The development smoke retained its private synthetic repository/state for
+inspection and removed its temporary shell profiles, plugin link, and
+workspace. Earlier synthetic startup attempts stopped in `needs_attention`;
+their failed journals were not replayed or treated as approval.
+
+These are bounded **developer observations** using a local shell impersonating
+Pi and unauthenticated synthetic worker assertions. They do not validate real
+Pi/model integration, external review, broad crash recovery, or formal release
+readiness. Keep the proven 0.7.5 Conductor path and the reviewed release pin
+until separate release evidence and operator selection exist. To roll back a
+test, unlink only the isolated candidate plugin, close only its disposable
+workspace, and stop only its named test server; leave the default 0.8.2
+server and 0.7.5 runtime untouched. Never point an older CLI at a newer
+default server and infer compatibility from the CLI's version alone.
 
 ## All seven actions
 

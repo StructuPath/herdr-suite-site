@@ -77,6 +77,13 @@
 </tbody>
 </table></div>
 <p>The pinned source also records a <a href="https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/readiness.md">bounded Herdr 0.8.2 live smoke</a>: fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's <code>done</code> agent state. Version 0.4.0 retains these fixes and adds the explicit GitHub draft-PR handoff below; broad Herdr compatibility evidence remains 0.7.4/0.7.5.</p>
+<p>An isolated Herdr 0.9.3/protocol 22 smoke registered all five actions and
+used a disposable, no-remote repository with an inert local shell preset.
+Scripted fan-out created one worktree and started one pane; the attended abort
+closed that pane, removed the clean worktree, archived the run, and kept its
+branch. Local validation passed 259/259. This does not verify a real model
+agent, merge/harvest, or GitHub transport on 0.9.3, so the published
+tested-version record remains 0.7.4/0.7.5.</p>
 <h2>Actions</h2>
 <div class="table-scroll"><table>
 <thead>
@@ -173,6 +180,32 @@ bash scripts/harvest-step.sh pr-status 1
 <p>A failed push creates no PR. A GitHub failure after a successful push leaves the published branch and local receipt intact. Inspect the error and retry the same command; a lost creation response triggers exact-PR rediscovery. A mismatched GitHub head refuses success and requires inspection, never a force-push correction.</p>
 <p>Press <code>c</code>, then a slot, for the pane's CI view. <code>pr-status</code> emits a <code>ci_status</code> tab-separated JSON record with <code>passed</code>, <code>failed</code>, <code>pending</code>, <code>not_run</code>, <code>unknown</code>, or <code>no_pr</code> status. Compare <code>head_sha</code> and <code>local_head_sha</code>: a passing remote check is not current candidate evidence when <code>matches_local_head</code> is false. Passing checks do not establish branch-protection completeness or authorize a merge. The command uses GitHub reads and the local run lock; it does not fetch, push, merge, or edit a PR.</p>
 <p>See the <a href="https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/github-handoff.md">pinned GitHub handoff contract</a> for the exact evidence and output schemas. <a href="/docs/console/">Console</a> can display an explicitly saved PR-status observation alongside project and QA evidence.</p>
+<h3>Strict candidate handoff in the local development checkout</h3>
+<p>The unreleased checkout adds <code>candidate-status &lt;slot&gt;</code> and
+<code>publish-candidate-pr &lt;slot&gt;</code>; the pinned 0.4.0 commit above does <strong>not</strong> include
+these verbs. In the active run, select a clean committed slot, record typed
+passing validation checks, a separately passing <a href="/docs/browser/">Browser QA</a> result
+for the same SHA, and an explicit operator review bound to the run ID, slot,
+and SHA. Set <code>HERDR_SWARM_CANDIDATE_VALIDATION_FILE</code>,
+<code>HERDR_SWARM_CANDIDATE_BROWSER_QA_FILE</code>, and
+<code>HERDR_SWARM_CANDIDATE_REVIEW_FILE</code> to regular private files. The review JSON
+has <code>schema_version: 1</code>, <code>kind: "herdr-swarm-operator-review"</code>, <code>run_id</code>,
+numeric <code>slot</code>, <code>head_sha</code>, and <code>decision: "approved"</code> or <code>"rejected"</code>.
+Run <code>bash scripts/harvest-step.sh candidate-status 1</code>, optionally save its
+<code>candidate_status</code> TSV output for <a href="/docs/console/">Console</a>, then, after operator
+inspection, run <code>bash scripts/harvest-step.sh publish-candidate-pr 1</code>.
+The publish verb rereads every input and refuses missing, stale, failed,
+rejected, invalid, or dirty candidates before a push or PR creation. It never
+merges or authorizes Conductor apply.</p>
+<p>The disposable live-CLI smoke observed a blocked preview and exit 36 without
+a Git push or <code>gh</code>, then a ready preview, audited push to a <strong>local bare Git
+repository</strong>, and a draft-PR result from a <strong>stubbed GitHub transport</strong>.
+It does not establish real GitHub authentication, CI, or remote PR creation.
+Caller-supplied evidence and the operator JSON are not attestations; an
+existing PR is reused without replacing its body, so reported evidence may
+not be attached to that PR. The source checkout's
+<code>docs/github-handoff.md</code> defines the development contract; the pinned URL
+above defines only the released contract.</p>
 <p>After a remote PR is merged, preview again. Harvest recognizes merge ancestry and squash merges whose tree changes are contained in the base. Prune uses ancestry, so squash-merged branches may remain for deliberate review.</p>
 <h2>Safety and trust boundary</h2>
 <p>Swarm isolates working trees and provides reviewable branches; it does not sandbox agents. Write agents are trusted same-user principals and can access anything their operating-system user can access. Agents are instructed to commit locally and never push, while the operator remains the merge gate.</p>

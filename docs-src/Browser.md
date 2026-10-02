@@ -15,6 +15,16 @@ Repo: [StructuPath/herdr-browser](https://github.com/StructuPath/herdr-browser) 
 
 The [pinned source](https://github.com/StructuPath/herdr-browser/tree/859d05e5a85972f0822d652eb86d64e78ef7e431) includes explicit tab selection, target-loss handling, verbatim text insertion, and standalone repeatable QA. The manifest version remains 0.8.0; the commit identifies the exact implementation behind this guide.
 
+An isolated Herdr 0.9.3/protocol 22 registration exposed all five Browser
+actions; installed Open created a pane successfully. The standalone Browser
+QA live fixture passed 14/14 checks, and the real-browser integration command
+passed Chromium launch and tab/paste scenarios but **failed its screencast
+case**: the stream delivered status/tab/navigation events without an image,
+then the viewer fell back to polling. This is not a passing full streaming
+compatibility result; retain the published tested-version claim until that
+failure is diagnosed and rerun. No default server or plugin installation was
+changed by this isolated test.
+
 ## Choose a browser connection
 
 | Your goal | Use | Requirements | What happens when you quit the pane |

@@ -21,6 +21,76 @@ function command(parent, label, value) {
   });
   group.append(element('p', label), code, button); parent.append(group);
 }
+const suiteComponents = [
+  ['site', 'Suite site'],
+  ['browser', 'Browser'],
+  ['guard', 'Guard'],
+  ['swarm', 'Swarm'],
+  ['conductor', 'Conductor']
+];
+const pinRelationLabels = {
+  at_pin: 'At reviewed pin',
+  ahead_of_pin: 'Ahead of reviewed pin',
+  behind_pin: 'Behind reviewed pin',
+  diverged: 'Diverged from reviewed pin',
+  pin_unavailable: 'Pinned commit unavailable locally',
+  not_pinned: 'No suite pin',
+  unavailable: 'Checkout unavailable'
+};
+function renderSuite() {
+  const configured = data.projects.filter(project => project.suite);
+  const section = $('#suite-section');
+  if (!configured.length) {
+    section.hidden = true;
+    $('#suite-checkouts').replaceChildren();
+    return;
+  }
+  const byComponent = new Map(configured.map(project => [project.suite.component, project]));
+  const cards = suiteComponents.map(([component, displayName]) => {
+    const project = byComponent.get(component);
+    const card = element('article', undefined, `suite-card${project ? '' : ' suite-gap'}`);
+    const heading = element('div', undefined, 'suite-card-heading');
+    const title = element('div');
+    title.append(element('h3', displayName));
+    if (!project) {
+      heading.append(title, badge('Not configured'));
+      card.append(heading, element('p', `Add suiteComponent "${component}" to one project to include this checkout.`, 'muted'));
+      return card;
+    }
+    title.append(element('p', project.name, 'muted'));
+    const relation = project.suite.pinRelation;
+    heading.append(title, badge(pinRelationLabels[relation] || relation, relation === 'at_pin' || relation === 'not_pinned' ? 'good' : 'warn'));
+    card.append(heading, element('p', project.path, 'path'));
+    if (project.error) card.append(element('p', project.error, 'error'));
+    const facts = element('div', undefined, 'suite-facts');
+    if (component === 'site') row(facts, 'Reviewed pin', 'Not applicable — the site is not pinned');
+    else row(facts, 'Reviewed pin', project.suite.pinnedCommit ? project.suite.pinnedCommit.slice(0, 12) : 'Unavailable');
+    const upstream = project.suite.upstream;
+    if (upstream.state === 'tracking') {
+      row(facts, 'Configured upstream', 'Local tracking ref');
+      const ahead = upstream.ahead === null ? 'unknown' : upstream.ahead;
+      const behind = upstream.behind === null ? 'unknown' : upstream.behind;
+      row(facts, 'HEAD comparison', `${ahead} ahead · ${behind} behind`);
+    } else if (upstream.state === 'no_upstream') {
+      row(facts, 'Configured upstream', 'No upstream configured');
+    } else {
+      row(facts, 'Configured upstream', 'Relation unavailable');
+    }
+    card.append(facts);
+    if (!project.error && relation !== 'unavailable') {
+      const commands = element('div', undefined, 'suite-commands');
+      commands.append(element('p', `Copy only — run manually from ${project.name} at the checkout path shown above.`, 'footnote'));
+      command(commands, `Inspect ${displayName} checkout`, 'git status -sb');
+      command(commands, `Refresh ${displayName} remote refs`, 'git fetch --prune');
+      card.append(commands);
+    }
+    return card;
+  });
+  $('#suite-checkouts').replaceChildren(...cards);
+  section.hidden = false;
+  const selected = data.readiness.server?.version;
+  $('#suite-compatibility').textContent = `Conductor supports exactly Herdr 0.7.5. Running Herdr server ${selected || 'unavailable'} ${selected === '0.7.5' ? 'matches that version; installed-action checks are still required.' : 'is not supported by the pinned Conductor.'}`;
+}
 function renderHealth() {
   const root = $('#health'); root.replaceChildren();
   for (const tool of data.readiness.tools) {
@@ -28,10 +98,15 @@ function renderHealth() {
     card.append(element('span', tool.name, 'muted'), element('strong', tool.version || 'Not available'), badge(tool.status, tool.status === 'available' ? 'good' : 'warn'));
     root.append(card);
   }
+  const server = data.readiness.server;
+  const card = element('div', undefined, 'health-card');
+  card.append(element('span', 'Running Herdr server', 'muted'), element('strong', server?.version || 'Not available'),
+    badge(server?.status || 'unavailable', server?.status === 'running' ? 'good' : 'warn'));
+  root.append(card);
   const line = element('div', undefined, 'compatibility');
   for (const plugin of data.readiness.plugins) line.append(badge(`${plugin.name} ${plugin.version} · ${labels[plugin.compatibility]}`, plugin.compatibility === 'version_match' ? '' : 'warn'));
   root.append(line);
-  $('#compatibility-note').textContent = `Pinned source versions · evidence ${data.readiness.evidenceDate}. Version matching does not verify installation, agent authentication, or live integration. Selected Herdr: ${data.readiness.selectedHerdr}`;
+  $('#compatibility-note').textContent = `Pinned source versions · evidence ${data.readiness.evidenceDate}. Compatibility compares the running server (protocol ${server?.protocol ?? 'unknown'}), not just the selected CLI binary. It does not verify installed actions or live integration. Selected binary: ${data.readiness.selectedHerdr}`;
 }
 function projectCard(p) {
   const card = element('article', undefined, 'project-card');
@@ -51,6 +126,18 @@ function projectCard(p) {
     row(swarm, 'Run', p.swarm.run);
     for (const slot of p.swarm.slots) row(swarm, `${slot.slot} · ${slot.label || slot.branch}`, slot.state);
     swarm.append(element('p', 'Manifest observations; agent activity may have changed.', 'footnote'));
+  }
+  const candidate = panel('Swarm candidate handoff', p.candidate);
+  if (p.candidate.status === 'observed') {
+    candidate.append(badge(p.candidate.freshness !== 'matches_clean_head' ? 'Saved preview: stale checkout' :
+      p.candidate.reportedReady ? 'Saved preview: ready' : 'Saved preview: blocked',
+      p.candidate.reportedReady && p.candidate.freshness === 'matches_clean_head' ? 'good' : 'warn'));
+    candidate.append(badge(p.candidate.freshness, p.candidate.freshness === 'matches_clean_head' ? '' : 'warn'));
+    row(candidate, 'Run / slot', `${p.candidate.run} / ${p.candidate.slot}`);
+    row(candidate, 'Selected commit', p.candidate.commit.slice(0, 12));
+    row(candidate, 'Validation / Browser QA / review', `${p.candidate.validation} / ${p.candidate.browserQA} / ${p.candidate.review}`);
+    if (p.candidate.issues.length) row(candidate, 'Reported gaps', p.candidate.issues.join(', '));
+    candidate.append(element('p', 'Saved caller-supplied preview, not approval or authorization. Swarm rechecks the selected slot and all evidence before publishing a draft PR.', 'footnote'));
   }
   const conductor = panel('Conductor', p.conductor);
   if (p.conductor.status === 'observed') {
@@ -90,7 +177,7 @@ function projectCard(p) {
       pr.append(element('p', 'Saved GitHub status. Refresh through Swarm before making a merge decision.', 'footnote'));
     }
   }
-  grid.append(swarm, conductor, qa, guard, pr); details.append(grid); card.append(details);
+  grid.append(swarm, candidate, conductor, qa, guard, pr); details.append(grid); card.append(details);
   const next = element('details', undefined, 'next-actions'); next.append(element('summary', 'Next steps in your project workspace'));
   next.append(element('p', 'Copy a command to the intended Herdr workspace. These controls only copy text; commands retain the plugin’s own previews and approvals.', 'muted'));
   command(next, 'Inspect Swarm status', 'herdr plugin action invoke status --plugin structupath.swarm');
@@ -111,7 +198,7 @@ async function refresh() {
   try {
     const response = await fetch('/api/snapshot', { headers: { 'X-Herdr-Console': '1' }, cache: 'no-store' });
     if (!response.ok) throw new Error('Snapshot unavailable. Check the Console terminal and refresh.');
-    data = await response.json(); renderHealth(); renderProjects();
+    data = await response.json(); renderHealth(); renderSuite(); renderProjects();
     $('#updated').textContent = `Read ${time(data.generatedAt)}`;
     $('#notice').textContent = data.demo ? 'DEMO — illustrative data only. Restart with --config to view your projects.' : `${data.projects.length} configured project${data.projects.length === 1 ? '' : 's'} · observations refresh when you ask.`;
     $('#notice').className = data.demo ? 'demo' : '';

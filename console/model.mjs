@@ -11,6 +11,13 @@ const SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
 const text = (v, max = 180) => typeof v === 'string' ? v.replace(/[\x00-\x1f\x7f]/g, ' ').slice(0, max) : '';
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const count = (v) => Number.isSafeInteger(v) && v >= 0 && v <= 1_000_000 ? v : null;
+const SUITE_COMPONENTS = new Set(['site', 'browser', 'guard', 'swarm', 'conductor']);
+let pluginEvidencePromise;
+
+function pluginEvidence() {
+  pluginEvidencePromise ||= readFile(new URL('../data/plugins.json', import.meta.url), 'utf8').then(JSON.parse);
+  return pluginEvidencePromise;
+}
 
 export async function boundedRead(path) {
   const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
@@ -37,16 +44,18 @@ export async function loadConfig(path) {
       Object.keys(config).some(k => !['schemaVersion', 'projects', 'herdrBinary'].includes(k))) {
     throw new Error('Config requires schemaVersion: 1 and 1–20 projects');
   }
-  const ids = new Set();
-  const paths = ['path', 'swarmManifest', 'conductorStatus', 'guardAudit', 'qaReport', 'pullRequestStatus'];
+  const ids = new Set(), suiteComponents = new Set();
+  const paths = ['path', 'swarmManifest', 'conductorStatus', 'guardAudit', 'qaReport', 'pullRequestStatus', 'candidateStatus'];
   const projects = config.projects.map(p => {
     if (!object(p) || !/^[a-z0-9][a-z0-9-]{0,47}$/.test(p.id) || ids.has(p.id) ||
         typeof p.name !== 'string' || !p.name.trim() || p.name.length > 100 ||
         typeof p.path !== 'string' ||
-        Object.keys(p).some(k => !['id', 'name', ...paths].includes(k))) {
-      throw new Error('Each project needs a unique slug id, name, path, and only supported fields');
+        (p.suiteComponent !== undefined && (!SUITE_COMPONENTS.has(p.suiteComponent) || suiteComponents.has(p.suiteComponent))) ||
+        Object.keys(p).some(k => !['id', 'name', 'suiteComponent', ...paths].includes(k))) {
+      throw new Error('Each project needs a unique slug id, name, path, suite component, and only supported fields');
     }
     ids.add(p.id);
+    if (p.suiteComponent !== undefined) suiteComponents.add(p.suiteComponent);
     const result = { id: p.id, name: text(p.name, 100) };
     for (const key of paths) if (p[key] !== undefined) {
       if (typeof p[key] !== 'string' || !p[key] || p[key].length > 4096 || /[\x00-\x1f\x7f]/.test(p[key])) {
@@ -54,6 +63,7 @@ export async function loadConfig(path) {
       }
       result[key] = resolve(base, p[key]);
     }
+    if (p.suiteComponent !== undefined) result.suiteComponent = p.suiteComponent;
     return result;
   });
   if (config.herdrBinary !== undefined && (typeof config.herdrBinary !== 'string' ||
@@ -103,6 +113,55 @@ export async function inspectGit(path) {
   const repositoryKey = createHash('sha256').update(`herdr-conductor-repository-v1\0${commonPath}\0${identity.dev}\0${identity.ino}`).digest('hex');
   return { commit, branch: text(branch.trim() || 'Detached HEAD'), dirty: Boolean(status), changedFiles,
     worktrees: worktrees.split('\0').filter(s => s.startsWith('worktree ')).length, root: physical, repositoryKey };
+}
+
+async function upstreamStatus(path, current) {
+  if (!current || current.branch === 'Detached HEAD') {
+    return { state: current ? 'no_upstream' : 'unknown', ahead: null, behind: null };
+  }
+  try {
+    const upstream = (await git(path, ['for-each-ref', '--format=%(upstream)', `refs/heads/${current.branch}`])).trim();
+    if (!upstream) return { state: 'no_upstream', ahead: null, behind: null };
+    const values = (await git(path, ['rev-list', '--left-right', '--count', `HEAD...${upstream}`])).trim().split(/\s+/).map(Number);
+    if (values.length !== 2 || values.some(value => !Number.isSafeInteger(value) || value < 0)) throw new Error('Invalid divergence counts');
+    return { state: 'tracking', ahead: values[0], behind: values[1] };
+  } catch {
+    return { state: 'unknown', ahead: null, behind: null };
+  }
+}
+
+async function isAncestor(path, ancestor, descendant) {
+  try {
+    await git(path, ['merge-base', '--is-ancestor', ancestor, descendant]);
+    return true;
+  } catch (error) {
+    if (error?.code === 1) return false;
+    throw error;
+  }
+}
+
+export async function inspectSuite(path, current, component, pinnedCommit) {
+  const upstream = await upstreamStatus(path, current);
+  if (!current) return { component, pinnedCommit: component === 'site' ? null : pinnedCommit, pinRelation: 'unavailable', upstream };
+  if (component === 'site') return { component, pinnedCommit: null, pinRelation: 'not_pinned', upstream };
+  if (!SHA.test(pinnedCommit || '')) return { component, pinnedCommit: null, pinRelation: 'pin_unavailable', upstream };
+  const suite = { component, pinnedCommit, pinRelation: 'pin_unavailable', upstream };
+  try {
+    await git(path, ['cat-file', '-e', `${pinnedCommit}^{commit}`]);
+    if (current.commit === pinnedCommit) suite.pinRelation = 'at_pin';
+    else if (await isAncestor(path, pinnedCommit, current.commit)) suite.pinRelation = 'ahead_of_pin';
+    else if (await isAncestor(path, current.commit, pinnedCommit)) suite.pinRelation = 'behind_pin';
+    else suite.pinRelation = 'diverged';
+  } catch {
+    suite.pinRelation = 'pin_unavailable';
+  }
+  return suite;
+}
+
+async function pinnedCommit(component) {
+  if (component === 'site') return null;
+  const plugin = (await pluginEvidence()).plugins?.find(candidate => candidate.slug === component);
+  return SHA.test(plugin?.commit || '') ? plugin.commit : null;
 }
 
 async function observation(path, parse) {
@@ -171,11 +230,41 @@ export function parsePullRequest(content, current) {
     freshness: current && current.commit === value.head_sha && value.local_head_sha === value.head_sha && !current.dirty ? 'matches_clean_head' : 'not_current_clean_head' };
 }
 
+const candidateIssues = new Set([
+  'slot_head_mismatch', 'slot_dirty',
+  ...['validation', 'browser_qa'].flatMap(kind => ['missing', 'stale', 'failed', 'invalid'].map(state => `${kind}_${state}`)),
+  ...['missing', 'stale', 'rejected', 'invalid'].map(state => `review_${state}`)
+]);
+export function parseCandidateStatus(content, current) {
+  const records = content.trim().split('\n');
+  if (records.length !== 1 || !records[0].startsWith('candidate_status\t')) throw new Error('Expected one candidate status record');
+  const value = JSON.parse(records[0].slice('candidate_status\t'.length));
+  if (!object(value) || value.schema_version !== 1 || !/^[A-Za-z0-9_-]+$/.test(value.run_id) ||
+      !Number.isSafeInteger(value.slot) || value.slot < 1 || !SHA.test(value.head_sha) ||
+      typeof value.ready !== 'boolean' || !Array.isArray(value.issues) || value.issues.length > candidateIssues.size ||
+      value.issues.some(issue => !candidateIssues.has(issue)) || new Set(value.issues).size !== value.issues.length ||
+      !['passed', 'missing', 'stale', 'failed', 'invalid'].includes(value.validation_status) ||
+      !['passed', 'missing', 'stale', 'failed', 'invalid'].includes(value.browser_qa_status) ||
+      !['approved', 'missing', 'stale', 'rejected', 'invalid'].includes(value.review_decision) ||
+      (value.ready !== (value.issues.length === 0 && value.validation_status === 'passed' &&
+        value.browser_qa_status === 'passed' && value.review_decision === 'approved'))) {
+    throw new Error('Invalid candidate status');
+  }
+  return { run: value.run_id, slot: value.slot, commit: value.head_sha, reportedReady: value.ready,
+    issues: value.issues, validation: value.validation_status, browserQA: value.browser_qa_status, review: value.review_decision,
+    freshness: current && current.commit === value.head_sha && !current.dirty ? 'matches_clean_head' : 'not_current_clean_head' };
+}
+
 export async function inspectProject(p) {
   const result = { id: p.id, name: p.name, path: p.path };
   try { result.git = await inspectGit(p.path); }
   catch { result.error = 'Repository unavailable, uncommitted, or not a worktree root. Check the configured path.'; }
-  const [swarm, conductor, guard, qa, pullRequest] = await Promise.all([
+  if (p.suiteComponent) {
+    let pin = null;
+    try { pin = await pinnedCommit(p.suiteComponent); } catch {}
+    result.suite = await inspectSuite(p.path, result.git, p.suiteComponent, pin);
+  }
+  const [swarm, conductor, guard, qa, pullRequest, candidate] = await Promise.all([
     observation(p.swarmManifest, async content => {
       const run = JSON.parse(content);
       if (!object(run) || typeof run.run_id !== 'string' || typeof run.repo_root !== 'string' ||
@@ -207,9 +296,10 @@ export async function inspectProject(p) {
       return { events: lines.length, counts };
     }),
     observation(p.qaReport, content => parseQA(content, result.git)),
-    observation(p.pullRequestStatus, content => parsePullRequest(content, result.git))
+    observation(p.pullRequestStatus, content => parsePullRequest(content, result.git)),
+    observation(p.candidateStatus, content => parseCandidateStatus(content, result.git))
   ]);
-  return { ...result, swarm, conductor, guard, qa, pullRequest };
+  return { ...result, swarm, conductor, guard, qa, pullRequest, candidate };
 }
 
 const parseVersion = (s) => /(?:^|\s|v)(\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?(?:\+[A-Za-z0-9.-]+)?)(?:\s|$)/.exec(s)?.[1] || null;
@@ -231,11 +321,22 @@ export async function health(herdrBinary) {
       return { name, version, status: version ? 'available' : 'unknown' };
     } catch { return { name, version: null, status: 'unavailable' }; }
   }));
-  const evidence = JSON.parse(await readFile(new URL('../data/plugins.json', import.meta.url), 'utf8'));
-  const herdr = tools.find(t => t.name === 'Herdr').version;
-  return { tools, selectedHerdr: herdrBinary, evidenceDate: evidence.evidence_date,
+  let server = { status: 'unavailable', version: null, protocol: null };
+  if (tools.find(t => t.name === 'Herdr').status === 'available') {
+    try {
+      const output = await command(herdrBinary, ['status', 'server']);
+      if (/^status: not running$/m.test(output)) server = { status: 'not_running', version: null, protocol: null };
+      else if (/^status: running$/m.test(output)) {
+        const version = parseVersion(output.match(/^version: (.+)$/m)?.[1] || '');
+        const protocol = Number(output.match(/^(?:private_protocol|protocol): (\d+)$/m)?.[1]);
+        if (version) server = { status: 'running', version, protocol: Number.isSafeInteger(protocol) && protocol > 0 ? protocol : null };
+      }
+    } catch { /* A missing or unreachable server is not a successful compatibility check. */ }
+  }
+  const evidence = await pluginEvidence();
+  return { tools, server, selectedHerdr: herdrBinary, evidenceDate: evidence.evidence_date,
     plugins: evidence.plugins.map(p => ({ name: p.name, slug: p.slug, version: p.version,
-      minimum: p.min_herdr_version, compatibility: compatibility(p, herdr), source: p.repository })) };
+      minimum: p.min_herdr_version, compatibility: compatibility(p, server.version), source: p.repository })) };
 }
 
 export async function snapshot(config) {
@@ -254,13 +355,14 @@ export async function snapshot(config) {
 export function demoSnapshot() {
   const now = new Date().toISOString(), commit = 'a'.repeat(40);
   return { schemaVersion: 1, generatedAt: now, demo: true,
-    readiness: { selectedHerdr: 'Demo runtime', evidenceDate: '2026-09-14',
+    readiness: { selectedHerdr: 'Demo runtime', evidenceDate: '2026-09-14', server: { status: 'running', version: '0.7.5', protocol: 17 },
       tools: ['Node','Git','Herdr','agent-browser'].map(name => ({ name, version: name === 'Herdr' ? '0.7.5' : 'Demo', status: 'available' })),
       plugins: [{name:'Browser',version:'0.8.0',compatibility:'version_match'}, {name:'Swarm',version:'0.4.0',compatibility:'version_match'}, {name:'Guard',version:'0.2.0',compatibility:'version_match'}, {name:'Conductor',version:'0.4.0',compatibility:'version_match'}] },
     projects: [{id:'demo',name:'Checkout improvements',path:'/demo/storefront',
       git:{commit,branch:'feature/checkout',dirty:false,changedFiles:0,worktrees:3},
+      suite:{component:'browser',pinnedCommit:'859d05e5a85972f0822d652eb86d64e78ef7e431',pinRelation:'ahead_of_pin',upstream:{state:'tracking',ahead:2,behind:0}},
       swarm:{status:'observed',observedAt:now,run:'demo-run',slots:[{slot:'1',label:'Builder',state:'settled',branch:'swarm/demo/1'},{slot:'2',label:'Alternative',state:'running',branch:'swarm/demo/2'}]},
-      conductor:{status:'not_configured'},pullRequest:{status:'not_configured'},guard:{status:'observed',observedAt:now,events:3,counts:{audit:2,alert:1,interrupt:0,other:0}},
+      conductor:{status:'not_configured'},pullRequest:{status:'not_configured'},candidate:{status:'observed',observedAt:now,run:'demo-run',slot:1,commit,reportedReady:false,issues:['review_missing'],validation:'passed',browserQA:'passed',review:'missing',freshness:'matches_clean_head'},guard:{status:'observed',observedAt:now,events:3,counts:{audit:2,alert:1,interrupt:0,other:0}},
       qa:{status:'observed',observedAt:now,outcome:'passed',commit,finishedAt:now,scenario:'Checkout journey',validationPolicy:'strict',freshness:'matches_clean_head',summary:{viewports:2,passed:2,failed:0,assertions:6,consoleErrors:0,pageErrors:0,failedRequests:0},artifactCount:2,viewports:[{name:'desktop',status:'passed'},{name:'mobile',status:'passed'}]}
     }] };
 }

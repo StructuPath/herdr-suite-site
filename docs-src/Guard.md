@@ -15,6 +15,14 @@ Repo: [StructuPath/herdr-guard](https://github.com/StructuPath/herdr-guard) · D
 
 Historical `v0.1.1` evidence covers sequential one-shot RPC, dedicated subscription, reconnect, terminal rendering, replay suppression, and default/named-session recovery on Herdr 0.7.5/protocol 17. It does not certify the new reporter in a live Herdr session. Guard records an interrupt request as accepted or failed; neither result proves command prevention.
 
+An isolated Herdr 0.9.3/protocol 22 test registered all five actions. Installed
+Open started the watcher and displayed ACTIVE with two watched panes and 52
+loaded rules; Test opened its dry-run surface, and a direct dry-run of the
+literal text `git reset --hard` returned the `git-reset-hard` alert without
+executing that command. The plugin's full local validation passed 132/132.
+This does not establish reliable interruption or live harness-reporter
+enforcement on 0.9.3; the pinned tested-version record stays unchanged.
+
 ## Actions
 
 | Action ID | Behavior |

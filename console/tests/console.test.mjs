@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, mkdir, symlink, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, writeFile, mkdir, symlink, rm, readFile, chmod } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { request } from 'node:http';
-import { boundedRead, loadConfig, inspectGit, inspectProject, parseQA, parsePullRequest, compatibility, demoSnapshot, gitEnvironment } from '../model.mjs';
+import { boundedRead, loadConfig, inspectGit, inspectProject, inspectSuite, parseQA, parsePullRequest, parseCandidateStatus, compatibility, health, demoSnapshot, gitEnvironment } from '../model.mjs';
 import { createConsoleServer, parseArgs } from '../server.mjs';
 
 async function fixture(t) {
@@ -17,7 +17,7 @@ async function fixture(t) {
     GIT_AUTHOR_NAME:'Console Test',GIT_AUTHOR_EMAIL:'console@example.invalid',
     GIT_COMMITTER_NAME:'Console Test',GIT_COMMITTER_EMAIL:'console@example.invalid'
   }}).trim();
-  git('init', '-q'); git('commit','-q','--allow-empty','-m','fixture');
+  git('init', '-q'); git('commit','-q','--allow-empty','-m','fixture'); git('branch', '-M', 'main');
   return { root, repo, git };
 }
 function qa(commit) {
@@ -27,13 +27,58 @@ function qa(commit) {
 }
 test('configuration explicitly selects repositories and rejects unknown, duplicate and executable fields', async t => {
   const { root } = await fixture(t); const file = join(root, 'config.json');
-  const config = {schemaVersion:1,projects:[{id:'one',name:'First project',path:'repo'}]};
+  const config = {schemaVersion:1,projects:[{id:'one',name:'First project',path:'repo',suiteComponent:'site'}]};
   await writeFile(file, JSON.stringify(config));
-  assert.equal((await loadConfig(file)).projects[0].path, join(root, 'repo'));
+  const loaded = await loadConfig(file);
+  assert.equal(loaded.projects[0].path, join(root, 'repo'));
+  assert.equal(loaded.projects[0].suiteComponent, 'site');
   for (const bad of [ {...config, command:'rm -rf /'}, {...config, projects:[config.projects[0],config.projects[0]]},
-    {...config,projects:[{...config.projects[0],script:'file.mjs'}]}, {...config,herdrBinary:'shell --eval anything'} ]) {
+    {...config,projects:[{...config.projects[0],script:'file.mjs'}]}, {...config,herdrBinary:'shell --eval anything'},
+    {...config,projects:[{...config.projects[0],suiteComponent:'unknown'}]},
+    {...config,projects:[config.projects[0],{id:'two',name:'Second',path:'repo',suiteComponent:'site'}]} ]) {
     await writeFile(file,JSON.stringify(bad)); await assert.rejects(loadConfig(file));
   }
+});
+test('suite status uses local pin ancestry and configured upstream refs', async t => {
+  const {repo,git}=await fixture(t), base=git('rev-parse','HEAD');
+  let current=await inspectGit(repo), suite=await inspectSuite(repo,current,'browser',base);
+  assert.equal(suite.pinRelation,'at_pin');
+  assert.deepEqual(suite.upstream,{state:'no_upstream',ahead:null,behind:null});
+
+  git('commit','-q','--allow-empty','-m','main ahead');
+  current=await inspectGit(repo);
+  assert.equal((await inspectSuite(repo,current,'browser',base)).pinRelation,'ahead_of_pin');
+
+  git('checkout','-qb','upstream',base); git('commit','-q','--allow-empty','-m','upstream ahead');
+  const upstreamPin=git('rev-parse','HEAD');
+  git('checkout','-q','main'); git('branch','--set-upstream-to=upstream','main');
+  current=await inspectGit(repo); suite=await inspectSuite(repo,current,'browser',base);
+  assert.deepEqual(suite.upstream,{state:'tracking',ahead:1,behind:1});
+  assert.equal((await inspectSuite(repo,current,'browser',upstreamPin)).pinRelation,'diverged');
+  git('branch','-D','upstream');
+  assert.deepEqual((await inspectSuite(repo,current,'browser',base)).upstream,{
+    state:'unknown',ahead:null,behind:null
+  });
+
+  git('checkout','-qb','future','main'); git('commit','-q','--allow-empty','-m','future pin');
+  const futurePin=git('rev-parse','HEAD'); git('checkout','-q','main');
+  assert.equal((await inspectSuite(repo,current,'guard',futurePin)).pinRelation,'behind_pin');
+  const missing=await inspectSuite(repo,current,'swarm','f'.repeat(40));
+  assert.equal(missing.pinRelation,'pin_unavailable');
+  assert.equal(missing.pinnedCommit,'f'.repeat(40));
+  assert.equal((await inspectSuite(repo,current,'site',null)).pinRelation,'not_pinned');
+  assert.deepEqual(await inspectSuite('/missing',null,'browser',base),{
+    component:'browser',pinnedCommit:base,pinRelation:'unavailable',
+    upstream:{state:'unknown',ahead:null,behind:null}
+  });
+});
+test('configured projects expose manifest pins without changing other projects', async t => {
+  const {repo}=await fixture(t);
+  const configured=await inspectProject({id:'suite',name:'Suite',path:repo,suiteComponent:'browser'});
+  assert.equal(configured.suite.pinnedCommit,'859d05e5a85972f0822d652eb86d64e78ef7e431');
+  assert.equal(configured.suite.pinRelation,'pin_unavailable');
+  const ordinary=await inspectProject({id:'ordinary',name:'Ordinary',path:repo});
+  assert.equal(Object.hasOwn(ordinary,'suite'),false);
 });
 test('bounded observation refuses symlinks, directories, FIFOs and oversized data', async t => {
   const {root} = await fixture(t); const file=join(root,'data'); await writeFile(file,'{}');
@@ -96,11 +141,44 @@ test('observations are projected, repository-bound, missing sources stay unknown
   await writeFile(p.swarmManifest,'{'); assert.equal((await inspectProject(p)).swarm.status,'unavailable');
   assert.equal((await inspectProject({id:'empty',name:'Empty',path:repo})).qa.status,'not_configured');
 });
+test('candidate preview distinguishes missing evidence from a fresh reviewed commit', async t => {
+  const { root, repo, git } = await fixture(t), commit = git('rev-parse', 'HEAD');
+  const report = { schema_version: 1, run_id: 'run1', slot: 1, head_sha: commit, ready: false,
+    issues: ['browser_qa_missing', 'review_missing'], validation_status: 'passed', browser_qa_status: 'missing', review_decision: 'missing' };
+  const parse = value => parseCandidateStatus(`candidate_status\t${JSON.stringify(value)}\n`, { commit, dirty: false });
+  assert.equal(parse(report).reportedReady, false);
+  assert.deepEqual(parse(report).issues, ['browser_qa_missing', 'review_missing']);
+  const approved = { ...report, ready: true, issues: [], browser_qa_status: 'passed', review_decision: 'approved' };
+  assert.equal(parse(approved).freshness, 'matches_clean_head');
+  assert.equal(parseCandidateStatus(`candidate_status\t${JSON.stringify(approved)}\n`, { commit, dirty: true }).freshness, 'not_current_clean_head');
+  assert.equal(parseCandidateStatus(`candidate_status\t${JSON.stringify({ ...approved, head_sha: 'b'.repeat(40) })}\n`, { commit, dirty: false }).freshness, 'not_current_clean_head');
+  assert.throws(() => parse({ ...report, ready: true }));
+  assert.throws(() => parse({ ...report, issues: ['unknown_gap'] }));
+  const file = join(root, 'candidate.tsv'); await writeFile(file, `candidate_status\t${JSON.stringify(approved)}\n`);
+  const observed = await inspectProject({ id: 'candidate', name: 'Candidate', path: repo, candidateStatus: file });
+  assert.equal(observed.candidate.status, 'observed');
+  assert.equal(observed.candidate.freshness, 'matches_clean_head');
+  await writeFile(file, `candidate_status\t${JSON.stringify({ ...approved, ready: false, issues: ['slot_dirty'] })}\n`);
+  assert.equal((await inspectProject({ id: 'candidate', name: 'Candidate', path: repo, candidateStatus: file })).candidate.reportedReady, false);
+});
 test('version compatibility never infers newer Conductor support', () => {
   const c={slug:'conductor',min_herdr_version:'0.7.5',tested_herdr_versions:['0.7.5']};
   assert.equal(compatibility(c,'0.7.5'),'version_match'); assert.equal(compatibility(c,'0.8.2'),'incompatible');
   assert.equal(compatibility({...c,slug:'swarm'},'0.8.2'),'not_tested');
   assert.equal(compatibility({...c,slug:'swarm'},'0.6.9'),'incompatible');
+});
+test('readiness compares the live server, not an older selected CLI binary', async t => {
+  const { root } = await fixture(t), binary = join(root, 'herdr');
+  await writeFile(binary, '#!/bin/sh\nif [ "$1" = "--version" ]; then echo "herdr 0.7.5"; else printf "status: running\\nversion: 0.8.2\\nprotocol: 20\\n"; fi\n');
+  await chmod(binary, 0o700);
+  let result = await health(binary);
+  assert.deepEqual(result.server, { status: 'running', version: '0.8.2', protocol: 20 });
+  assert.equal(result.tools.find(tool => tool.name === 'Herdr').version, '0.7.5');
+  assert.equal(result.plugins.find(plugin => plugin.slug === 'conductor').compatibility, 'incompatible');
+  await writeFile(binary, '#!/bin/sh\nif [ "$1" = "--version" ]; then echo "herdr 0.7.5"; else echo "status: not running"; fi\n');
+  result = await health(binary);
+  assert.equal(result.server.status, 'not_running');
+  assert.equal(result.plugins.find(plugin => plugin.slug === 'conductor').compatibility, 'unknown');
 });
 test('PR observations validate links, current SHA and never turn absent checks into pass', () => {
   const commit='a'.repeat(40), current={commit,dirty:false};
@@ -120,7 +198,9 @@ test('PR observations validate links, current SHA and never turn absent checks i
 test('CLI requires an explicit project configuration or clearly labeled demo', () => {
   assert.throws(()=>parseArgs([])); assert.throws(()=>parseArgs(['--demo','--config','a']));
   assert.throws(()=>parseArgs(['--demo','--port','80'])); assert.throws(()=>parseArgs(['--host','0.0.0.0']));
-  assert.equal(parseArgs(['--demo','--check']).check,true); assert.equal(demoSnapshot().demo,true);
+  assert.equal(parseArgs(['--demo','--check']).check,true);
+  const demo=demoSnapshot(); assert.equal(demo.demo,true);
+  assert.deepEqual(demo.projects[0].suite.upstream,{state:'tracking',ahead:2,behind:0});
 });
 test('HTTP serves read-only same-origin data, rejects rebinding, traversal and write attempts', async t => {
   let reads=0;

@@ -14,7 +14,7 @@ The four plugins can be installed together, but they do not form one automatic r
 
 With Node.js 20 or newer, run `npm run console -- --demo` for a labeled fixture dashboard. For real projects, use `npm run console -- --config /absolute/private/console.json`; add `--check` to print a snapshot and exit. The server binds to `127.0.0.1:4317` by default.
 
-Console reads explicit project paths and optional saved Swarm, Conductor, Guard, and Browser QA observations. It shows tool health, Git state, evidence freshness, and copyable next commands. It has no mutating controls. The public website serves documentation, not a remote controller; Console is a local app, not a fifth plugin. See the [Console guide](https://herdr.structupath.ai/docs/console/) for configuration and evidence limits.
+Console reads explicit project paths and optional saved Swarm, Conductor, Guard, Browser QA, candidate-status, and PR-status observations. An optional `suiteComponent` on the five local site, Browser, Guard, Swarm, and Conductor checkout entries adds local-only pin and upstream comparisons. These comparisons use local Git refs and may be stale; Console never fetches, pulls, installs, updates, or runs its copy-only review commands. It has no mutating controls. The pinned Conductor release supports exactly Herdr 0.7.5; the isolated 0.9.3 developer smoke is not a release promotion, and 0.8.2 remains unsupported. The public website serves documentation, not a remote controller; Console is a local app, not a fifth plugin. See the [Console guide](https://herdr.structupath.ai/docs/console/) for the five-checkout configuration example and evidence limits.
 
 ## Source and publishing contract
 

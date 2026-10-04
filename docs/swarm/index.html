@@ -60,7 +60,7 @@
 <tbody>
 <tr>
 <td>Plugin release</td>
-<td><code>0.4.0</code></td>
+<td><code>0.5.0</code></td>
 </tr>
 <tr>
 <td>Minimum Herdr</td>
@@ -72,12 +72,22 @@
 </tr>
 <tr>
 <td>Evidence commit</td>
-<td><code>09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb</code></td>
+<td><code>f750bc7d61f99d857e2276c5493fbe91254c9e7f</code></td>
 </tr>
 </tbody>
 </table></div>
-<p>The pinned source also records a <a href="https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/readiness.md">bounded Herdr 0.8.2 live smoke</a>: fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's <code>done</code> agent state. Version 0.4.0 retains these fixes and adds the explicit GitHub draft-PR handoff below; broad Herdr compatibility evidence remains 0.7.4/0.7.5.</p>
-<p>An isolated Herdr 0.9.3/protocol 22 smoke registered all five actions and
+<p>Version 0.5.0 adds the workflow described under <strong>Pick the winner</strong> below. The pinned <a href="https://github.com/StructuPath/herdr-swarm/blob/f750bc7d61f99d857e2276c5493fbe91254c9e7f/docs/readiness.md">readiness record</a> documents a 2026-10-04 live end-to-end run of that flow on Herdr 0.8.2:</p>
+<ul>
+<li>fan-out with per-slot tasks, slot variables, and cloned dependencies;</li>
+<li>finish detection, validate, compare, and broadcast;</li>
+<li>a merge at the compared commit;</li>
+<li>a conflict handed to a resolver, reviewed read-only, and landed;</li>
+<li>the review flagging a file slipped into the merge;</li>
+<li>archive with exact cleanup approvals, and prune dry-run.</li>
+</ul>
+<p>That run used scripted stand-in agents, not real model agents. It did not cover the status pane, which opens through the plugin action, or Herdr 0.7.4. The broad tested-version record remains 0.7.4/0.7.5.</p>
+<p>An earlier bounded 0.8.2 smoke (0.4.0) exercised fan-out, committed work, merge, automatic archive, abort, and prune dry-run. It found and fixed archive-state reconciliation and the newer runtime's <code>done</code> agent state.</p>
+<p>An isolated Herdr 0.9.3/protocol 22 smoke (0.4.0-era) registered all five actions and
 used a disposable, no-remote repository with an inert local shell preset.
 Scripted fan-out created one worktree and started one pane; the attended abort
 closed that pane, removed the clean worktree, archived the run, and kept its
@@ -152,8 +162,8 @@ with the clearest failure-path test.
 <p>Fresh worktrees omit ignored dependencies, <code>.env</code> files, and caches. If every agent fails immediately, add a reviewed plugin-config <code>setup.sh</code> or tell agents to install required dependencies, then start a new run.</p>
 <p>Setup logs preserve command output verbatim. Keep credentials out of setup output and review logs before sharing them.</p>
 <h3>4. Inspect every credible candidate</h3>
-<p>Open Status and use <code>1</code>–<code>9</code> to visit each slot. Compare committed and uncommitted counts against the recorded fork SHA. A 0.7.5+ slot can remain labeled <code>working</code> after it finishes until Harvest previews it; state is informative, not a completion gate.</p>
-<p>Open Harvest, preview each candidate's diff, run its tests, and compare it against the criterion declared before fan-out. Dirty slots offer WIP commit, skip, or discard; review the backup behavior before discarding.</p>
+<p>Open Status and use <code>1</code>–<code>9</code> to visit each slot. Compare committed and uncommitted counts against the recorded fork SHA. While Status is open, finish detection marks a slot <code>finished</code> when its agent writes the <code>.swarm-done</code> marker or exits, and shows elapsed time per slot. State is informative, not a completion gate.</p>
+<p>Open Harvest. Press <code>w</code> for the ranked compare view, <code>v</code> to run your <code>validate.sh</code> on a slot, or preview each candidate's diff, run its tests, and compare it against the criterion declared before fan-out. Dirty slots offer WIP commit, skip, or discard; review the backup behavior before discarding.</p>
 <h3>5. Treat clean-slot selection as approval</h3>
 <blockquote>
 <p><strong>Merge warning:</strong> selecting a clean slot in Harvest performs a review-first <code>--no-ff</code> merge. If the base branch is checked out, Swarm asks for explicit confirmation. If the base is not checked out anywhere, a plugin-owned detached worktree can advance the base ref after the preview without another confirmation screen. Treat slot selection as the approval action.</p>
@@ -161,6 +171,51 @@ with the clearest failure-path test.
 <p>Use <code>q</code> to leave Status or Harvest without selecting a candidate. Invoke Abort to stop an active run: it closes Swarm-owned panes and removes clean plugin-owned worktrees, while keeping branches and anything questionable.</p>
 <h3>Success definition</h3>
 <p>A first Explore run is successful when one chosen branch is merged without conflict, its tests pass on the base, the resulting diff meets the stated comparison criterion, and skipped work remains recoverable on branches until deliberate pruning.</p>
+<h2>Pick the winner</h2>
+<p>Version 0.5.0 covers the whole path from fan-out to a landed winner. Each step is opt-in or read-only unless stated, and nothing merges without the operator's selection or confirmation. The <a href="https://github.com/StructuPath/herdr-swarm/blob/f750bc7d61f99d857e2276c5493fbe91254c9e7f/README.md#the-workflow-050">pinned README</a> is the detailed reference.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prepare slots</strong></td>
+<td>Fan-out clones the repository's ignored <code>node_modules</code> (or a configured <code>clone-paths</code> list) into each worktree with copy-on-write. On Linux it's skipped where copy-on-write is unavailable; on macOS <code>cp -c</code> falls back to a full copy. Each slot gets <code>HERDR_SWARM_RUN_ID</code>, <code>HERDR_SWARM_SLOT</code>, and its own port range (10 per slot from 4100). <code>setup.sh</code> always receives them, and the agent receives them on Herdr 0.7.5+.</td>
+</tr>
+<tr>
+<td><strong>Different tasks per slot</strong></td>
+<td><code>&lt;!-- swarm-slot: N --&gt;</code> lines split <code>HERDR_SWARM_TASK_FILE</code> into per-slot sections after a shared preamble. Before anything is created, fan-out warns when slots given <em>different</em> tasks name the same tracked file.</td>
+</tr>
+<tr>
+<td><strong>Know when done</strong></td>
+<td>Status records a slot <code>finished</code> when its agent writes <code>.swarm-done</code> or exits, and sends one Herdr notification when all slots are done.</td>
+</tr>
+<tr>
+<td><strong>Check</strong></td>
+<td><code>v</code> (or <code>harvest-step.sh validate &lt;slot&gt;</code>) runs your plugin-config <code>validate.sh</code> against the slot's clean commit and records the result bound to that SHA. It can run automatically on finish if you opt in. The strict candidate handoff uses this result by default.</td>
+</tr>
+<tr>
+<td><strong>Compare</strong></td>
+<td><code>w</code> ranks slots by checks on their current commit, then commits, then finished. It never ranks by diff size. It shows files, <code>+/-</code>, dirty count, the files each pair both changed, and elapsed time. <code>d</code> shows the diff between two slots.</td>
+</tr>
+<tr>
+<td><strong>Merge the winner</strong></td>
+<td><code>m</code> merges the chosen slot <strong>at the exact commit compared</strong>, and refuses if it moved. Only if that merge lands are the finished losers skipped and archived. Branches are always kept.</td>
+</tr>
+<tr>
+<td><strong>Steer</strong></td>
+<td><code>harvest-step.sh broadcast</code> types one single-line message into every running slot's agent. It only does so where the slot's own agent program leads the pane, never into a shell, an editor, or an agent Herdr reports as blocked.</td>
+</tr>
+<tr>
+<td><strong>Resolve conflicts</strong></td>
+<td>For a conflict in Swarm's own detached merge tree, <code>g</code> starts a resolver agent beside the slot (Herdr 0.7.5+). <code>c</code> reviews its commit <strong>read-only</strong>: it lists every path changed beyond git's own automatic merge and the full diffstat. Only <code>y</code> records exactly the reviewed commit and lands it through the compare-and-swap. A merge you resolve by hand concludes the same way.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Elapsed time is shown; token usage and cost aren't, because Herdr carries no usage data and agents do not report it.</p>
 <h2>Publish for PR review</h2>
 <p>In Harvest, press <code>p</code>, then select a slot to publish its branch. The script equivalent is <code>scripts/harvest-step.sh publish &lt;slot&gt;</code> from the installed plugin root. Publication uses an ordinary push to <code>origin</code>, or the explicit <code>HERDR_SWARM_PUBLISH_REMOTE</code> override; it never force-pushes and does not create a GitHub PR itself.</p>
 <h3>Explicit GitHub draft handoff</h3>
@@ -179,12 +234,12 @@ bash scripts/harvest-step.sh pr-status 1
 <p>Imported Browser QA summaries must agree with per-run outcomes and counts. Unresolved requests or incomplete telemetry cannot produce a passing handoff check.</p>
 <p>A failed push creates no PR. A GitHub failure after a successful push leaves the published branch and local receipt intact. Inspect the error and retry the same command; a lost creation response triggers exact-PR rediscovery. A mismatched GitHub head refuses success and requires inspection, never a force-push correction.</p>
 <p>Press <code>c</code>, then a slot, for the pane's CI view. <code>pr-status</code> emits a <code>ci_status</code> tab-separated JSON record with <code>passed</code>, <code>failed</code>, <code>pending</code>, <code>not_run</code>, <code>unknown</code>, or <code>no_pr</code> status. Compare <code>head_sha</code> and <code>local_head_sha</code>: a passing remote check is not current candidate evidence when <code>matches_local_head</code> is false. Passing checks do not establish branch-protection completeness or authorize a merge. The command uses GitHub reads and the local run lock; it does not fetch, push, merge, or edit a PR.</p>
-<p>See the <a href="https://github.com/StructuPath/herdr-swarm/blob/09dd1f22c95ca9c9e4cdb0e3510f886360d5f0fb/docs/github-handoff.md">pinned GitHub handoff contract</a> for the exact evidence and output schemas. <a href="/docs/console/">Console</a> can display an explicitly saved PR-status observation alongside project and QA evidence.</p>
-<h3>Strict candidate handoff in the local development checkout</h3>
-<p>The unreleased checkout adds <code>candidate-status &lt;slot&gt;</code> and
-<code>publish-candidate-pr &lt;slot&gt;</code>; the pinned 0.4.0 commit above does <strong>not</strong> include
-these verbs. In the active run, select a clean committed slot, record typed
-passing validation checks, a separately passing <a href="/docs/browser/">Browser QA</a> result
+<p>See the <a href="https://github.com/StructuPath/herdr-swarm/blob/f750bc7d61f99d857e2276c5493fbe91254c9e7f/docs/github-handoff.md">pinned GitHub handoff contract</a> for the exact evidence and output schemas. <a href="/docs/console/">Console</a> can display an explicitly saved PR-status observation alongside project and QA evidence.</p>
+<h3>Strict candidate handoff</h3>
+<p>Version 0.5.0 includes <code>candidate-status &lt;slot&gt;</code> and
+<code>publish-candidate-pr &lt;slot&gt;</code>. In the active run, select a clean committed
+slot, record typed passing validation checks (the result <code>validate &lt;slot&gt;</code>
+records is used when no file is named), a separately passing <a href="/docs/browser/">Browser QA</a> result
 for the same SHA, and an explicit operator review bound to the run ID, slot,
 and SHA. Set <code>HERDR_SWARM_CANDIDATE_VALIDATION_FILE</code>,
 <code>HERDR_SWARM_CANDIDATE_BROWSER_QA_FILE</code>, and
@@ -203,14 +258,15 @@ repository</strong>, and a draft-PR result from a <strong>stubbed GitHub transpo
 It does not establish real GitHub authentication, CI, or remote PR creation.
 Caller-supplied evidence and the operator JSON are not attestations; an
 existing PR is reused without replacing its body, so reported evidence may
-not be attached to that PR. The source checkout's
-<code>docs/github-handoff.md</code> defines the development contract; the pinned URL
-above defines only the released contract.</p>
+not be attached to that PR. The pinned <code>docs/github-handoff.md</code> linked above
+defines the contract.</p>
 <p>After a remote PR is merged, preview again. Harvest recognizes merge ancestry and squash merges whose tree changes are contained in the base. Prune uses ancestry, so squash-merged branches may remain for deliberate review.</p>
 <h2>Safety and trust boundary</h2>
 <p>Swarm isolates working trees and provides reviewable branches; it does not sandbox agents. Write agents are trusted same-user principals and can access anything their operating-system user can access. Agents are instructed to commit locally and never push, while the operator remains the merge gate.</p>
 <p>Harvest uses review-first, <code>--no-ff</code> merges and checks base drift. Dirty discards first create backup refs. Abort keeps branches, and prune is dry-run/env-gated. Active runs resolve by physical repository identity; conflicting generations are refused rather than guessed.</p>
-<p>Ignored files remain outside Git's safety net. Removal requires the exact one-use <code>cleanup_approval</code> JSON returned by the inventory preview, bound to the resource, path, run, generation, and inventory digest. A generic yes is insufficient, and changed inventory invalidates approval. This also applies to ignored files in detached merge worktrees.</p>
+<p>Ignored files remain outside Git's safety net. Removal requires the exact one-use <code>cleanup_approval</code> JSON returned by the inventory preview, bound to the resource, path, run, generation, and inventory digest. A generic yes is insufficient, and changed inventory invalidates approval. This also applies to ignored files in detached merge worktrees, and to <code>node_modules</code> cloned into a slot. Large sets are summarized by top-level directory in the prompt, while the approval still covers every exact file.</p>
+<p><strong>Broadcast</strong> types text into agents, so it refuses multi-line text, control characters, and a leading <code>-</code>. It only types into a pane whose foreground program is the slot's own agent. On Herdr 0.7.5+, Swarm reports agent state itself, so an open approval prompt does not read as <code>blocked</code>: do not broadcast while an agent may be asking for approval.</p>
+<p><strong>The conflict resolver</strong> never handles a conflict in your own checked-out branch. Its merge tree is kept until Swarm can <em>prove</em> the resolver is gone; an uncertain state blocks abort and conclude. A resolution's second parent must be the exact slot commit the merge started with. Hunk-level changes inside conflicted files are not flagged separately, so review the conflicted files' content.</p>
 <h2>Scripted fan-out</h2>
 <p>Interactive fan-out uses the action. A zero-TTY run must invoke the pane script directly because action-spawned panes do not inherit caller environment in the pinned runtime:</p>
 <pre><code class="language-bash">HERDR_SWARM_SLOTS=3 \
@@ -220,7 +276,7 @@ HERDR_SWARM_DETRITUS=rename \
 HERDR_WORKSPACE_ID='replace-with-repo-workspace-id' \
   bash &quot;$(herdr plugin list --json | jq -r '.plugins[] | select(.id==&quot;structupath.swarm&quot;).root')/scripts/fanout-pane.sh&quot;
 </code></pre>
-<p>Per-slot overrides remain interactive-only. If a zero-TTY input is missing, the script exits with a named-variable error instead of waiting on an unreadable prompt.</p>
+<p>For a different task per slot, split the task file with <code>&lt;!-- swarm-slot: N --&gt;</code> lines (see <strong>Pick the winner</strong> above). Without <code>HERDR_SWARM_SLOTS</code>, the highest section number sets the slot count. Sections that don't fit the run, or a near-miss marker, refuse before anything is created. If a zero-TTY input is missing, the script exits with a named-variable error instead of waiting on an unreadable prompt.</p>
 <h2>Safe exit and cleanup</h2>
 <ul>
 <li><code>q</code> closes Status or Harvest without selecting work.</li>

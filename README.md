@@ -4,7 +4,7 @@ Canonical, reviewable documentation for the StructuPath Herdr Suite, published a
 
 The product surface is organized by workflow readiness:
 
-- **Explore / Swarm** is the ready first workflow: bounded parallel candidates, reviewable worktrees, operator-selected harvest, and optional GitHub draft PR handoff. A separate strict candidate handoff requires passing validation and Browser QA plus an exact-SHA operator review before publication; it is an unreleased development path, not an automatic merge.
+- **Explore / Swarm** is the ready first workflow: bounded parallel candidates, reviewable worktrees, operator-selected harvest, and optional GitHub draft PR handoff. Release 0.5.0 adds per-slot checks, finish detection, a ranked compare view with merge-the-winner at the exact compared commit, broadcast to running agents, and a conflict resolver whose result is reviewed read-only before it lands. A separate strict candidate handoff requires passing validation and Browser QA plus an exact-SHA operator review before publication; it is not an automatic merge.
 - **Deliver / Conductor** is an attended Stage 3 lifecycle: task-bound roles, exact-SHA gates, operator approval receipts, single-local-ref apply, and archival stand-down on exactly Herdr 0.7.5.
 - **Browser** provides Chromium launch, external attach, shared sessions, agent-browser recording, and repeatable desktop/mobile QA. **Guard** provides text policy and an optional fail-open harness reporter.
 

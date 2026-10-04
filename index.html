@@ -1132,17 +1132,21 @@
               <span class="step-no">03</span>
               <h3>Inspect evidence</h3>
               <p>
-                Status reports committed and uncommitted counts. Harvest
-                previews the selected candidate's diff.
+                Status reports committed and uncommitted counts and marks
+                each slot finished. Your <code>validate.sh</code> checks each
+                slot's exact commit, and Harvest's compare view ranks the
+                candidates and diffs any two.
               </p>
             </div>
             <div class="workflow-step">
               <span class="step-no">04</span>
               <h3>Choose what lands</h3>
               <p>
-                Merge one reviewed slot, skip the rest, or Abort while keeping
-                branches for recovery. For GitHub review, explicitly request
-                the draft PR handoff with the candidate's validation evidence.
+                Merge the winner at the exact commit you compared and skip the
+                rest, or Abort while keeping branches for recovery. A conflict
+                can go to a resolver agent, whose result you review before it
+                lands. For GitHub review, explicitly request the draft PR
+                handoff with the candidate's validation evidence.
               </p>
             </div>
           </div>
